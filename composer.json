@@ -1,5 +1,4 @@
 {
-    "$schema": "https://getcomposer.org/schema.json",
     "name": "entelechy/architect",
     "description": "Architect — a Laravel package for building data-rich admin interfaces with tables, navigation, stats, toolbar, and supersearch.",
     "type": "library",
@@ -52,6 +51,6 @@
             }
         }
     },
-    "minimum-stability": "dev",
+    "minimum-stability": "stable",
     "prefer-stable": true
 }
