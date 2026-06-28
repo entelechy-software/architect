@@ -1,0 +1,57 @@
+{
+    "$schema": "https://getcomposer.org/schema.json",
+    "name": "entelechy/architect",
+    "description": "Architect — a Laravel package for building data-rich admin interfaces with tables, navigation, stats, toolbar, and supersearch.",
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Greg",
+            "role": "Developer"
+        }
+    ],
+    "keywords": ["laravel", "admin", "livewire", "table", "form", "dashboard", "supersearch", "statistics"],
+    "homepage": "https://github.com/entelechy-software/architect",
+    "support": {
+        "issues": "https://github.com/entelechy-software/architect/issues",
+        "source": "https://github.com/entelechy-software/architect"
+    },
+    "require": {
+        "php": "^8.3",
+        "illuminate/support": "^13.0",
+        "livewire/livewire": "^4.3",
+        "maatwebsite/excel": "^3.1"
+    },
+    "suggest": {
+        "laravel/mcp": "Required to use the Architect MCP tools (Entelechy\\Architect\\Mcp\\Tools\\*)."
+    },
+    "require-dev": {
+        "orchestra/testbench": "^11.0",
+        "phpunit/phpunit": "^12.0",
+        "larastan/larastan": "^3.0",
+        "laravel/pint": "^1.0",
+        "laravel/mcp": "^0.8.2"
+    },
+    "autoload": {
+        "psr-4": {
+            "Entelechy\\Architect\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Entelechy\\Architect\\Tests\\": "tests/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Entelechy\\Architect\\ArchitectServiceProvider"
+            ],
+            "aliases": {
+                "Architect": "Entelechy\\Architect\\Facades\\Architect"
+            }
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}

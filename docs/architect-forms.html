@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Form Controls — Architect</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="_assets/docs.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+<script>(function(){var t=localStorage.getItem('arch-docs-theme');if(t==='light')document.documentElement.setAttribute('data-theme','light');})()</script>
+</head>
+<body>
+<nav id="sidebar">
+  <div class="nav-brand"><h1>Architect</h1><p>entelechy/architect</p></div>
+  <div class="nav-section">Getting Started</div>
+  <a href="index.html">Home</a><a href="quick-start.html">Quick Start</a><a href="concepts.html">Core Concepts</a>
+  <div class="nav-section">Core Subsystems</div>
+  <a href="architect-tables.html">CRUD Tables</a><a href="architect-navigation.html">Navigation</a><a href="architect-stats.html">Stats Dashboard</a><a href="architect-toolbar.html">Toolbar</a><a href="architect-supersearch.html">Supersearch ⌘K</a>
+  <div class="nav-section">Components &amp; Forms</div>
+  <a href="architect-forms.html">Form Controls</a><a href="architect-content.html">Content / Entries</a><a href="architect-actions.html">Actions</a><a href="architect-panels.html">Panels</a><a href="architect-notifications.html">Notifications</a>
+  <div class="nav-section">Tooling</div>
+  <a href="architect-styling.html">Styling Guide</a><a href="architect-mcp.html">MCP Tools</a>
+  <button id="theme-toggle"></button>
+</nav>
+<main>
+<div class="page-badge">Components &amp; Forms</div>
+<h1>Form Controls</h1>
+<p class="lead">27 field types, a fluent FormBuilder, a WizardBuilder, conditional logic, autosave, and lifecycle hooks.</p>
+
+<div class="callout callout-info">
+  <strong>Package docs</strong>
+  This page covers the Architect form system (<code>Entelechy\Architect\Forms</code>).
+</div>
+
+<section id="formbuilder">
+<h2>FormBuilder</h2>
+<pre><code>use Entelechy\Architect\Forms\FormBuilder;
+use Entelechy\Architect\Forms\Fields\TextField;
+use Entelechy\Architect\Forms\Fields\SelectField;
+
+$form = FormBuilder::make('member-form')
+    ->title('New Member')
+    ->saveRoute('members.store')
+    ->fields([
+        TextField::make('name')->label('Full Name')->required(),
+        TextField::make('email')->label('Email')->type('email')->required(),
+        SelectField::make('status')->label('Status')->options([
+            'active'   => 'Active',
+            'inactive' => 'Inactive',
+        ]),
+    ])
+    ->build();</code></pre>
+
+<h3>FormBuilder API</h3>
+<table>
+<thead><tr><th>Method</th><th>Description</th></tr></thead>
+<tbody>
+<tr><td><code>FormBuilder::make(string $key)</code></td><td>Static factory. Key is used for event scoping.</td></tr>
+<tr><td><code>title(string)</code></td><td>Form heading.</td></tr>
+<tr><td><code>saveRoute(string)</code></td><td>Named route POSTed on submit.</td></tr>
+<tr><td><code>fields(array)</code></td><td>Flat list of field objects (or mix with sections).</td></tr>
+<tr><td><code>section(string $label, array $fields)</code></td><td>Wrap fields in a labelled section.</td></tr>
+<tr><td><code>grid(int $cols, array $fields)</code></td><td>Lay fields out in a grid column layout.</td></tr>
+<tr><td><code>autosave(int $debounceMs)</code></td><td>Auto-save form data after N ms of inactivity.</td></tr>
+<tr><td><code>onSaved(Closure)</code></td><td>Callback invoked after the form is saved successfully.</td></tr>
+<tr><td><code>build()</code></td><td>Returns <code>ArchitectFormDefinition</code>.</td></tr>
+</tbody>
+</table>
+</section>
+
+<section id="wizard-builder">
+<h2>WizardBuilder</h2>
+<p>Multi-step forms with optional per-step validation.</p>
+<pre><code>use Entelechy\Architect\Forms\WizardBuilder;
+
+WizardBuilder::make('onboarding')
+    ->step('Personal Details', [
+        TextField::make('first_name')->required(),
+        TextField::make('last_name')->required(),
+    ])
+    ->step('Contact', [
+        TextField::make('email')->type('email')->required(),
+        TextField::make('phone'),
+    ])
+    ->validateOnStep()
+    ->saveRoute('onboarding.store')
+    ->build();</code></pre>
+</section>
+
+<section id="field-types">
+<h2>Field Types</h2>
+
+<h3>Text &amp; Input</h3>
+<table>
+<thead><tr><th>Class</th><th>Key methods</th><th>Description</th></tr></thead>
+<tbody>
+<tr><td><code>TextField</code></td><td><code>type()</code>, <code>prefix()</code>, <code>suffix()</code>, <code>maxLength()</code></td><td>Single-line text input. <code>type</code> can be <code>'text'</code>, <code>'email'</code>, <code>'url'</code>, <code>'password'</code>.</td></tr>
+<tr><td><code>TextareaField</code></td><td><code>rows()</code>, <code>autosize()</code></td><td>Multi-line text area.</td></tr>
+<tr><td><code>IntegerField</code></td><td><code>min()</code>, <code>max()</code>, <code>step()</code></td><td>Integer number input.</td></tr>
+<tr><td><code>DecimalField</code></td><td><code>decimalPlaces()</code>, <code>min()</code>, <code>max()</code></td><td>Decimal / float input.</td></tr>
+<tr><td><code>Slider</code></td><td><code>min()</code>, <code>max()</code>, <code>step()</code></td><td>Range slider.</td></tr>
+<tr><td><code>Hidden</code></td><td><code>default()</code></td><td>Hidden input; value set server-side.</td></tr>
+<tr><td><code>DisplayField</code></td><td><code>value()</code></td><td>Read-only display value inside a form.</td></tr>
+</tbody>
+</table>
+
+<h3>Date &amp; Time</h3>
+<table>
+<thead><tr><th>Class</th><th>Key methods</th><th>Description</th></tr></thead>
+<tbody>
+<tr><td><code>DateField</code></td><td><code>minDate()</code>, <code>maxDate()</code>, <code>format()</code></td><td>Date picker.</td></tr>
+<tr><td><code>DateTimeField</code></td><td><code>withSeconds()</code>, <code>timezone()</code></td><td>Date + time picker.</td></tr>
+<tr><td><code>DateTimePicker</code></td><td><code>inline()</code>, <code>enableTime()</code></td><td>Flatpickr-powered calendar picker.</td></tr>
+</tbody>
+</table>
+
+<h3>Choice &amp; Selection</h3>
+<table>
+<thead><tr><th>Class</th><th>Key methods</th><th>Description</th></tr></thead>
+<tbody>
+<tr><td><code>SelectField</code></td><td><code>options()</code>, <code>searchable()</code>, <code>multiple()</code></td><td>Select dropdown. Supports remote source via <code>source()</code>.</td></tr>
+<tr><td><code>Radio</code></td><td><code>options()</code>, <code>inline()</code></td><td>Radio group.</td></tr>
+<tr><td><code>CheckboxField</code></td><td><code>label()</code></td><td>Single checkbox toggle.</td></tr>
+<tr><td><code>CheckboxList</code></td><td><code>options()</code>, <code>columns()</code></td><td>Multiple checkboxes.</td></tr>
+<tr><td><code>Toggle</code></td><td><code>onLabel()</code>, <code>offLabel()</code></td><td>On/off toggle switch.</td></tr>
+<tr><td><code>ToggleButtons</code></td><td><code>options()</code>, <code>multiple()</code></td><td>Segmented button group selection.</td></tr>
+<tr><td><code>TagsInput</code></td><td><code>suggestions()</code>, <code>max()</code></td><td>Free-text tag input with autocomplete.</td></tr>
+</tbody>
+</table>
+
+<h3>Rich Content</h3>
+<table>
+<thead><tr><th>Class</th><th>Key methods</th><th>Description</th></tr></thead>
+<tbody>
+<tr><td><code>RichEditor</code></td><td><code>toolbarButtons()</code>, <code>fileUpload()</code></td><td>WYSIWYG rich text editor (TipTap-based).</td></tr>
+<tr><td><code>MarkdownEditor</code></td><td><code>preview()</code></td><td>Markdown editor with live preview.</td></tr>
+<tr><td><code>CodeEditor</code></td><td><code>language()</code>, <code>theme()</code></td><td>Monaco-based code editor.</td></tr>
+<tr><td><code>ColorPicker</code></td><td><code>format()</code>, <code>swatches()</code></td><td>Colour picker.</td></tr>
+<tr><td><code>FileUpload</code></td><td><code>disk()</code>, <code>acceptedTypes()</code>, <code>maxSize()</code>, <code>multiple()</code></td><td>Filepond-based file upload.</td></tr>
+</tbody>
+</table>
+
+<h3>Relationships &amp; Lookup</h3>
+<table>
+<thead><tr><th>Class</th><th>Key methods</th><th>Description</th></tr></thead>
+<tbody>
+<tr><td><code>LookupField</code></td><td><code>model()</code>, <code>source()</code>, <code>multiple()</code>, <code>cascadeFrom()</code></td><td>Async lookup / autocomplete for related models.</td></tr>
+<tr><td><code>KeyValue</code></td><td><code>keyLabel()</code>, <code>valueLabel()</code></td><td>Editable key-value pairs.</td></tr>
+</tbody>
+</table>
+
+<h3>Structural</h3>
+<table>
+<thead><tr><th>Class</th><th>Key methods</th><th>Description</th></tr></thead>
+<tbody>
+<tr><td><code>Fieldset</code></td><td><code>fields()</code>, <code>legend()</code></td><td>Group fields inside a labelled fieldset border.</td></tr>
+<tr><td><code>Repeater</code></td><td><code>fields()</code>, <code>min()</code>, <code>max()</code>, <code>addLabel()</code></td><td>Repeatable row of fields.</td></tr>
+<tr><td><code>Builder</code></td><td><code>blocks()</code></td><td>Configurable block builder (page-builder style).</td></tr>
+<tr><td><code>Block</code></td><td><code>fields()</code></td><td>Named block type used inside <code>Builder</code>.</td></tr>
+<tr><td><code>Custom</code></td><td><code>view()</code>, <code>component()</code></td><td>Escape hatch: render a custom Blade view or Livewire component as a field.</td></tr>
+</tbody>
+</table>
+</section>
+
+<section id="common-field-api">
+<h2>Common Field API</h2>
+<p>All field classes share these base methods from <code>Field</code>:</p>
+<pre><code>TextField::make('name')
+    ->label('Full Name')          // display label
+    ->hint('Max 100 characters')  // helper text below field
+    ->placeholder('John Smith')
+    ->required(true)
+    ->disabled(false)
+    ->hidden(false)
+    ->default('pending')
+    ->rules('required|max:100')   // Laravel validation rules
+    ->permission('members.edit_name')  // hide if user lacks this node
+    ->visibleWhen('role', '=', 'admin');  // Alpine-driven conditional visibility</code></pre>
+</section>
+</main>
+<aside id="toc"></aside>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
+<script src="_assets/docs.js"></script>
+</body>
+</html>

@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Navigation — Architect</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="_assets/docs.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+<script>(function(){var t=localStorage.getItem('arch-docs-theme');if(t==='light')document.documentElement.setAttribute('data-theme','light');})()</script>
+</head>
+<body>
+<nav id="sidebar">
+  <div class="nav-brand"><h1>Architect</h1><p>entelechy/architect</p></div>
+  <div class="nav-section">Getting Started</div>
+  <a href="index.html">Home</a><a href="quick-start.html">Quick Start</a><a href="concepts.html">Core Concepts</a>
+  <div class="nav-section">Core Subsystems</div>
+  <a href="architect-tables.html">CRUD Tables</a><a href="architect-navigation.html">Navigation</a><a href="architect-stats.html">Stats Dashboard</a><a href="architect-toolbar.html">Toolbar</a><a href="architect-supersearch.html">Supersearch ⌘K</a>
+  <div class="nav-section">Components &amp; Forms</div>
+  <a href="architect-forms.html">Form Controls</a><a href="architect-content.html">Content / Entries</a><a href="architect-actions.html">Actions</a><a href="architect-panels.html">Panels</a><a href="architect-notifications.html">Notifications</a>
+  <div class="nav-section">Tooling</div>
+  <a href="architect-styling.html">Styling Guide</a><a href="architect-mcp.html">MCP Tools</a>
+  <button id="theme-toggle"></button>
+</nav>
+<main>
+<div class="page-badge">Core Subsystem</div>
+<h1>Navigation</h1>
+<p class="lead">Tab bars, pills, sidebars, steppers, and Livewire workspace tabs. All driven from the same fluent NavigatorBuilder.</p>
+
+<section id="navigator-types">
+<h2>Navigator Types</h2>
+<table>
+<thead><tr><th>Factory</th><th>Style</th><th>Use when</th></tr></thead>
+<tbody>
+<tr><td><code>Architect::tabs()</code></td><td>Underline pill tabs</td><td>Section-level navigation within a page</td></tr>
+<tr><td><code>Architect::navTabs()</code></td><td>Alias for <code>tabs()</code></td><td></td></tr>
+<tr><td><code>Architect::pills()</code></td><td>Filled pill buttons</td><td>Compact selection with few options</td></tr>
+<tr><td><code>Architect::buttons()</code></td><td>Button group</td><td>View-mode toggles (e.g. List / Grid)</td></tr>
+<tr><td><code>Architect::stepper()</code></td><td>Numbered step indicators</td><td>Multi-step wizard progress</td></tr>
+<tr><td><code>Architect::sidebar()</code></td><td>Vertical sidebar links</td><td>Module-level navigation</td></tr>
+<tr><td><code>Architect::dropdown()</code></td><td>Dropdown menu</td><td>Overflow nav or context menus</td></tr>
+<tr><td><code>Architect::toolbar()</code></td><td>Contextual toolbar</td><td>See <a href="architect-toolbar.html">Toolbar docs</a></td></tr>
+<tr><td><code>Architect::workspaceTabs(key)</code></td><td>Livewire multi-tab workspace</td><td>Concurrent records (inbox, case workers)</td></tr>
+</tbody>
+</table>
+</section>
+
+<section id="link-navigator">
+<h2>Link-Based Navigators</h2>
+<p>Link navigators produce static <code>&lt;a href&gt;</code> tabs rendered server-side. No Livewire required.</p>
+
+<pre><code>use Entelechy\Architect\Facades\Architect;
+use Entelechy\Architect\Navigator\Items\Tab;
+
+$nav = Architect::tabs()
+    ->tab(Tab::make('Overview')->href('/members')->default())
+    ->tab(Tab::make('Activity')->href('/members/activity'))
+    ->tab(Tab::make('Finance')->href('/members/finance'))
+    ->build();
+
+// In a table definition:
+$this->navigator($nav);</code></pre>
+
+<h3>NavigatorBuilder API</h3>
+<table>
+<thead><tr><th>Method</th><th>Description</th></tr></thead>
+<tbody>
+<tr><td><code>type(string)</code></td><td>Override navigator style: <code>'tabs'|'pills'|'buttons'|'stepper'|'sidebar'|'dropdown'</code>.</td></tr>
+<tr><td><code>style(string)</code></td><td>Alternate style variant (e.g. <code>'page'</code> for page-level tabs with border-bottom).</td></tr>
+<tr><td><code>position(string)</code></td><td><code>'top'|'left'|'right'</code>.</td></tr>
+<tr><td><code>align(string)</code></td><td><code>'start'|'center'|'end'</code>.</td></tr>
+<tr><td><code>tab(Tab)</code></td><td>Add a Tab item.</td></tr>
+<tr><td><code>button(NavButton)</code></td><td>Add a NavButton item.</td></tr>
+<tr><td><code>step(StepItem)</code></td><td>Add a StepItem (stepper navigators).</td></tr>
+<tr><td><code>separator()</code></td><td>Add a visual separator.</td></tr>
+<tr><td><code>item(NavigatorItem)</code></td><td>Generic item — use when the item type varies.</td></tr>
+<tr><td><code>urlParam(string)</code></td><td>URL query param used to track active tab (default: <code>tab</code>).</td></tr>
+<tr><td><code>breadcrumbs(array|string)</code></td><td>Contextual breadcrumbs for this navigator.</td></tr>
+<tr><td><code>build()</code></td><td>Returns <code>ArchitectNavigatorDefinition</code>.</td></tr>
+</tbody>
+</table>
+
+<h3>Tab Item API</h3>
+<table>
+<thead><tr><th>Method</th><th>Description</th></tr></thead>
+<tbody>
+<tr><td><code>Tab::make(string $label)</code></td><td>Static factory.</td></tr>
+<tr><td><code>href(string $url)</code></td><td>Link target.</td></tr>
+<tr><td><code>icon(string)</code></td><td>Font Awesome / Heroicon class prefix (e.g. <code>'fas fa-user'</code>).</td></tr>
+<tr><td><code>default()</code></td><td>Mark as the default/active tab.</td></tr>
+<tr><td><code>disabled()</code></td><td>Prevent the tab from being clicked.</td></tr>
+<tr><td><code>badge(int $count)</code></td><td>Show a numeric badge on the tab.</td></tr>
+<tr><td><code>activeOn(array $patterns)</code></td><td>URL patterns that mark this tab active (supports wildcards).</td></tr>
+<tr><td><code>architect(string $definitionClass)</code></td><td>SPA mode: render an Architect definition in the tab pane without a navigation.</td></tr>
+<tr><td><code>component(string $class, array $props)</code></td><td>SPA mode: render a Livewire component in the tab pane.</td></tr>
+<tr><td><code>view(string $blade, array $data)</code></td><td>SPA mode: render a Blade partial in the tab pane.</td></tr>
+<tr><td><code>withSlug(string)</code></td><td>URL slug for this tab in SPA mode.</td></tr>
+</tbody>
+</table>
+</section>
+
+<section id="workspace-tabs">
+<h2>Workspace Tabs (Livewire)</h2>
+<p>Workspace tabs host multiple Livewire components simultaneously below a shared topbar. Alpine <code>x-show</code> handles visibility with zero server round-trips. Ideal for inbox/case-worker UIs where users keep multiple records open.</p>
+
+<pre><code>use Entelechy\Architect\Facades\Architect;
+use Entelechy\Architect\Navigator\Items\PinnedTab;
+use Entelechy\Architect\Navigator\Items\DynamicTabType;
+
+class MembersTabsDefinition
+{
+    public static function build(): WorkspaceTabsDefinition
+    {
+        return Architect::workspaceTabs('members-workspace')
+            ->persist()
+            ->maxTabs(8)
+            ->pinnedTab(
+                PinnedTab::make('All Members')
+                    ->icon('fas fa-users')
+                    ->component(\App\Modules\Members\Livewire\MembersList::class)
+            )
+            ->dynamicTab(
+                DynamicTabType::make('member')
+                    ->component(\App\Modules\Members\Livewire\MemberDetail::class)
+                    ->icon('fas fa-user')
+                    ->labelResolver(fn($props) => 'Member #' . $props['id'])
+            )
+            ->showOverflowPopover()
+            ->showRecentlyClosed(5)
+            ->enableSwitcherPalette()
+            ->build();
+    }
+}</code></pre>
+
+<h3>Workspace Builder API</h3>
+<table>
+<thead><tr><th>Method</th><th>Description</th></tr></thead>
+<tbody>
+<tr><td><code>Architect::workspaceTabs(string $key)</code></td><td>Start a workspace. Key identifies the Livewire component and LocalStorage namespace.</td></tr>
+<tr><td><code>persist(bool)</code></td><td>Persist open tabs in LocalStorage across page loads.</td></tr>
+<tr><td><code>maxTabs(int)</code></td><td>Maximum number of simultaneously open tabs.</td></tr>
+<tr><td><code>pinnedTab(PinnedTab)</code></td><td>Add a fixed tab that is always present (cannot be closed).</td></tr>
+<tr><td><code>dynamicTab(DynamicTabType)</code></td><td>Register a dynamic tab type (opened programmatically by the user).</td></tr>
+<tr><td><code>showOverflowPopover(bool)</code></td><td>Show a <code>+N</code> overflow popover when tabs exceed the available width.</td></tr>
+<tr><td><code>showRecentlyClosed(int $max)</code></td><td>Show a "Recently closed" list in the overflow popover.</td></tr>
+<tr><td><code>enableSwitcherPalette(bool)</code></td><td>Enable ⌘K palette for tab switching.</td></tr>
+<tr><td><code>notifyStaleRecords(bool)</code></td><td>Emit a warning when a dynamic tab's record has been modified since it was opened.</td></tr>
+</tbody>
+</table>
+
+<h3>Rendering Workspace Tabs</h3>
+<pre><code>&lt;!-- Pass the FQCN string — the component rebuilds fresh on each request --&gt;
+&lt;x-architect definition-class="\App\Modules\Members\Components\Tabs\MembersTabsDefinition" /&gt;
+
+&lt;!-- Backward-compatible alias: --&gt;
+&lt;x-module-tabs definition-class="\App\Modules\Members\Components\Tabs\MembersTabsDefinition" /&gt;</code></pre>
+</section>
+
+<section id="spa-tabs">
+<h2>SPA Tabs</h2>
+<p>Link-based navigators can operate in SPA mode using <code>->spa()</code> on the builder. In this mode Alpine handles tab switching client-side without a page reload. Tab panes are rendered with <code>->architect()</code>, <code>->component()</code>, or <code>->view()</code> on each <code>Tab</code>.</p>
+<pre><code>Architect::tabs()
+    ->spa()
+    ->tab(
+        Tab::make('Details')
+            ->withSlug('details')
+            ->component(\App\Modules\Members\Livewire\MemberDetails::class, ['id' => $id])
+    )
+    ->tab(
+        Tab::make('Finance')
+            ->withSlug('finance')
+            ->architect(\App\Modules\Finance\Components\Tables\MemberTransactionsTableDefinition::class)
+    )
+    ->build();</code></pre>
+</section>
+</main>
+<aside id="toc"></aside>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
+<script src="_assets/docs.js"></script>
+</body>
+</html>

@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CRUD Tables — Architect</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="_assets/docs.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+<script>(function(){var t=localStorage.getItem('arch-docs-theme');if(t==='light')document.documentElement.setAttribute('data-theme','light');})()</script>
+</head>
+<body>
+<nav id="sidebar">
+  <div class="nav-brand"><h1>Architect</h1><p>entelechy/architect</p></div>
+  <div class="nav-section">Getting Started</div>
+  <a href="index.html">Home</a><a href="quick-start.html">Quick Start</a><a href="concepts.html">Core Concepts</a>
+  <div class="nav-section">Core Subsystems</div>
+  <a href="architect-tables.html">CRUD Tables</a><a href="architect-navigation.html">Navigation</a><a href="architect-stats.html">Stats Dashboard</a><a href="architect-toolbar.html">Toolbar</a><a href="architect-supersearch.html">Supersearch ⌘K</a>
+  <div class="nav-section">Components &amp; Forms</div>
+  <a href="architect-forms.html">Form Controls</a><a href="architect-content.html">Content / Entries</a><a href="architect-actions.html">Actions</a><a href="architect-panels.html">Panels</a><a href="architect-notifications.html">Notifications</a>
+  <div class="nav-section">Tooling</div>
+  <a href="architect-styling.html">Styling Guide</a><a href="architect-mcp.html">MCP Tools</a>
+  <button id="theme-toggle"></button>
+</nav>
+<main>
+<div class="page-badge">Core Subsystem</div>
+<h1>CRUD Tables</h1>
+<p class="lead">Sortable, searchable, filterable data tables backed by any Eloquent query, with full create / edit / view / delete modal flows.</p>
+
+<section id="overview">
+<h2>Overview</h2>
+<p>The CRUD Table subsystem is built around three classes:</p>
+<ul>
+  <li><code>TableBuilder</code> — fluent configuration API</li>
+  <li><code>ArchitectTableDefinition</code> — value object produced by the builder</li>
+  <li><code>TableEngine</code> — Livewire component that renders the table</li>
+</ul>
+<p>You always extend <code>ArchitectTableDefinition</code> and call builder methods inside <code>definition()</code>:</p>
+<pre><code>use Entelechy\Architect\Table\ArchitectTableDefinition;
+
+class MembersTableDefinition extends ArchitectTableDefinition
+{
+    public function definition(): static
+    {
+        return $this
+            ->title('Members')
+            ->model(Member::class)
+            ->columns([...])
+            ->fields([...]);
+    }
+}</code></pre>
+</section>
+
+<section id="tablebuilder">
+<h2>TableBuilder API</h2>
+<p>All methods return <code>self</code> for chaining.</p>
+<table>
+<thead><tr><th>Method</th><th>Description</th></tr></thead>
+<tbody>
+<tr><td><code>title(string)</code></td><td>Table heading (also used in breadcrumbs).</td></tr>
+<tr><td><code>pageTitle(string)</code></td><td>Browser title / page heading (defaults to <code>title</code>).</td></tr>
+<tr><td><code>breadcrumbs(array)</code></td><td>Array of <code>['label' => ..., 'url' => ...]</code> breadcrumb items.</td></tr>
+<tr><td><code>model(string)</code></td><td>Eloquent model FQCN. Architect infers the table name automatically.</td></tr>
+<tr><td><code>permissions(string $read, string $create, string $modify, string $remove)</code></td><td>Permission nodes checked before rendering.</td></tr>
+<tr><td><code>sections(array)</code></td><td>Logical sections grouping fields in the create/edit modal.</td></tr>
+<tr><td><code>formMode(string $mode)</code></td><td><code>'modal'</code> (default) or <code>'page'</code> for full-page create/edit forms.</td></tr>
+<tr><td><code>filterPanel(bool $persistence, bool $bookmarkFilters)</code></td><td>Show collapsible filter panel. Optionally persist filter state in URL.</td></tr>
+<tr><td><code>column(Column)</code></td><td>Add a single column definition.</td></tr>
+<tr><td><code>field(ArchitectField)</code></td><td>Add a single form field for create/edit modals.</td></tr>
+<tr><td><code>filter(ArchitectFilter)</code></td><td>Add a table filter.</td></tr>
+<tr><td><code>defaultFilters(array)</code></td><td>Pre-applied filter values on first load.</td></tr>
+<tr><td><code>archivable(string $column, string $label)</code></td><td>Soft-delete support with archive/restore UI.</td></tr>
+<tr><td><code>deletable(bool, bool $reasonRequired)</code></td><td>Enable hard delete with optional reason prompt.</td></tr>
+<tr><td><code>requiresDeletionReason(bool)</code></td><td>Force user to supply a reason before deleting.</td></tr>
+<tr><td><code>selectableRows(bool)</code></td><td>Show checkboxes for bulk selection.</td></tr>
+<tr><td><code>bulkActions(array)</code></td><td>Register bulk action definitions.</td></tr>
+<tr><td><code>bulkDelete(bool $reasonRequired)</code></td><td>Add a built-in bulk delete action.</td></tr>
+<tr><td><code>exportable(array|bool $formats)</code></td><td>Enable CSV/XLSX export. Pass <code>true</code> for all formats or an array of format strings.</td></tr>
+<tr><td><code>rowAction(RowAction)</code></td><td>Add a per-row action button.</td></tr>
+<tr><td><code>headerAction(HeaderAction)</code></td><td>Add an action button to the table header.</td></tr>
+<tr><td><code>clonable(array $except)</code></td><td>Add a "Clone" row action; <code>$except</code> lists fields to blank out on the copy.</td></tr>
+<tr><td><code>auditable(bool)</code></td><td>Show audit log link on each row.</td></tr>
+<tr><td><code>viewable(?string $url)</code></td><td>Add a "View" row action. Pass a URL template with <code>{id}</code> placeholder or leave <code>null</code> for the view modal.</td></tr>
+<tr><td><code>documentation(string $url)</code></td><td>Add a help icon linking to external documentation.</td></tr>
+<tr><td><code>navigator(?ArchitectNavigatorDefinition)</code></td><td>Attach a tab navigator bar above the table.</td></tr>
+<tr><td><code>hideId()</code></td><td>Remove the ID column from the table.</td></tr>
+<tr><td><code>create(string $mode, ?array $columns)</code></td><td>Override the create form columns list.</td></tr>
+<tr><td><code>modify(string $mode, ?array $columns)</code></td><td>Override the edit form columns list.</td></tr>
+<tr><td><code>importable(array $config)</code></td><td>Enable CSV import with column mapping.</td></tr>
+<tr><td><code>alert(string $type, string $message)</code></td><td>Show a persistent alert banner above the table (<code>'info'|'warning'|'danger'</code>).</td></tr>
+<tr><td><code>hideSearchBar(bool)</code></td><td>Remove the search input.</td></tr>
+<tr><td><code>autoRefresh(int $seconds, bool $countdown)</code></td><td>Auto-refresh the table every N seconds.</td></tr>
+<tr><td><code>persistOnCreate(bool)</code></td><td>Keep the create modal open after saving (for rapid data entry).</td></tr>
+<tr><td><code>perPage(int $default, array $options)</code></td><td>Default page size and available page size options.</td></tr>
+<tr><td><code>build()</code></td><td>Returns the <code>ArchitectTableDefinition</code> value object.</td></tr>
+</tbody>
+</table>
+</section>
+
+<section id="columns">
+<h2>Column API</h2>
+<pre><code>use Entelechy\Architect\Table\Column;
+
+Column::make('email')
+    ->label('Email Address')
+    ->searchable()
+    ->sortable()
+    ->badge()
+    ->colors(['active' => 'green', 'inactive' => 'gray']);</code></pre>
+
+<table>
+<thead><tr><th>Method</th><th>Description</th></tr></thead>
+<tbody>
+<tr><td><code>Column::make(string $key)</code></td><td>Static factory. Key maps to the model attribute or query alias.</td></tr>
+<tr><td><code>label(string)</code></td><td>Display label in the table header.</td></tr>
+<tr><td><code>searchable(bool)</code></td><td>Include this column in the search query.</td></tr>
+<tr><td><code>searchColumns(array)</code></td><td>Override which DB columns are searched (for aliased or joined columns).</td></tr>
+<tr><td><code>sortable(string|bool $dir, ?int $priority)</code></td><td>Allow sorting. Optionally set default direction (<code>'asc'</code>/<code>'desc'</code>) and sort priority.</td></tr>
+<tr><td><code>badge(bool)</code></td><td>Render the cell value as a coloured badge.</td></tr>
+<tr><td><code>colors(array)</code></td><td>Map values to colour names: <code>['active' => 'green']</code>.</td></tr>
+<tr><td><code>visibleTo(string $node)</code></td><td>Hide column from users without the given permission node.</td></tr>
+<tr><td><code>filter(ArchitectFilter)</code></td><td>Attach an inline filter to this column.</td></tr>
+<tr><td><code>type(string)</code></td><td>Column render type: <code>'text'</code>, <code>'date'</code>, <code>'datetime'</code>, <code>'money'</code>, <code>'boolean'</code>, <code>'image'</code>, <code>'link'</code>, <code>'list'</code>.</td></tr>
+<tr><td><code>editAs(string $key)</code></td><td>Alias: when editing, use this field key instead of the column key.</td></tr>
+<tr><td><code>options(array)</code></td><td>Map of stored values to display labels.</td></tr>
+<tr><td><code>source(string $url)</code></td><td>Remote JSON source URL for lookup / autocomplete columns.</td></tr>
+<tr><td><code>visibleWhen(string $field, string $op, mixed $value)</code></td><td>Alpine-powered conditional column visibility.</td></tr>
+<tr><td><code>toggleable(bool)</code></td><td>Allow user to show/hide this column via the column picker.</td></tr>
+<tr><td><code>model(string)</code></td><td>Eloquent model class for inline relationship lookups.</td></tr>
+<tr><td><code>cascadeFrom(string $parentKey)</code></td><td>Cascade-filter this lookup from a parent column's value.</td></tr>
+<tr><td><code>labelUsing(callable)</code></td><td>Custom callback to format the display label from the raw value.</td></tr>
+</tbody>
+</table>
+</section>
+
+<section id="filters">
+<h2>Filter Types</h2>
+<pre><code>use Entelechy\Architect\Table\Filters\SelectFilter;
+use Entelechy\Architect\Table\Filters\DateRangeFilter;
+use Entelechy\Architect\Table\Filters\MultiSelectFilter;
+
+SelectFilter::make('status')->options(['active' => 'Active', 'inactive' => 'Inactive']),
+DateRangeFilter::make('created_at')->label('Date Joined'),
+MultiSelectFilter::make('tags')->source('/api/tags'),</code></pre>
+
+<table>
+<thead><tr><th>Class</th><th>Description</th></tr></thead>
+<tbody>
+<tr><td><code>SelectFilter</code></td><td>Single-value dropdown filter.</td></tr>
+<tr><td><code>MultiSelectFilter</code></td><td>Multi-value filter with checkboxes or tag pills.</td></tr>
+<tr><td><code>MultiTagFilter</code></td><td>Like MultiSelectFilter but displays as a tag list.</td></tr>
+<tr><td><code>TextFilter</code></td><td>Free-text filter against a specific column.</td></tr>
+<tr><td><code>RadioFilter</code></td><td>Inline radio group filter.</td></tr>
+<tr><td><code>DateRangeFilter</code></td><td>From / To date range picker.</td></tr>
+<tr><td><code>LookupFilter</code></td><td>Async lookup filter with remote source.</td></tr>
+</tbody>
+</table>
+</section>
+
+<section id="datamodel">
+<h2>DataModel</h2>
+<p>For advanced query customisation, create a DataModel class instead of using <code>->model(Member::class)</code>:</p>
+<pre><code>use Entelechy\Architect\Table\AbstractEloquentDataModel;
+
+class MemberDataModel extends AbstractEloquentDataModel
+{
+    protected string $model = Member::class;
+
+    public function getQuery(): \Illuminate\Database\Eloquent\Builder
+    {
+        return Member::query()
+            ->with('union')
+            ->where('tenant_id', tenant()->id);
+    }
+}</code></pre>
+<pre><code>// Register in definition:
+->dataModel(MemberDataModel::class)</code></pre>
+</section>
+
+<section id="rendering">
+<h2>Rendering</h2>
+<pre><code>// Controller:
+public function index(): View
+{
+    return view('members.index', [
+        'definition' => (new MembersTableDefinition())->definition(),
+    ]);
+}
+
+// Blade:
+&lt;x-architect :definition="$definition" /&gt;
+
+// Or by class name (definition instantiated on every Livewire re-render):
+&lt;x-architect definition-class="\App\Modules\Members\Components\Tables\MembersTableDefinition" /&gt;</code></pre>
+</section>
+</main>
+<aside id="toc"></aside>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
+<script src="_assets/docs.js"></script>
+</body>
+</html>

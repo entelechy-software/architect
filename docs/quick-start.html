@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quick Start — Architect</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="_assets/docs.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+<script>(function(){var t=localStorage.getItem('arch-docs-theme');if(t==='light')document.documentElement.setAttribute('data-theme','light');})()</script>
+</head>
+<body>
+
+<nav id="sidebar">
+  <div class="nav-brand">
+    <h1>Architect</h1>
+    <p>entelechy/architect</p>
+  </div>
+  <div class="nav-section">Getting Started</div>
+  <a href="index.html">Home</a>
+  <a href="quick-start.html">Quick Start</a>
+  <a href="concepts.html">Core Concepts</a>
+  <div class="nav-section">Core Subsystems</div>
+  <a href="architect-tables.html">CRUD Tables</a>
+  <a href="architect-navigation.html">Navigation</a>
+  <a href="architect-stats.html">Stats Dashboard</a>
+  <a href="architect-toolbar.html">Toolbar</a>
+  <a href="architect-supersearch.html">Supersearch ⌘K</a>
+  <div class="nav-section">Components &amp; Forms</div>
+  <a href="architect-forms.html">Form Controls</a>
+  <a href="architect-content.html">Content / Entries</a>
+  <a href="architect-actions.html">Actions</a>
+  <a href="architect-panels.html">Panels</a>
+  <a href="architect-notifications.html">Notifications</a>
+  <div class="nav-section">Tooling</div>
+  <a href="architect-styling.html">Styling Guide</a>
+  <a href="architect-mcp.html">MCP Tools</a>
+  <button id="theme-toggle"></button>
+</nav>
+
+<main>
+<div class="page-badge">Getting Started</div>
+<h1>Quick Start</h1>
+<p class="lead">Get Architect installed and ship your first CRUD table in under 10 minutes.</p>
+
+<section id="requirements">
+<h2>Requirements</h2>
+<table>
+<thead><tr><th>Dependency</th><th>Version</th></tr></thead>
+<tbody>
+<tr><td>PHP</td><td>8.2 or higher</td></tr>
+<tr><td>Laravel</td><td>10, 11, or 13</td></tr>
+<tr><td>Livewire</td><td>3.x</td></tr>
+<tr><td>Alpine.js</td><td>3.x</td></tr>
+</tbody>
+</table>
+</section>
+
+<section id="installation">
+<h2>Installation</h2>
+
+<h3>1. Install the package</h3>
+<pre><code>composer require entelechy/architect</code></pre>
+
+<h3>2. Publish assets &amp; config</h3>
+<pre><code># Publish config and Blade stubs
+php artisan vendor:publish --tag=architect-config
+php artisan vendor:publish --tag=architect-views
+
+# Publish CSS/JS assets to public/vendor/architect/
+php artisan vendor:publish --tag=architect-assets</code></pre>
+
+<h3>3. Add to your base layout</h3>
+<pre><code>&lt;!-- In &lt;head&gt; --&gt;
+@architectStyles
+
+&lt;!-- Before &lt;/body&gt; --&gt;
+@architectScripts
+&lt;livewire:architect-toast-manager /&gt;</code></pre>
+
+<h3>4. Register the facade (optional)</h3>
+<p>Architect auto-registers the <code>Architect</code> alias in Laravel. You can import the facade explicitly if your IDE prefers it:</p>
+<pre><code>use Entelechy\Architect\Facades\Architect;</code></pre>
+</section>
+
+<section id="first-table">
+<h2>Your First CRUD Table</h2>
+
+<h3>1. Generate the definition class</h3>
+<pre><code>php artisan make:architect-table Members --model=Member --module=Members</code></pre>
+
+<p>This creates:</p>
+<ul>
+  <li><code>app/Modules/Members/Components/Tables/MembersTableDefinition.php</code> — table config</li>
+  <li><code>app/Modules/Members/Models/MemberDataModel.php</code> — Architect data model</li>
+  <li><code>database/migrations/customer/YYYY_MM_DD_000000_create_members_table.php</code> — migration stub</li>
+</ul>
+
+<h3>2. Define your columns</h3>
+<pre><code>use Entelechy\Architect\Tables\ArchitectTableDefinition;
+use Entelechy\Architect\Tables\Columns\TextColumn;
+use Entelechy\Architect\Tables\Columns\BadgeColumn;
+use Entelechy\Architect\Tables\Columns\DateColumn;
+
+class MembersTableDefinition extends ArchitectTableDefinition
+{
+    public function definition(): static
+    {
+        return $this
+            ->title('Members')
+            ->dataModel(MemberDataModel::class)
+            ->columns([
+                TextColumn::make('name')->label('Name')->sortable()->searchable(),
+                TextColumn::make('email')->label('Email')->searchable(),
+                BadgeColumn::make('status')->label('Status')->sortable(),
+                DateColumn::make('created_at')->label('Joined')->sortable(),
+            ]);
+    }
+}</code></pre>
+
+<h3>3. Add a route</h3>
+<pre><code>// routes/web.php or app/Modules/Members/Routes/web.php
+Route::get('/members', [MembersController::class, 'index'])->name('members.index');</code></pre>
+
+<h3>4. Render in your controller &amp; view</h3>
+<pre><code>// MembersController.php
+public function index(): View
+{
+    return view('members.index', [
+        'definition' => (new MembersTableDefinition())->definition(),
+    ]);
+}
+
+// resources/views/members/index.blade.php
+&lt;x-architect :definition="$definition" /&gt;</code></pre>
+
+<div class="callout callout-tip">
+  <strong>That's it.</strong> Architect renders the table, pagination, search, column sort, and the full create / edit / view / delete modal flow automatically.
+</div>
+</section>
+
+<section id="next-steps">
+<h2>Next Steps</h2>
+<ul>
+  <li>Read <a href="concepts.html">Core Concepts</a> to understand how builders, definitions, and engines work.</li>
+  <li>Customise your columns with <a href="architect-tables.html">the full CRUD Tables reference</a>.</li>
+  <li>Add <a href="architect-forms.html">form fields</a> for create and edit modals.</li>
+  <li>Use <a href="architect-mcp.html">MCP tools</a> to let your AI assistant scaffold for you.</li>
+</ul>
+</section>
+</main>
+
+<aside id="toc"></aside>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
+<script src="_assets/docs.js"></script>
+</body>
+</html>

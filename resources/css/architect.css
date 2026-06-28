@@ -1,0 +1,728 @@
+/* =======================================================================
+   Entelechy Architect — Default Theme
+   Structure: tailwind reset → design tokens → layout hooks → components
+
+   Designers: override arch-* selectors or --arch-* tokens in the host
+   app's CSS (loaded after this file). See §0.3 for the full contract.
+   ======================================================================= */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── Design tokens (CSS custom properties) ──────────────────────────────
+   Override these at :root in the host app to rebrand the entire package
+   without touching any individual component rule.
+   ─────────────────────────────────────────────────────────────────────── */
+:root {
+    /* Colours */
+    --arch-color-primary:       #0ea5e9;   /* arch-500 */
+    --arch-color-primary-dark:  #0284c7;   /* arch-600 — hover/active */
+    --arch-color-primary-muted: #e0f2fe;   /* arch-100 — soft backgrounds */
+    --arch-color-surface:       #ffffff;
+    --arch-color-surface-alt:   #f9fafb;
+    --arch-color-border:        #e5e7eb;
+    --arch-color-text:          #111827;
+    --arch-color-text-muted:    #6b7280;
+    --arch-color-success:       #16a34a;
+    --arch-color-success-muted: #dcfce7;
+    --arch-color-warning:       #d97706;
+    --arch-color-warning-muted: #fef3c7;
+    --arch-color-danger:        #dc2626;
+    --arch-color-danger-muted:  #fee2e2;
+    --arch-color-info:          #2563eb;
+    --arch-color-info-muted:    #dbeafe;
+
+    /* Radius */
+    --arch-radius-sm:   0.25rem;
+    --arch-radius-md:   0.5rem;
+    --arch-radius-lg:   0.75rem;
+    --arch-radius-full: 9999px;
+
+    /* Spacing (gap scale) */
+    --arch-gap-xs:  0.25rem;
+    --arch-gap-sm:  0.5rem;
+    --arch-gap-md:  1rem;
+    --arch-gap-lg:  1.5rem;
+    --arch-gap-xl:  2rem;
+
+    /* Typography */
+    --arch-font-family-sans: ui-sans-serif, system-ui, -apple-system, sans-serif;
+    --arch-font-family-mono: ui-monospace, 'Cascadia Code', monospace;
+    --arch-font-size-xs:     0.75rem;    /* 12px */
+    --arch-font-size-sm:     0.875rem;   /* 14px */
+    --arch-font-size-md:     1rem;       /* 16px */
+    --arch-font-size-lg:     1.125rem;   /* 18px */
+    --arch-font-size-xl:     1.25rem;    /* 20px */
+    --arch-font-size-2xl:    1.5rem;     /* 24px */
+    --arch-font-weight-normal:   400;
+    --arch-font-weight-medium:   500;
+    --arch-font-weight-semibold: 600;
+    --arch-font-weight-bold:     700;
+    --arch-line-height-tight:    1.25;
+    --arch-line-height-normal:   1.5;
+    --arch-line-height-loose:    1.75;
+
+    /* Shadows */
+    --arch-shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    --arch-shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    --arch-shadow-lg: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+
+    /* Transitions */
+    --arch-transition: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+
+    /* Interactive states */
+    --arch-color-focus-ring:  #7dd3fc;   /* sky-300 — visible focus outline */
+    --arch-opacity-disabled:  0.5;
+
+    /* Z-index stack — prevents stacking conflicts between floating layers */
+    --arch-z-dropdown:   30;
+    --arch-z-slide-over: 35;   /* above dropdowns, below modals */
+    --arch-z-modal:      40;
+    --arch-z-toast:      50;
+
+    /* Sustained animations */
+    --arch-animation-pulse: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    --arch-animation-spin:  spin  1s linear infinite;
+}
+
+/* Dark mode token overrides */
+[data-theme="dark"] {
+    --arch-color-surface:      #0f172a;
+    --arch-color-surface-alt:  #1e293b;
+    --arch-color-border:       #334155;
+    --arch-color-text:         #f1f5f9;
+    --arch-color-text-muted:   #94a3b8;
+}
+
+/* Reduced motion — one block covers every component automatically */
+@media (prefers-reduced-motion: reduce) {
+    :root {
+        --arch-animation-pulse: none;
+        --arch-animation-spin:  none;
+        --arch-transition:      0ms;
+    }
+}
+
+/* ── Layout hooks ───────────────────────────────────────────────────────
+   All layout primitives. PHP values (Grid::make(2), span: 6) map here.
+   ─────────────────────────────────────────────────────────────────────── */
+.arch-grid { @apply grid w-full; }
+.arch-grid[data-cols="1"] { @apply grid-cols-1; }
+.arch-grid[data-cols="2"] { @apply grid-cols-1 md:grid-cols-2; }
+.arch-grid[data-cols="3"] { @apply grid-cols-1 md:grid-cols-2 lg:grid-cols-3; }
+.arch-grid[data-cols="4"] { @apply grid-cols-1 md:grid-cols-2 lg:grid-cols-4; }
+.arch-grid[data-gap="xs"] { gap: var(--arch-gap-xs); }
+.arch-grid[data-gap="sm"] { gap: var(--arch-gap-sm); }
+.arch-grid[data-gap="md"] { gap: var(--arch-gap-md); }
+.arch-grid[data-gap="lg"] { gap: var(--arch-gap-lg); }
+.arch-grid[data-gap="xl"] { gap: var(--arch-gap-xl); }
+
+/* 12-column dashboard grid */
+.arch-dashboard { @apply w-full; }
+.arch-dashboard__grid { @apply grid grid-cols-12 w-full; gap: var(--arch-gap-md); }
+.arch-dashboard__slot[data-span="1"]  { @apply col-span-12 md:col-span-1; }
+.arch-dashboard__slot[data-span="2"]  { @apply col-span-12 md:col-span-2; }
+.arch-dashboard__slot[data-span="3"]  { @apply col-span-12 md:col-span-3; }
+.arch-dashboard__slot[data-span="4"]  { @apply col-span-12 md:col-span-4; }
+.arch-dashboard__slot[data-span="5"]  { @apply col-span-12 md:col-span-5; }
+.arch-dashboard__slot[data-span="6"]  { @apply col-span-12 md:col-span-6; }
+.arch-dashboard__slot[data-span="7"]  { @apply col-span-12 md:col-span-7; }
+.arch-dashboard__slot[data-span="8"]  { @apply col-span-12 md:col-span-8; }
+.arch-dashboard__slot[data-span="9"]  { @apply col-span-12 md:col-span-9; }
+.arch-dashboard__slot[data-span="10"] { @apply col-span-12 md:col-span-10; }
+.arch-dashboard__slot[data-span="11"] { @apply col-span-12 md:col-span-11; }
+.arch-dashboard__slot[data-span="12"] { @apply col-span-12; }
+
+/* ── Component hooks ────────────────────────────────────────────────────
+   Semantic arch-* classes. The arch-* class is the stable public API.
+   Tailwind @apply provides the default visual implementation.
+   Designers override via the same selectors in the host app CSS.
+   ─────────────────────────────────────────────────────────────────────── */
+
+/* Badge */
+.arch-badge { @apply inline-flex items-center font-medium; border-radius: var(--arch-radius-full); }
+.arch-badge[data-size="sm"] { @apply px-2 py-0.5 text-xs; }
+.arch-badge[data-size="md"] { @apply px-2.5 py-1 text-sm; }
+/* Solid */
+.arch-badge[data-variant="solid"][data-color="primary"] { background-color: var(--arch-color-primary); color: #fff; }
+.arch-badge[data-variant="solid"][data-color="success"] { background-color: var(--arch-color-success); color: #fff; }
+.arch-badge[data-variant="solid"][data-color="warning"] { background-color: var(--arch-color-warning); color: #fff; }
+.arch-badge[data-variant="solid"][data-color="danger"]  { background-color: var(--arch-color-danger);  color: #fff; }
+.arch-badge[data-variant="solid"][data-color="info"]    { background-color: var(--arch-color-info);    color: #fff; }
+.arch-badge[data-variant="solid"][data-color="gray"]    { @apply bg-gray-500 text-white; }
+/* Soft */
+.arch-badge[data-variant="soft"][data-color="primary"] { background-color: var(--arch-color-primary-muted); color: var(--arch-color-primary-dark); }
+.arch-badge[data-variant="soft"][data-color="success"] { background-color: var(--arch-color-success-muted); color: var(--arch-color-success); }
+.arch-badge[data-variant="soft"][data-color="warning"] { background-color: var(--arch-color-warning-muted); color: var(--arch-color-warning); }
+.arch-badge[data-variant="soft"][data-color="danger"]  { background-color: var(--arch-color-danger-muted);  color: var(--arch-color-danger); }
+.arch-badge[data-variant="soft"][data-color="info"]    { background-color: var(--arch-color-info-muted);    color: var(--arch-color-info); }
+.arch-badge[data-variant="soft"][data-color="gray"]    { @apply bg-gray-100 text-gray-600; }
+/* Outline */
+.arch-badge[data-variant="outline"][data-color="primary"] { border: 1px solid var(--arch-color-primary); color: var(--arch-color-primary); }
+.arch-badge[data-variant="outline"][data-color="success"] { border: 1px solid var(--arch-color-success); color: var(--arch-color-success); }
+.arch-badge[data-variant="outline"][data-color="warning"] { border: 1px solid var(--arch-color-warning); color: var(--arch-color-warning); }
+.arch-badge[data-variant="outline"][data-color="danger"]  { border: 1px solid var(--arch-color-danger);  color: var(--arch-color-danger); }
+.arch-badge[data-variant="outline"][data-color="info"]    { border: 1px solid var(--arch-color-info);    color: var(--arch-color-info); }
+.arch-badge[data-variant="outline"][data-color="gray"]    { @apply border border-gray-300 text-gray-600; }
+
+/* Avatar */
+.arch-avatar { @apply inline-flex items-center justify-center rounded-full overflow-hidden; }
+.arch-avatar[data-size="xs"] { @apply w-6 h-6; }
+.arch-avatar[data-size="sm"] { @apply w-8 h-8; }
+.arch-avatar[data-size="md"] { @apply w-10 h-10; }
+.arch-avatar[data-size="lg"] { @apply w-12 h-12; }
+.arch-avatar[data-size="xl"] { @apply w-16 h-16; }
+.arch-avatar__img { @apply w-full h-full object-cover; }
+.arch-avatar__initials { @apply w-full h-full flex items-center justify-center font-medium text-white; font-size: var(--arch-font-size-sm); }
+.arch-avatar-group { display: flex; }
+.arch-avatar-group .arch-avatar { margin-left: -0.5rem; box-shadow: 0 0 0 2px var(--arch-color-surface); }
+.arch-avatar-group__overflow { @apply inline-flex items-center justify-center; border-radius: var(--arch-radius-full); background: var(--arch-color-border); color: var(--arch-color-text-muted); font-size: var(--arch-font-size-xs); font-weight: var(--arch-font-weight-medium); }
+
+/* Icon */
+.arch-icon { display: inline-flex; align-items: center; justify-content: center; }
+.arch-icon[data-size="xs"] { font-size: 0.75rem; width: 0.75rem; height: 0.75rem; }
+.arch-icon[data-size="sm"] { font-size: 0.875rem; width: 0.875rem; height: 0.875rem; }
+.arch-icon[data-size="md"] { font-size: 1rem; width: 1rem; height: 1rem; }
+.arch-icon[data-size="lg"] { font-size: 1.25rem; width: 1.25rem; height: 1.25rem; }
+.arch-icon[data-size="xl"] { font-size: 1.5rem; width: 1.5rem; height: 1.5rem; }
+.arch-icon[data-color="primary"] { color: var(--arch-color-primary); }
+.arch-icon[data-color="success"] { color: var(--arch-color-success); }
+.arch-icon[data-color="warning"] { color: var(--arch-color-warning); }
+.arch-icon[data-color="danger"]  { color: var(--arch-color-danger); }
+.arch-icon[data-color="info"]    { color: var(--arch-color-info); }
+.arch-icon[data-color="muted"]   { color: var(--arch-color-text-muted); }
+
+/* Button */
+.arch-button { @apply inline-flex items-center justify-center gap-2 font-medium transition-colors rounded-md; border-radius: var(--arch-radius-md); }
+.arch-button[data-size="sm"] { @apply px-3 py-1.5 text-sm; }
+.arch-button[data-size="md"] { @apply px-4 py-2 text-sm; }
+.arch-button[data-size="lg"] { @apply px-5 py-2.5 text-base; }
+/* Solid */
+.arch-button[data-variant="solid"][data-color="primary"] { background-color: var(--arch-color-primary); color: #fff; }
+.arch-button[data-variant="solid"][data-color="primary"]:hover { background-color: var(--arch-color-primary-dark); }
+.arch-button[data-variant="solid"][data-color="danger"]  { background-color: var(--arch-color-danger);  color: #fff; }
+.arch-button[data-variant="solid"][data-color="success"] { background-color: var(--arch-color-success); color: #fff; }
+.arch-button[data-variant="solid"][data-color="warning"] { background-color: var(--arch-color-warning); color: #fff; }
+.arch-button[data-variant="solid"][data-color="info"]    { background-color: var(--arch-color-info);    color: #fff; }
+.arch-button[data-variant="solid"][data-color="gray"]    { @apply bg-gray-500 text-white; }
+.arch-button[data-variant="solid"][data-color="secondary"] { @apply bg-gray-500 text-white; }
+/* Outline */
+.arch-button[data-variant="outline"][data-color="primary"] { border: 1px solid var(--arch-color-primary); color: var(--arch-color-primary); background: transparent; }
+.arch-button[data-variant="outline"][data-color="danger"]  { border: 1px solid var(--arch-color-danger);  color: var(--arch-color-danger); background: transparent; }
+.arch-button[data-variant="outline"][data-color="success"] { border: 1px solid var(--arch-color-success); color: var(--arch-color-success); background: transparent; }
+.arch-button[data-variant="outline"][data-color="warning"] { border: 1px solid var(--arch-color-warning); color: var(--arch-color-warning); background: transparent; }
+.arch-button[data-variant="outline"][data-color="info"]    { border: 1px solid var(--arch-color-info);    color: var(--arch-color-info);    background: transparent; }
+.arch-button[data-variant="outline"][data-color="gray"]    { @apply border border-gray-300 text-gray-600; background: transparent; }
+.arch-button[data-variant="outline"][data-color="secondary"] { @apply border border-gray-300 text-gray-600; background: transparent; }
+/* Ghost */
+.arch-button[data-variant="ghost"] { background: transparent; color: var(--arch-color-text); }
+.arch-button[data-variant="ghost"]:hover { background-color: var(--arch-color-surface-alt); }
+
+/* Link */
+.arch-link { color: var(--arch-color-primary); text-decoration: underline; text-underline-offset: 2px; }
+.arch-link:hover { color: var(--arch-color-primary-dark); }
+
+/* Kbd */
+.arch-kbd { @apply inline-flex items-center; font-family: var(--arch-font-family-mono); font-size: var(--arch-font-size-xs); background: var(--arch-color-surface-alt); border: 1px solid var(--arch-color-border); border-radius: var(--arch-radius-sm); box-shadow: 0 1px 0 var(--arch-color-border); padding: 0.125rem 0.375rem; }
+
+/* Split button */
+.arch-split-button { position: relative; display: inline-flex; }
+.arch-split-button__primary { border-right: none; border-radius: var(--arch-radius-md) 0 0 var(--arch-radius-md); }
+.arch-split-button__toggle  { border-radius: 0 var(--arch-radius-md) var(--arch-radius-md) 0; }
+.arch-split-button__menu    { position: absolute; top: 100%; z-index: var(--arch-z-dropdown); background: var(--arch-color-surface); border-radius: var(--arch-radius-md); box-shadow: var(--arch-shadow-md); }
+
+/* Callout */
+.arch-callout { @apply flex gap-3 rounded-lg p-4; border-left: 4px solid; }
+.arch-callout[data-type="info"]    { background-color: var(--arch-color-info-muted);    border-color: var(--arch-color-info); }
+.arch-callout[data-type="success"] { background-color: var(--arch-color-success-muted); border-color: var(--arch-color-success); }
+.arch-callout[data-type="warning"] { background-color: var(--arch-color-warning-muted); border-color: var(--arch-color-warning); }
+.arch-callout[data-type="danger"]  { background-color: var(--arch-color-danger-muted);  border-color: var(--arch-color-danger); }
+.arch-callout__icon   { @apply flex-shrink-0; }
+.arch-callout__body   { @apply flex-1 min-w-0; }
+.arch-callout__title  { font-size: var(--arch-font-size-sm); font-weight: var(--arch-font-weight-semibold); margin-bottom: 0.25rem; }
+.arch-callout__content { font-size: var(--arch-font-size-sm); }
+.arch-callout__dismiss { @apply flex-shrink-0 self-start opacity-60 hover:opacity-100; }
+
+/* Empty state */
+.arch-empty-state { @apply flex flex-col items-center justify-center text-center py-12 px-6; }
+.arch-empty-state__icon  { font-size: 2.5rem; color: var(--arch-color-text-muted); margin-bottom: var(--arch-gap-md); }
+.arch-empty-state__title { font-size: var(--arch-font-size-lg); font-weight: var(--arch-font-weight-semibold); color: var(--arch-color-text); margin-bottom: var(--arch-gap-sm); }
+.arch-empty-state__description { font-size: var(--arch-font-size-sm); color: var(--arch-color-text-muted); margin-bottom: var(--arch-gap-md); }
+.arch-empty-state__action { }
+
+/* Skeleton */
+.arch-skeleton { animation: var(--arch-animation-pulse); background-color: var(--arch-color-border); border-radius: var(--arch-radius-md); }
+.arch-skeleton[data-variant="lines"] { @apply flex flex-col gap-2; background-color: transparent; border-radius: 0; }
+.arch-skeleton__line { height: 0.875rem; background-color: var(--arch-color-border); border-radius: var(--arch-radius-md); }
+.arch-skeleton[data-variant="lines"] .arch-skeleton__line:last-child { width: 60%; }
+.arch-skeleton[data-variant="avatar"] { @apply w-10 h-10; background-color: var(--arch-color-border); border-radius: var(--arch-radius-full); }
+.arch-skeleton[data-variant="card"] { height: 8rem; background-color: var(--arch-color-border); border-radius: var(--arch-radius-lg); }
+.arch-skeleton[data-variant="table-row"] { height: 2.5rem; background-color: var(--arch-color-border); border-radius: var(--arch-radius-md); }
+
+/* Loader / spinner */
+.arch-loader { display: inline-block; }
+.arch-loader[data-variant="spinner"] { animation: var(--arch-animation-spin); border: 2px solid var(--arch-color-border); border-top-color: var(--arch-color-primary); border-radius: 50%; }
+.arch-loader[data-variant="spinner"][data-size="sm"] { width: 1rem; height: 1rem; }
+.arch-loader[data-variant="spinner"][data-size="md"] { width: 1.5rem; height: 1.5rem; }
+.arch-loader[data-variant="spinner"][data-size="lg"] { width: 2rem; height: 2rem; }
+.arch-loader[data-variant="dots"] { @apply flex gap-1; }
+.arch-loader[data-variant="progress"] { background: var(--arch-color-border); border-radius: var(--arch-radius-full); height: 0.375rem; overflow: hidden; position: relative; }
+.arch-loader[data-color="success"] { border-top-color: var(--arch-color-success); }
+.arch-loader[data-color="danger"] { border-top-color: var(--arch-color-danger); }
+.arch-loader[data-color="warning"] { border-top-color: var(--arch-color-warning); }
+
+/* Navigation */
+.arch-breadcrumbs { @apply flex items-center gap-1 text-sm; color: var(--arch-color-text-muted); }
+.arch-breadcrumb-item + .arch-breadcrumb-item::before { content: '/'; color: var(--arch-color-text-muted); @apply mx-1; }
+.arch-breadcrumb-item[data-current="true"] { color: var(--arch-color-text); font-weight: var(--arch-font-weight-medium); }
+.arch-pagination { @apply flex items-center gap-1; }
+.arch-pagination__btn { @apply px-3 py-1.5 rounded-md text-sm; border-radius: var(--arch-radius-md); }
+.arch-pagination__btn[data-active="true"] { background-color: var(--arch-color-primary); color: #fff; }
+.arch-pagination__item[data-disabled="true"] .arch-pagination__btn { opacity: var(--arch-opacity-disabled); cursor: not-allowed; }
+.arch-pagination-bar { @apply flex flex-wrap items-center justify-between gap-3 text-sm px-1 py-2; }
+.arch-pagination-bar__per-page { @apply flex items-center gap-2; color: var(--arch-color-text-muted); }
+.arch-pagination-bar__label { font-size: var(--arch-font-size-xs); }
+.arch-pagination-bar__summary { font-size: var(--arch-font-size-xs); color: var(--arch-color-text-muted); }
+
+/* Input wrapper (error-ring around a form control) */
+.arch-input-wrapper { position: relative; }
+.arch-input-wrapper[data-invalid="true"] { box-shadow: 0 0 0 1px var(--arch-color-danger) inset; border-radius: var(--arch-radius-lg); }
+
+/* Field disabled-via-Field::disabled() wrapper — see forms/partials/structure-item.blade.php */
+[data-disabled="true"] { opacity: var(--arch-opacity-disabled); }
+[data-disabled="true"] input,
+[data-disabled="true"] select,
+[data-disabled="true"] textarea,
+[data-disabled="true"] button {
+    pointer-events: none;
+}
+
+/* Tab bar */
+.arch-tab-bar { @apply flex items-center gap-1; }
+.arch-tab { @apply px-4 py-2 rounded-md text-sm font-medium; border-radius: var(--arch-radius-md); transition: background-color var(--arch-transition); }
+.arch-tab[data-active="true"] { background-color: var(--arch-color-primary); color: #fff; }
+.arch-tab[data-style="page"] { @apply px-4 py-2 rounded-none border-b-2 border-transparent; }
+.arch-tab[data-style="page"][data-active="true"] { border-bottom-color: var(--arch-color-primary); background: transparent; color: var(--arch-color-primary); }
+
+/* Floating layers — z-index set via tokens */
+.arch-dropdown { position: relative; }
+.arch-dropdown-menu[data-align="right"] { right: 0; left: auto; }
+.arch-dropdown-menu[data-align="left"] { left: 0; right: auto; }
+.arch-modal__backdrop { position: fixed; inset: 0; z-index: var(--arch-z-modal); background: rgb(0 0 0 / 0.4); }
+.arch-modal__wrapper  { position: fixed; inset: 0; z-index: var(--arch-z-modal); display: flex; align-items: center; justify-content: center; }
+.arch-modal__panel    { box-shadow: var(--arch-shadow-lg); background: var(--arch-color-surface); border-radius: var(--arch-radius-lg); }
+.arch-toast { z-index: var(--arch-z-toast); }
+
+/* Slide-over panels */
+.arch-slide-over { position: fixed; top: 0; right: 0; height: 100%; z-index: var(--arch-z-slide-over); background: var(--arch-color-surface); box-shadow: var(--arch-shadow-lg); display: flex; flex-direction: column; }
+.arch-slide-over[data-position="left"] { left: 0; right: auto; }
+.arch-slide-over[data-width="sm"] { width: 24rem; }
+.arch-slide-over[data-width="md"] { width: 36rem; }
+.arch-slide-over[data-width="lg"] { width: 48rem; }
+
+/* Step wizard */
+.arch-wizard { @apply flex flex-col gap-6; }
+.arch-wizard__steps { @apply flex items-start gap-6; }
+.arch-wizard__step { @apply flex flex-col items-center gap-1 text-center; flex: 1; }
+.arch-wizard__step[data-state="complete"] { color: var(--arch-color-success); }
+.arch-wizard__step[data-state="current"]  { color: var(--arch-color-primary); }
+.arch-wizard__step[data-state="upcoming"] { color: var(--arch-color-text-muted); }
+.arch-wizard__step-number { @apply inline-flex items-center justify-center w-6 h-6 rounded-full text-xs; border: 1px solid currentColor; }
+.arch-wizard__step-label { font-size: var(--arch-font-size-sm); font-weight: var(--arch-font-weight-medium); }
+.arch-wizard__step-description { font-size: var(--arch-font-size-xs); color: var(--arch-color-text-muted); }
+.arch-wizard__panel { @apply mt-2; }
+
+/* Progress */
+.arch-progress { @apply flex flex-col gap-1; }
+.arch-progress__header { @apply flex items-center justify-between text-sm; }
+.arch-progress__label { color: var(--arch-color-text); }
+.arch-progress__value { color: var(--arch-color-text-muted); }
+.arch-progress__track { background: var(--arch-color-border); border-radius: var(--arch-radius-full); overflow: hidden; height: 0.5rem; }
+.arch-progress__fill  { background: var(--arch-color-primary); transition: width var(--arch-transition); height: 100%; }
+.arch-progress[data-color="success"] .arch-progress__fill { background: var(--arch-color-success); }
+.arch-progress[data-color="danger"]  .arch-progress__fill { background: var(--arch-color-danger); }
+.arch-progress[data-color="warning"] .arch-progress__fill { background: var(--arch-color-warning); }
+
+/* Timeline */
+.arch-timeline { @apply flex flex-col; }
+.arch-timeline-item { display: grid; grid-template-columns: 1.5rem 2px 1fr; gap: 0 var(--arch-gap-sm); }
+.arch-timeline-item__indicator { @apply flex items-center justify-center w-6 h-6 text-xs text-white; background: var(--arch-color-primary); border-radius: var(--arch-radius-full); }
+.arch-timeline-item__connector { background: var(--arch-color-border); width: 2px; justify-self: center; }
+.arch-timeline-item[data-last="true"] .arch-timeline-item__connector { visibility: hidden; }
+.arch-timeline-item__content { @apply pb-4; }
+.arch-timeline-item__title { font-weight: var(--arch-font-weight-medium); color: var(--arch-color-text); }
+.arch-timeline-item__timestamp { font-size: var(--arch-font-size-xs); color: var(--arch-color-text-muted); }
+.arch-timeline-item__body { font-size: var(--arch-font-size-sm); @apply mt-1; }
+
+/* Tables */
+.arch-table { width: 100%; border-collapse: separate; border-spacing: 0; }
+.arch-th { font-size: var(--arch-font-size-xs); font-weight: var(--arch-font-weight-semibold); color: var(--arch-color-text-muted); @apply px-4 py-3 text-left uppercase tracking-wide; }
+.arch-td { font-size: var(--arch-font-size-sm); @apply px-4 py-3; }
+.arch-tr { border-bottom: 1px solid var(--arch-color-border); }
+.arch-tr:hover { background-color: var(--arch-color-surface-alt); }
+.arch-tr[data-state="selected"] { background-color: var(--arch-color-primary-muted); }
+
+/* Forms */
+.arch-form { @apply flex flex-col; gap: var(--arch-gap-lg); }
+.arch-form__section { border: 1px solid var(--arch-color-border); border-radius: var(--arch-radius-lg); @apply p-6; }
+.arch-form__section-header { margin-bottom: var(--arch-gap-md); }
+.arch-form__section-title { font-size: var(--arch-font-size-lg); font-weight: var(--arch-font-weight-semibold); color: var(--arch-color-text); }
+.arch-form__section-description { font-size: var(--arch-font-size-sm); color: var(--arch-color-text-muted); margin-top: 0.25rem; }
+.arch-form__section-body { @apply flex flex-col; gap: var(--arch-gap-md); }
+.arch-form__row { display: grid; gap: var(--arch-gap-md); }
+.arch-form__actions { display: flex; align-items: center; gap: var(--arch-gap-sm); @apply pt-2; }
+
+/* Field wrapper (shared by every Forms\Fields\* view) */
+.arch-field { @apply flex flex-col; gap: var(--arch-gap-xs); }
+.arch-field__label { font-size: var(--arch-font-size-sm); font-weight: var(--arch-font-weight-medium); color: var(--arch-color-text); }
+.arch-field__required { color: var(--arch-color-danger); margin-left: 0.125rem; }
+.arch-field__control { display: flex; flex-direction: column; }
+.arch-field__hint { font-size: var(--arch-font-size-xs); color: var(--arch-color-text-muted); }
+.arch-field__error { font-size: var(--arch-font-size-xs); color: var(--arch-color-danger); }
+.arch-field__char-count { font-size: var(--arch-font-size-xs); color: var(--arch-color-text-muted); text-align: right; }
+.arch-field__static { font-size: var(--arch-font-size-sm); color: var(--arch-color-text); }
+.arch-field[data-invalid="true"] .arch-input,
+.arch-field[data-invalid="true"] .arch-select,
+.arch-field[data-invalid="true"] .arch-textarea { border-color: var(--arch-color-danger); }
+
+/* Native-style inputs */
+.arch-input,
+.arch-select,
+.arch-textarea { @apply w-full px-3 py-2 text-sm; background: var(--arch-color-surface); color: var(--arch-color-text); border: 1px solid var(--arch-color-border); border-radius: var(--arch-radius-md); transition: border-color var(--arch-transition); }
+.arch-input:focus,
+.arch-select:focus,
+.arch-textarea:focus { outline: none; border-color: var(--arch-color-primary); box-shadow: 0 0 0 2px var(--arch-color-focus-ring); }
+.arch-textarea { resize: vertical; min-height: 4rem; }
+
+/* Checkbox / Radio */
+.arch-checkbox,
+.arch-radio { @apply inline-flex items-center gap-2; font-size: var(--arch-font-size-sm); cursor: pointer; }
+.arch-checkbox__input,
+.arch-radio__input { width: 1rem; height: 1rem; accent-color: var(--arch-color-primary); }
+.arch-radio-group { @apply flex flex-col; gap: var(--arch-gap-sm); }
+.arch-radio-group[data-inline="true"] { @apply flex-row flex-wrap; gap: var(--arch-gap-md); }
+.arch-checkbox-list__options { display: grid; gap: var(--arch-gap-sm); }
+.arch-checkbox-list[data-columns="2"] .arch-checkbox-list__options { @apply grid-cols-2; }
+.arch-checkbox-list[data-columns="3"] .arch-checkbox-list__options { @apply grid-cols-3; }
+.arch-checkbox-list__search { margin-bottom: var(--arch-gap-sm); }
+
+/* Toggle */
+.arch-toggle__row { @apply inline-flex items-center gap-2; cursor: pointer; }
+.arch-toggle__switch { width: 2.5rem; height: 1.5rem; border-radius: var(--arch-radius-full); background: var(--arch-color-border); position: relative; transition: background-color var(--arch-transition); border: none; padding: 0; }
+.arch-toggle__switch[data-on="true"] { background: var(--arch-color-primary); }
+.arch-toggle__thumb { position: absolute; top: 0.125rem; left: 0.125rem; width: 1.25rem; height: 1.25rem; border-radius: 50%; background: #fff; transition: transform var(--arch-transition); }
+.arch-toggle__switch[data-on="true"] .arch-toggle__thumb { transform: translateX(1rem); }
+.arch-toggle__label { font-size: var(--arch-font-size-sm); color: var(--arch-color-text-muted); }
+
+/* Toggle buttons */
+.arch-toggle-buttons { display: inline-flex; border-radius: var(--arch-radius-md); overflow: hidden; border: 1px solid var(--arch-color-border); }
+.arch-toggle-buttons__item { @apply px-3 py-1.5 text-sm; background: var(--arch-color-surface); border-right: 1px solid var(--arch-color-border); }
+.arch-toggle-buttons__item:last-child { border-right: none; }
+.arch-toggle-buttons__item[data-active="true"] { background: var(--arch-color-primary); color: #fff; }
+
+/* Slider */
+.arch-slider { @apply flex items-center gap-3; }
+.arch-slider__input { flex: 1; accent-color: var(--arch-color-primary); }
+.arch-slider__value { font-size: var(--arch-font-size-sm); color: var(--arch-color-text-muted); min-width: 2.5rem; text-align: right; }
+
+/* Combobox (lookup) */
+.arch-combobox { position: relative; }
+.arch-combobox__trigger { @apply w-full px-3 py-2 text-sm text-left flex items-center justify-between gap-2; background: var(--arch-color-surface); border: 1px solid var(--arch-color-border); border-radius: var(--arch-radius-md); }
+.arch-combobox[data-invalid="true"] .arch-combobox__trigger { border-color: var(--arch-color-danger); }
+.arch-combobox__placeholder { color: var(--arch-color-text-muted); }
+.arch-combobox__clear { color: var(--arch-color-text-muted); }
+.arch-combobox__dropdown { position: absolute; top: 100%; left: 0; right: 0; z-index: var(--arch-z-dropdown); background: var(--arch-color-surface); border: 1px solid var(--arch-color-border); border-radius: var(--arch-radius-md); box-shadow: var(--arch-shadow-md); margin-top: 0.25rem; }
+.arch-combobox__search { @apply w-full px-3 py-2 text-sm; border: none; border-bottom: 1px solid var(--arch-color-border); }
+.arch-combobox__options { max-height: 16rem; overflow-y: auto; }
+.arch-combobox__option { @apply px-3 py-2 text-sm; cursor: pointer; }
+.arch-combobox__option:hover,
+.arch-combobox__option[data-active="true"] { background: var(--arch-color-surface-alt); }
+.arch-combobox__option.selected { color: var(--arch-color-primary); font-weight: var(--arch-font-weight-medium); }
+.arch-combobox__loading,
+.arch-combobox__empty { @apply px-3 py-2 text-sm; color: var(--arch-color-text-muted); }
+
+/* File upload */
+.arch-file-upload { position: relative; }
+.arch-file-upload__dropzone { @apply flex flex-col items-center justify-center text-center px-6 py-8; border: 2px dashed var(--arch-color-border); border-radius: var(--arch-radius-lg); cursor: pointer; }
+.arch-file-upload[data-dragging="true"] .arch-file-upload__dropzone { border-color: var(--arch-color-primary); background: var(--arch-color-primary-muted); }
+.arch-file-upload__text { font-size: var(--arch-font-size-sm); color: var(--arch-color-text); }
+.arch-file-upload__hint { font-size: var(--arch-font-size-xs); color: var(--arch-color-text-muted); }
+.arch-file-upload__input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+
+/* Rich / markdown editor */
+.arch-rich-editor,
+.arch-markdown-editor { border: 1px solid var(--arch-color-border); border-radius: var(--arch-radius-md); overflow: hidden; }
+.arch-rich-editor__toolbar,
+.arch-markdown-editor__toolbar { @apply flex items-center gap-1 px-2 py-1.5; border-bottom: 1px solid var(--arch-color-border); background: var(--arch-color-surface-alt); }
+.arch-rich-editor__content { @apply px-3 py-2 text-sm; min-height: 8rem; }
+.arch-markdown-editor__tool { @apply px-2 py-1 text-xs; border-radius: var(--arch-radius-sm); }
+.arch-markdown-editor__tool:hover { background: var(--arch-color-border); }
+.arch-markdown-editor__preview-toggle { @apply ml-auto px-2 py-1 text-xs; color: var(--arch-color-primary); }
+.arch-markdown-editor__preview { @apply px-3 py-2 text-sm; min-height: 8rem; white-space: pre-wrap; }
+
+/* Code editor */
+.arch-code-editor { border: 1px solid var(--arch-color-border); border-radius: var(--arch-radius-md); overflow: hidden; }
+
+/* Repeater / Builder */
+.arch-repeater,
+.arch-builder { @apply flex flex-col; gap: var(--arch-gap-sm); }
+.arch-repeater__row,
+.arch-builder__block { border: 1px solid var(--arch-color-border); border-radius: var(--arch-radius-md); @apply p-4 flex flex-col; gap: var(--arch-gap-sm); }
+.arch-repeater__row-fields,
+.arch-builder__block-fields { display: grid; gap: var(--arch-gap-sm); }
+.arch-builder__block-header { @apply flex items-center justify-between; }
+.arch-builder__add-menu { @apply flex items-center gap-2 flex-wrap; }
+.arch-repeater__sub-field { @apply flex flex-col; gap: var(--arch-gap-xs); }
+.arch-repeater__remove { font-size: var(--arch-font-size-xs); color: var(--arch-color-danger); align-self: flex-end; }
+
+/* Tags input */
+.arch-tags-input { @apply flex flex-col; gap: var(--arch-gap-sm); border: 1px solid var(--arch-color-border); border-radius: var(--arch-radius-md); @apply p-2; }
+.arch-tags-input__tags { @apply flex flex-wrap gap-1; }
+
+/* Key/value */
+.arch-key-value { @apply flex flex-col; gap: var(--arch-gap-sm); }
+.arch-key-value__header { display: grid; grid-template-columns: 1fr 1fr; gap: var(--arch-gap-sm); font-size: var(--arch-font-size-xs); color: var(--arch-color-text-muted); }
+.arch-key-value__row { display: grid; grid-template-columns: 1fr 1fr auto; gap: var(--arch-gap-sm); align-items: center; }
+
+/* Color picker */
+.arch-color-picker { @apply flex items-center gap-2; position: relative; }
+.arch-color-picker__swatch { width: 2rem; height: 2rem; border-radius: var(--arch-radius-md); border: 1px solid var(--arch-color-border); flex-shrink: 0; }
+.arch-color-picker__native { position: absolute; top: 100%; left: 0; z-index: var(--arch-z-dropdown); }
+
+/* Fieldset (grouping-only structure item) */
+.arch-fieldset { border: 1px solid var(--arch-color-border); border-radius: var(--arch-radius-lg); @apply p-4; }
+.arch-fieldset__legend { font-size: var(--arch-font-size-sm); font-weight: var(--arch-font-weight-semibold); color: var(--arch-color-text); @apply px-1; }
+
+/* Stats & Charts */
+.arch-stat { }
+.arch-stat__value { font-size: var(--arch-font-size-2xl); font-weight: var(--arch-font-weight-bold); color: var(--arch-color-text); }
+.arch-stat__label { font-size: var(--arch-font-size-sm); color: var(--arch-color-text-muted); }
+.arch-stat__change { font-size: var(--arch-font-size-sm); }
+.arch-stat__change[data-trend="up"]   { color: var(--arch-color-success); }
+.arch-stat__change[data-trend="down"] { color: var(--arch-color-danger); }
+.arch-chart { }
+
+/* Universal interactive state hooks */
+[class*="arch-"]:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--arch-color-focus-ring);
+}
+[class*="arch-"][disabled],
+[class*="arch-"][data-disabled="true"] {
+    opacity: var(--arch-opacity-disabled);
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+/* Keyframe animations */
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(360deg); }
+}
+
+/* ── Table / Navigator / Stats / Toolbar subsystem classes ──────────────────
+   Flat (non-data-attribute) class families used by views migrated from the
+   host app's legacy markup. Kept as their own flat-class system rather than
+   retrofitted onto the data-attribute components above, since that would
+   require restructuring the Blade markup itself, not just renaming strings.
+   ─────────────────────────────────────────────────────────────────────── */
+
+/* Alerts */
+.arch-alert { @apply flex items-start gap-3 rounded-lg p-4 text-sm; border-left: 4px solid; }
+.arch-alert-danger  { background-color: var(--arch-color-danger-muted);  border-color: var(--arch-color-danger);  color: var(--arch-color-danger); }
+.arch-alert-success { background-color: var(--arch-color-success-muted); border-color: var(--arch-color-success); color: var(--arch-color-success); }
+.arch-alert-warning  { background-color: var(--arch-color-warning-muted); border-color: var(--arch-color-warning); color: var(--arch-color-warning); }
+
+/* Badge flat modifiers (legacy markup alongside the data-attribute badge component) */
+.arch-badge-secondary  { @apply inline-flex items-center px-2.5 py-1 text-sm font-medium bg-gray-100 text-gray-600 rounded-full; }
+.arch-badge-primary-lt { @apply inline-flex items-center px-2.5 py-1 text-sm font-medium rounded-full; background-color: var(--arch-color-primary-muted); color: var(--arch-color-primary-dark); }
+
+/* Button flat family (legacy markup alongside the data-attribute button component) */
+.arch-btn { @apply inline-flex items-center justify-center gap-2 font-medium transition-colors; border-radius: var(--arch-radius-md); @apply px-4 py-2 text-sm; }
+.arch-btn-sm { @apply px-3 py-1.5 text-sm; }
+.arch-btn-xs { @apply px-2 py-1 text-xs; }
+.arch-btn-primary   { background-color: var(--arch-color-primary); color: #fff; }
+.arch-btn-primary:hover { background-color: var(--arch-color-primary-dark); }
+.arch-btn-secondary { @apply bg-gray-500 text-white; }
+.arch-btn-danger    { background-color: var(--arch-color-danger);  color: #fff; }
+.arch-btn-success   { background-color: var(--arch-color-success); color: #fff; }
+.arch-btn-warning   { background-color: var(--arch-color-warning); color: #fff; }
+.arch-btn-outline-primary   { border: 1px solid var(--arch-color-primary); color: var(--arch-color-primary); background: transparent; }
+.arch-btn-outline-secondary { @apply border border-gray-300 text-gray-600; background: transparent; }
+.arch-btn-outline-danger    { border: 1px solid var(--arch-color-danger);  color: var(--arch-color-danger);  background: transparent; }
+.arch-btn-outline-success   { border: 1px solid var(--arch-color-success); color: var(--arch-color-success); background: transparent; }
+.arch-btn-link  { background: transparent; color: var(--arch-color-primary); text-decoration: underline; padding: 0; }
+.arch-btn-close { @apply inline-flex items-center justify-center w-6 h-6 rounded-full; background: transparent; color: var(--arch-color-text-muted); }
+.arch-btn-close:hover { background-color: var(--arch-color-surface-alt); }
+
+/* Card */
+.arch-card { background: var(--arch-color-surface); border: 1px solid var(--arch-color-border); border-radius: var(--arch-radius-lg); box-shadow: var(--arch-shadow-sm); }
+.arch-card[data-shadow="false"] { box-shadow: none; }
+.arch-card-header { border-bottom: 1px solid var(--arch-color-border); @apply flex items-center justify-between px-4 py-3; }
+.arch-card-title  { font-weight: var(--arch-font-weight-semibold); color: var(--arch-color-text); }
+.arch-card-body   { @apply p-4; }
+.arch-card-footer { border-top: 1px solid var(--arch-color-border); @apply px-4 py-3; }
+
+/* Section */
+.arch-section { @apply flex flex-col gap-4; }
+.arch-section__header { @apply flex items-start justify-between gap-4; }
+.arch-section[data-divided="true"] .arch-section__header { border-bottom: 1px solid var(--arch-color-border); @apply pb-4; }
+.arch-section__title { font-weight: var(--arch-font-weight-semibold); font-size: var(--arch-font-size-lg); color: var(--arch-color-text); }
+.arch-section__description { font-size: var(--arch-font-size-sm); color: var(--arch-color-text-muted); }
+.arch-section__actions { @apply flex items-center gap-2; }
+
+/* Content entries (read-only record-detail display) */
+.arch-entry { @apply flex flex-col gap-1; }
+.arch-entry__label { font-size: var(--arch-font-size-xs); font-weight: var(--arch-font-weight-medium); color: var(--arch-color-text-muted); }
+.arch-entry__value { @apply flex items-center gap-2; font-size: var(--arch-font-size-sm); color: var(--arch-color-text); }
+.arch-entry__placeholder { color: var(--arch-color-text-muted); font-style: italic; }
+.arch-entry__copy { @apply inline-flex items-center justify-center w-6 h-6 rounded-md; background: transparent; color: var(--arch-color-text-muted); cursor: pointer; }
+.arch-entry__copy:hover { background-color: var(--arch-color-surface-alt); }
+.arch-entry__image { border-radius: var(--arch-radius-md); max-width: 100%; }
+.arch-entry__image[data-rounded="true"] { border-radius: var(--arch-radius-full); }
+.arch-entry__swatch { @apply inline-block w-5 h-5; border-radius: var(--arch-radius-sm); border: 1px solid var(--arch-color-border); }
+.arch-entry__swatch[data-circle="true"] { border-radius: var(--arch-radius-full); }
+.arch-entry__swatch-hex { font-family: var(--arch-font-family-mono); font-size: var(--arch-font-size-xs); color: var(--arch-color-text-muted); }
+.arch-entry__code { position: relative; background: var(--arch-color-surface-alt); border-radius: var(--arch-radius-md); @apply p-3; }
+.arch-entry__code pre { font-family: var(--arch-font-family-mono); font-size: var(--arch-font-size-sm); white-space: pre-wrap; word-break: break-word; margin: 0; }
+.arch-entry__code .arch-entry__copy { position: absolute; top: 0.5rem; right: 0.5rem; }
+.arch-entry__repeatable-item { background: var(--arch-color-surface-alt); border-radius: var(--arch-radius-md); @apply p-3; }
+
+/* Checkbox / switch (flat, legacy markup) */
+.arch-check { @apply inline-flex items-center gap-2; }
+.arch-check-input { width: 1rem; height: 1rem; accent-color: var(--arch-color-primary); }
+.arch-check-label { font-size: var(--arch-font-size-sm); color: var(--arch-color-text); }
+.arch-switch { @apply inline-flex items-center gap-2; }
+.arch-switch-input { width: 2.5rem; height: 1.5rem; accent-color: var(--arch-color-primary); }
+
+/* Chip (removable tag) */
+.arch-chip { @apply inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-full; background-color: var(--arch-color-primary-muted); color: var(--arch-color-primary-dark); }
+.arch-chip-remove { cursor: pointer; opacity: 0.7; }
+.arch-chip-remove:hover { opacity: 1; }
+
+/* Combobox — flat single-hyphen variant used by Table/Filters lookup markup
+   (distinct from the double-underscore Forms\Fields\LookupField combobox above). */
+.arch-combobox-trigger { @apply w-full px-3 py-2 text-sm text-left flex items-center justify-between gap-2; background: var(--arch-color-surface); border: 1px solid var(--arch-color-border); border-radius: var(--arch-radius-md); }
+.arch-combobox-dropdown { position: absolute; z-index: var(--arch-z-dropdown); background: var(--arch-color-surface); border: 1px solid var(--arch-color-border); border-radius: var(--arch-radius-md); box-shadow: var(--arch-shadow-md); margin-top: 0.25rem; min-width: 100%; }
+.arch-combobox-search-wrap { @apply p-2; border-bottom: 1px solid var(--arch-color-border); }
+.arch-combobox-search,
+.arch-combobox-search-inline { @apply w-full px-3 py-2 text-sm; border: 1px solid var(--arch-color-border); border-radius: var(--arch-radius-md); }
+.arch-combobox-options { max-height: 16rem; overflow-y: auto; }
+.arch-combobox-option { @apply flex items-center gap-2 px-3 py-2 text-sm; cursor: pointer; }
+.arch-combobox-option:hover { background: var(--arch-color-surface-alt); }
+.arch-combobox-value { color: var(--arch-color-text); }
+.arch-combobox-placeholder { color: var(--arch-color-text-muted); }
+.arch-combobox-clear { color: var(--arch-color-text-muted); cursor: pointer; }
+.arch-combobox-chevron { color: var(--arch-color-text-muted); }
+.arch-combobox-loading,
+.arch-combobox-empty { @apply px-3 py-2 text-sm; color: var(--arch-color-text-muted); }
+.arch-combobox-check { width: 1rem; color: var(--arch-color-primary); }
+
+/* Dialog (confirmation modals) */
+.arch-dialog-wrap { position: fixed; inset: 0; z-index: var(--arch-z-modal); display: flex; align-items: center; justify-content: center; }
+.arch-dialog-backdrop { position: fixed; inset: 0; z-index: var(--arch-z-modal); background: rgb(0 0 0 / 0.4); }
+.arch-dialog { position: relative; z-index: calc(var(--arch-z-modal) + 1); background: var(--arch-color-surface); border-radius: var(--arch-radius-lg); box-shadow: var(--arch-shadow-lg); max-width: 32rem; width: 100%; }
+.arch-dialog-header { @apply px-6 py-4; border-bottom: 1px solid var(--arch-color-border); }
+.arch-dialog-title,
+.arch-archive-dialog-title,
+.arch-delete-dialog-title,
+.arch-bulk-reason-dialog-title { font-weight: var(--arch-font-weight-semibold); color: var(--arch-color-text); }
+.arch-dialog-body { @apply px-6 py-4; }
+.arch-dialog-footer { @apply flex items-center justify-end gap-3 px-6 py-4; border-top: 1px solid var(--arch-color-border); }
+.arch-bulk-reason-input { @apply w-full px-3 py-2 text-sm; border: 1px solid var(--arch-color-border); border-radius: var(--arch-radius-md); }
+
+/* Dropdown menu (flat, legacy markup) */
+.arch-dropdown-menu { position: absolute; z-index: var(--arch-z-dropdown); background: var(--arch-color-surface); border: 1px solid var(--arch-color-border); border-radius: var(--arch-radius-md); box-shadow: var(--arch-shadow-md); min-width: 10rem; }
+.arch-dropdown-item { @apply flex items-center gap-2 px-3 py-2 text-sm w-full text-left; cursor: pointer; }
+.arch-dropdown-item:hover { background: var(--arch-color-surface-alt); }
+.arch-dropdown-divider { border-top: 1px solid var(--arch-color-border); margin: 0.25rem 0; }
+
+/* Form misc (flat, legacy markup) */
+.arch-form-hint { font-size: var(--arch-font-size-xs); color: var(--arch-color-text-muted); }
+.arch-input-group { @apply flex items-stretch; }
+.arch-input-addon { @apply inline-flex items-center px-3 text-sm; background: var(--arch-color-surface-alt); border: 1px solid var(--arch-color-border); }
+.arch-input-color { width: 2.5rem; height: 2.5rem; padding: 0.25rem; border: 1px solid var(--arch-color-border); border-radius: var(--arch-radius-md); }
+.arch-input-sm { @apply px-2 py-1 text-sm; }
+.arch-select-sm { @apply px-2 py-1 text-sm; }
+.arch-label { font-size: var(--arch-font-size-sm); font-weight: var(--arch-font-weight-medium); color: var(--arch-color-text); }
+
+/* Skeleton flat modifiers */
+.arch-skeleton-wrapper { @apply flex flex-col; }
+.arch-skeleton--title { height: 1.25rem; width: 40%; }
+.arch-skeleton--text  { height: 0.875rem; width: 100%; }
+.arch-skeleton--short { width: 60%; }
+
+/* Slide-over sub-elements (compose with .arch-slide-over above) */
+.arch-slide-over-backdrop { position: fixed; inset: 0; z-index: calc(var(--arch-z-slide-over) - 1); background: rgb(0 0 0 / 0.3); }
+.arch-slide-over-header { border-bottom: 1px solid var(--arch-color-border); @apply flex items-center justify-between px-6 py-4; }
+.arch-slide-over-title  { font-weight: var(--arch-font-weight-semibold); color: var(--arch-color-text); }
+.arch-slide-over-body   { overflow-y: auto; flex: 1; @apply px-6 py-4; }
+.arch-slide-over-footer { border-top: 1px solid var(--arch-color-border); @apply flex items-center justify-end gap-3 px-6 py-4; }
+
+/* Table modifiers (compose with .arch-table/.arch-th/.arch-td/.arch-tr above) */
+.arch-table-hover .arch-tr:hover { background-color: var(--arch-color-surface-alt); }
+.arch-table-bordered .arch-td,
+.arch-table-bordered .arch-th { border: 1px solid var(--arch-color-border); }
+.arch-table-borderless .arch-td,
+.arch-table-borderless .arch-th { border: none; }
+.arch-table-sm .arch-td,
+.arch-table-sm .arch-th { @apply px-2 py-1.5; }
+
+/* Form panel (Table create/edit — slide-over | modal | page modes) */
+.arch-panel { }
+.arch-panel-backdrop { position: fixed; inset: 0; z-index: var(--arch-z-modal); background: rgb(0 0 0 / 0.4); }
+.arch-panel--slide-over { position: fixed; top: 0; right: 0; height: 100%; z-index: var(--arch-z-slide-over); background: var(--arch-color-surface); box-shadow: var(--arch-shadow-lg); display: flex; flex-direction: column; }
+.arch-panel--modal { position: relative; background: var(--arch-color-surface); border-radius: var(--arch-radius-lg); box-shadow: var(--arch-shadow-lg); display: flex; flex-direction: column; max-height: 90vh; }
+.arch-panel__window { display: flex; flex-direction: column; height: 100%; }
+.arch-panel__window--slide-over { width: 36rem; }
+.arch-panel__window--modal { width: 32rem; margin: auto; }
+.arch-panel__window--xl { width: 56rem; }
+.arch-panel__header { border-bottom: 1px solid var(--arch-color-border); @apply flex items-center justify-between px-6 py-4; }
+.arch-panel__header-copy { @apply flex flex-col; }
+.arch-panel__title { font-weight: var(--arch-font-weight-semibold); color: var(--arch-color-text); }
+.arch-panel__close { color: var(--arch-color-text-muted); cursor: pointer; }
+.arch-panel__body { overflow-y: auto; flex: 1; @apply px-6 py-4; }
+.arch-panel__footer { border-top: 1px solid var(--arch-color-border); @apply flex items-center justify-end gap-3 px-6 py-4; }
+.arch-panel__footer--split { @apply justify-between; }
+
+/* Module tabs workspace */
+.arch-module-tabs { @apply flex flex-col h-full; }
+.arch-module-tabs__bar { @apply flex items-center gap-1; border-bottom: 1px solid var(--arch-color-border); }
+.arch-module-tabs__tabs { @apply flex items-center gap-1 flex-1 overflow-x-auto; }
+.arch-module-tabs__tab { @apply flex items-center gap-2 px-3 py-2 text-sm; border-bottom: 2px solid transparent; white-space: nowrap; }
+.arch-module-tabs__tab--active { border-bottom-color: var(--arch-color-primary); color: var(--arch-color-primary); font-weight: var(--arch-font-weight-medium); }
+.arch-module-tabs__tab--dirty { font-style: italic; }
+.arch-module-tabs__tab--saved { color: var(--arch-color-success); }
+.arch-module-tabs__tab--stale { color: var(--arch-color-warning); }
+.arch-module-tabs__tab--pinned { font-weight: var(--arch-font-weight-medium); }
+.arch-module-tabs__tab--has-dropdown { @apply pr-1; }
+.arch-module-tabs__tab-icon { font-size: var(--arch-font-size-sm); }
+.arch-module-tabs__tab-label { }
+.arch-module-tabs__tab-group { @apply flex items-center; position: relative; }
+.arch-module-tabs__tab-dropdown-toggle { @apply px-2 py-2; }
+.arch-module-tabs__tab-dropdown-panel { position: absolute; top: 100%; right: 0; z-index: var(--arch-z-dropdown); background: var(--arch-color-surface); border: 1px solid var(--arch-color-border); border-radius: var(--arch-radius-md); box-shadow: var(--arch-shadow-md); min-width: 12rem; }
+.arch-module-tabs__close { @apply inline-flex items-center justify-center w-4 h-4 rounded-full; opacity: 0.6; }
+.arch-module-tabs__close:hover { opacity: 1; background: var(--arch-color-surface-alt); }
+.arch-module-tabs__stale-btn { color: var(--arch-color-warning); cursor: pointer; }
+.arch-module-tabs__actions { @apply flex items-center gap-1 px-2; }
+.arch-module-tabs__action-btn { @apply inline-flex items-center justify-center w-8 h-8 rounded-md; color: var(--arch-color-text-muted); }
+.arch-module-tabs__action-btn:hover { background: var(--arch-color-surface-alt); }
+.arch-module-tabs__overflow { position: relative; }
+.arch-module-tabs__overflow-btn { @apply px-2 py-1 text-xs rounded-md; background: var(--arch-color-surface-alt); }
+.arch-module-tabs__overflow-popover { position: absolute; top: 100%; right: 0; z-index: var(--arch-z-dropdown); background: var(--arch-color-surface); border: 1px solid var(--arch-color-border); border-radius: var(--arch-radius-md); box-shadow: var(--arch-shadow-md); min-width: 12rem; max-height: 20rem; overflow-y: auto; }
+.arch-module-tabs__overflow-item { @apply flex items-center gap-2 px-3 py-2 text-sm w-full text-left; cursor: pointer; }
+.arch-module-tabs__overflow-item:hover { background: var(--arch-color-surface-alt); }
+.arch-module-tabs__content { flex: 1; overflow: hidden; position: relative; }
+.arch-module-tabs__panel { height: 100%; overflow-y: auto; }
+.arch-module-tabs__loading { position: absolute; inset: 0; background: var(--arch-color-surface); }
+.arch-module-tabs__context-menu { position: fixed; z-index: var(--arch-z-dropdown); background: var(--arch-color-surface); border: 1px solid var(--arch-color-border); border-radius: var(--arch-radius-md); box-shadow: var(--arch-shadow-md); min-width: 10rem; }
+.arch-module-tabs__context-item { @apply flex items-center px-3 py-2 text-sm w-full text-left; cursor: pointer; }
+.arch-module-tabs__context-item:hover { background: var(--arch-color-surface-alt); }
+.arch-module-tabs__context-item--danger { color: var(--arch-color-danger); }
+.arch-module-tabs__context-divider { border-top: 1px solid var(--arch-color-border); margin: 0.25rem 0; }

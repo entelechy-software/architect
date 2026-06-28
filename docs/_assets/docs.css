@@ -1,0 +1,290 @@
+/* ================================================================
+   Architect Documentation Site — _assets/docs.css
+   Self-contained static site styles (no build step required).
+================================================================ */
+
+/* ── Reset & base ─────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; }
+
+:root {
+  --arch-doc-bg:           #0d1117;
+  --arch-doc-surface:      #161b22;
+  --arch-doc-surface-2:    #21262d;
+  --arch-doc-border:       #30363d;
+  --arch-doc-text:         #c9d1d9;
+  --arch-doc-text-muted:   #8b949e;
+  --arch-doc-text-strong:  #f0f6fc;
+  --arch-doc-accent:       #58a6ff;
+  --arch-doc-accent-dark:  #1f6feb;
+  --arch-doc-success:      #3fb950;
+  --arch-doc-warning:      #d29922;
+  --arch-doc-danger:       #f85149;
+  --arch-doc-sidebar-w:    260px;
+  --arch-doc-toc-w:        220px;
+  --arch-doc-font:         'Inter', system-ui, sans-serif;
+  --arch-doc-mono:         'JetBrains Mono', 'Fira Code', monospace;
+}
+
+[data-theme="light"] {
+  --arch-doc-bg:           #ffffff;
+  --arch-doc-surface:      #f6f8fa;
+  --arch-doc-surface-2:    #eaeef2;
+  --arch-doc-border:       #d0d7de;
+  --arch-doc-text:         #24292f;
+  --arch-doc-text-muted:   #57606a;
+  --arch-doc-text-strong:  #1f2328;
+  --arch-doc-accent:       #0969da;
+  --arch-doc-accent-dark:  #0550ae;
+  --arch-doc-success:      #1a7f37;
+  --arch-doc-warning:      #9a6700;
+  --arch-doc-danger:       #cf222e;
+}
+
+html { font-size: 15px; scroll-behavior: smooth; }
+
+body {
+  font-family: var(--arch-doc-font);
+  background: var(--arch-doc-bg);
+  color: var(--arch-doc-text);
+  margin: 0;
+  display: grid;
+  grid-template-columns: var(--arch-doc-sidebar-w) 1fr var(--arch-doc-toc-w);
+  min-height: 100vh;
+  line-height: 1.65;
+}
+
+/* ── Sidebar ──────────────────────────────────────────────── */
+#sidebar {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+  background: var(--arch-doc-surface);
+  border-right: 1px solid var(--arch-doc-border);
+  padding: 1.5rem 0;
+  font-size: 0.875rem;
+}
+
+.nav-brand { padding: 0 1.25rem 1.5rem; border-bottom: 1px solid var(--arch-doc-border); margin-bottom: 0.75rem; }
+.nav-brand h1 { margin: 0; font-size: 1rem; font-weight: 700; color: var(--arch-doc-text-strong); }
+.nav-brand p  { margin: 0.2rem 0 0; font-size: 0.75rem; color: var(--arch-doc-text-muted); }
+
+.nav-section {
+  padding: 0.6rem 1.25rem 0.2rem;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--arch-doc-text-muted);
+  margin-top: 0.5rem;
+}
+
+#sidebar a {
+  display: block;
+  padding: 0.3rem 1.25rem;
+  color: var(--arch-doc-text);
+  text-decoration: none;
+  border-radius: 4px;
+  margin: 0 0.4rem;
+  transition: background 0.1s;
+}
+#sidebar a.sub { padding-left: 2rem; font-size: 0.82rem; color: var(--arch-doc-text-muted); }
+#sidebar a:hover { background: var(--arch-doc-surface-2); color: var(--arch-doc-text-strong); }
+#sidebar a.active { background: var(--arch-doc-accent-dark); color: #fff; }
+
+/* Theme toggle */
+#theme-toggle {
+  display: block;
+  width: calc(100% - 2.5rem);
+  margin: 1rem 1.25rem 0;
+  padding: 0.45rem 0.75rem;
+  background: var(--arch-doc-surface-2);
+  border: 1px solid var(--arch-doc-border);
+  border-radius: 6px;
+  color: var(--arch-doc-text);
+  font-size: 0.8rem;
+  cursor: pointer;
+  text-align: left;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+#theme-toggle:hover { border-color: var(--arch-doc-accent); }
+
+/* ── Main content ─────────────────────────────────────────── */
+main {
+  max-width: 860px;
+  padding: 2.5rem 3rem 4rem;
+  min-width: 0;
+}
+
+main h1 { font-size: 2rem; font-weight: 700; color: var(--arch-doc-text-strong); margin-top: 0; line-height: 1.3; }
+main h2 { font-size: 1.35rem; font-weight: 600; color: var(--arch-doc-text-strong); margin-top: 2.5rem; padding-top: 1.5rem; border-top: 1px solid var(--arch-doc-border); }
+main h3 { font-size: 1.05rem; font-weight: 600; color: var(--arch-doc-text-strong); margin-top: 1.75rem; }
+main h4 { font-size: 0.95rem; font-weight: 600; color: var(--arch-doc-text-muted); text-transform: uppercase; letter-spacing: 0.04em; margin-top: 1.5rem; }
+main section { margin-bottom: 0.5rem; }
+
+p { margin: 0.75rem 0; }
+p.lead { font-size: 1.05rem; color: var(--arch-doc-text); line-height: 1.7; }
+
+a { color: var(--arch-doc-accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+strong { color: var(--arch-doc-text-strong); }
+
+/* ── Code blocks ──────────────────────────────────────────── */
+pre, code {
+  font-family: var(--arch-doc-mono);
+  font-size: 0.83rem;
+}
+
+code {
+  background: var(--arch-doc-surface-2);
+  border: 1px solid var(--arch-doc-border);
+  border-radius: 4px;
+  padding: 0.1em 0.4em;
+  color: var(--arch-doc-text-strong);
+}
+
+pre {
+  background: var(--arch-doc-surface);
+  border: 1px solid var(--arch-doc-border);
+  border-radius: 8px;
+  padding: 1.25rem 1.5rem;
+  overflow-x: auto;
+  line-height: 1.65;
+  position: relative;
+  margin: 1rem 0 1.5rem;
+}
+
+pre code {
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--arch-doc-text);
+}
+
+/* Syntax highlights (lightweight, no JS required) */
+pre code .kw  { color: #ff7b72; }  /* keywords */
+pre code .ty  { color: #79c0ff; }  /* types/classes */
+pre code .str { color: #a5d6ff; }  /* strings */
+pre code .cm  { color: var(--arch-doc-text-muted); font-style: italic; }  /* comments */
+pre code .fn  { color: #d2a8ff; }  /* functions */
+pre code .num { color: #79c0ff; }  /* numbers */
+
+/* Copy button on code blocks */
+pre .copy-btn {
+  position: absolute;
+  top: 0.6rem;
+  right: 0.6rem;
+  padding: 0.25rem 0.6rem;
+  font-size: 0.72rem;
+  font-family: var(--arch-doc-font);
+  background: var(--arch-doc-surface-2);
+  border: 1px solid var(--arch-doc-border);
+  border-radius: 4px;
+  color: var(--arch-doc-text-muted);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+pre:hover .copy-btn { opacity: 1; }
+pre .copy-btn:hover  { color: var(--arch-doc-text-strong); border-color: var(--arch-doc-accent); }
+pre .copy-btn.copied { color: var(--arch-doc-success); }
+
+/* ── Tables ───────────────────────────────────────────────── */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1rem 0 1.5rem;
+  font-size: 0.875rem;
+}
+
+th {
+  background: var(--arch-doc-surface-2);
+  padding: 0.5rem 0.75rem;
+  text-align: left;
+  font-weight: 600;
+  color: var(--arch-doc-text-strong);
+  border: 1px solid var(--arch-doc-border);
+}
+
+td {
+  padding: 0.45rem 0.75rem;
+  border: 1px solid var(--arch-doc-border);
+  vertical-align: top;
+}
+
+tr:nth-child(even) td { background: var(--arch-doc-surface); }
+
+/* ── Callout boxes ────────────────────────────────────────── */
+.callout {
+  padding: 1rem 1.25rem;
+  border-radius: 8px;
+  border-left: 4px solid;
+  margin: 1.25rem 0;
+  font-size: 0.9rem;
+}
+.callout-info    { background: #0969da11; border-color: var(--arch-doc-accent); }
+.callout-tip     { background: #1a7f3711; border-color: var(--arch-doc-success); }
+.callout-warning { background: #9a670011; border-color: var(--arch-doc-warning); }
+.callout-danger  { background: #cf222e11; border-color: var(--arch-doc-danger); }
+.callout strong  { display: block; margin-bottom: 0.3rem; }
+
+/* ── TOC ──────────────────────────────────────────────────── */
+#toc {
+  position: sticky;
+  top: 1.5rem;
+  padding: 1.5rem 1rem;
+  font-size: 0.8rem;
+  max-height: calc(100vh - 3rem);
+  overflow-y: auto;
+}
+
+#toc h3 {
+  margin: 0 0 0.6rem;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--arch-doc-text-muted);
+}
+
+#toc a {
+  display: block;
+  color: var(--arch-doc-text-muted);
+  padding: 0.2rem 0;
+  text-decoration: none;
+  border-left: 2px solid transparent;
+  padding-left: 0.6rem;
+  transition: color 0.15s, border-color 0.15s;
+}
+#toc a:hover      { color: var(--arch-doc-text); }
+#toc a.toc-active { color: var(--arch-doc-accent); border-left-color: var(--arch-doc-accent); }
+#toc a.toc-h3     { padding-left: 1.2rem; font-size: 0.76rem; }
+
+/* ── Subsystem badge ──────────────────────────────────────── */
+.page-badge {
+  display: inline-block;
+  padding: 0.2rem 0.7rem;
+  border-radius: 9999px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  background: var(--arch-doc-accent-dark);
+  color: #fff;
+  margin-bottom: 0.6rem;
+}
+
+/* ── Responsive ───────────────────────────────────────────── */
+@media (max-width: 1200px) {
+  body { grid-template-columns: var(--arch-doc-sidebar-w) 1fr; }
+  #toc { display: none; }
+}
+
+@media (max-width: 768px) {
+  body { grid-template-columns: 1fr; }
+  #sidebar { display: none; }
+  main { padding: 1.5rem; }
+}

@@ -1,0 +1,57 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Entelechy\Architect\Table\Fields;
+
+use Entelechy\Architect\Table\Contracts\ArchitectField;
+
+class TextField extends ArchitectField
+{
+    private ?int $maxLength = null;
+
+    private bool $showCharCount = false;
+
+    public function maxLength(int $length): self
+    {
+        $clone = clone $this;
+        $clone->maxLength = $length;
+
+        return $clone;
+    }
+
+    public function showCharCount(bool $show = true): self
+    {
+        $clone = clone $this;
+        $clone->showCharCount = $show;
+
+        return $clone;
+    }
+
+    public function getMaxLength(): ?int
+    {
+        return $this->maxLength;
+    }
+
+    public function getShowCharCount(): bool
+    {
+        return $this->showCharCount;
+    }
+
+    public function blade(): string
+    {
+        return 'architect::table.fields.text';
+    }
+
+    public function validationRules(): array
+    {
+        $rules = parent::validationRules();
+        $rules[] = 'string';
+
+        if ($this->maxLength !== null) {
+            $rules[] = "max:{$this->maxLength}";
+        }
+
+        return $rules;
+    }
+}

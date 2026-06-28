@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Panels — Architect</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="_assets/docs.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+<script>(function(){var t=localStorage.getItem('arch-docs-theme');if(t==='light')document.documentElement.setAttribute('data-theme','light');})()</script>
+</head>
+<body>
+<nav id="sidebar">
+  <div class="nav-brand"><h1>Architect</h1><p>entelechy/architect</p></div>
+  <div class="nav-section">Getting Started</div>
+  <a href="index.html">Home</a><a href="quick-start.html">Quick Start</a><a href="concepts.html">Core Concepts</a>
+  <div class="nav-section">Core Subsystems</div>
+  <a href="architect-tables.html">CRUD Tables</a><a href="architect-navigation.html">Navigation</a><a href="architect-stats.html">Stats Dashboard</a><a href="architect-toolbar.html">Toolbar</a><a href="architect-supersearch.html">Supersearch ⌘K</a>
+  <div class="nav-section">Components &amp; Forms</div>
+  <a href="architect-forms.html">Form Controls</a><a href="architect-content.html">Content / Entries</a><a href="architect-actions.html">Actions</a><a href="architect-panels.html">Panels</a><a href="architect-notifications.html">Notifications</a>
+  <div class="nav-section">Tooling</div>
+  <a href="architect-styling.html">Styling Guide</a><a href="architect-mcp.html">MCP Tools</a>
+  <button id="theme-toggle"></button>
+</nav>
+<main>
+<div class="page-badge">Components &amp; Forms</div>
+<h1>Panels</h1>
+<p class="lead">Flexible dashboard panels: stats cards, charts, image carousels, quick forms, and embedded tables in a configurable grid layout.</p>
+
+<section id="overview">
+<h2>Overview</h2>
+<p>Panels are rendered by the <code>PanelEngine</code> Livewire component and configured via <code>DashboardBuilder</code>. Each panel occupies a number of grid columns (1–12) and renders its own Blade partial.</p>
+<pre><code>use Entelechy\Architect\Facades\Architect;
+use Entelechy\Architect\Panels\Panels\StatsPanel;
+use Entelechy\Architect\Panels\Panels\ChartPanel;
+
+$dashboard = Architect::dashboard()
+    ->title('Membership Overview')
+    ->columns(12)
+    ->panel(StatsPanel::make('headline-stats')->span(12)->cards([...]))
+    ->panel(ChartPanel::make('signups-trend')->span(8)->series(fn($range) => [...]))
+    ->panel(StatsPanel::make('quick-metrics')->span(4)->cards([...]))
+    ->build();</code></pre>
+<pre><code>&lt;x-architect :definition="$dashboard" /&gt;</code></pre>
+</section>
+
+<section id="dashboardbuilder">
+<h2>DashboardBuilder API</h2>
+<table>
+<thead><tr><th>Method</th><th>Description</th></tr></thead>
+<tbody>
+<tr><td><code>Architect::dashboard()</code></td><td>Start building a dashboard.</td></tr>
+<tr><td><code>title(string)</code></td><td>Dashboard heading.</td></tr>
+<tr><td><code>columns(int)</code></td><td>Total grid columns (default: 12).</td></tr>
+<tr><td><code>panel(Panel)</code></td><td>Add a panel. Call multiple times for multiple panels.</td></tr>
+<tr><td><code>gap(string)</code></td><td>CSS gap value between panels (e.g. <code>'1.5rem'</code>).</td></tr>
+<tr><td><code>build()</code></td><td>Returns <code>ArchitectDashboardDefinition</code>.</td></tr>
+</tbody>
+</table>
+</section>
+
+<section id="stats-panel">
+<h2>StatsPanel</h2>
+<pre><code>use Entelechy\Architect\Panels\Panels\StatsPanel;
+use Entelechy\Architect\Stats\Elements\MetricCard;
+
+StatsPanel::make('key-metrics')
+    ->span(12)
+    ->columns(4)
+    ->cards([
+        MetricCard::make('Total Members')->value(fn() => Member::count()),
+        MetricCard::make('Active Today')->value(fn() => Member::activeToday()->count())->trend(2.1),
+    ]);</code></pre>
+<table>
+<thead><tr><th>Method</th><th>Description</th></tr></thead>
+<tbody>
+<tr><td><code>StatsPanel::make(string $key)</code></td><td>Static factory.</td></tr>
+<tr><td><code>span(int)</code></td><td>Grid columns to span.</td></tr>
+<tr><td><code>columns(int)</code></td><td>Inner grid columns for the metric cards.</td></tr>
+<tr><td><code>cards(array|Closure)</code></td><td><code>MetricCard[]</code> or a closure returning them.</td></tr>
+<tr><td><code>title(string)</code></td><td>Optional section title above the cards.</td></tr>
+</tbody>
+</table>
+</section>
+
+<section id="chart-panel">
+<h2>ChartPanel</h2>
+<pre><code>use Entelechy\Architect\Panels\Panels\ChartPanel;
+
+ChartPanel::make('signup-trend')
+    ->span(8)
+    ->chartType('line')
+    ->series(function ($range) {
+        return [
+            'labels' => collect($range->eachDay())->map->format('d M')->all(),
+            'datasets' => [[
+                'label' => 'New members',
+                'data'  => collect($range->eachDay())
+                            ->map(fn($day) => Member::whereDate('created_at', $day)->count())
+                            ->all(),
+            ]],
+        ];
+    });</code></pre>
+<table>
+<thead><tr><th>Method</th><th>Description</th></tr></thead>
+<tbody>
+<tr><td><code>ChartPanel::make(string $key)</code></td><td>Static factory.</td></tr>
+<tr><td><code>span(int)</code></td><td>Grid columns to span.</td></tr>
+<tr><td><code>chartType(string)</code></td><td>Chart.js type: <code>'line'|'bar'|'doughnut'|'pie'|'radar'</code>.</td></tr>
+<tr><td><code>series(Closure)</code></td><td>Data provider. Receives a <code>DateRange</code>; returns Chart.js data object.</td></tr>
+<tr><td><code>title(string)</code></td><td>Panel heading.</td></tr>
+<tr><td><code>height(int)</code></td><td>Chart height in pixels.</td></tr>
+</tbody>
+</table>
+</section>
+
+<section id="image-carousel-panel">
+<h2>ImageCarouselPanel</h2>
+<pre><code>use Entelechy\Architect\Panels\Panels\ImageCarouselPanel;
+
+ImageCarouselPanel::make('gallery')
+    ->span(6)
+    ->images(fn() => Photo::recent(10)->pluck('url')->all())
+    ->captions(fn() => Photo::recent(10)->pluck('caption')->all())
+    ->autoplay(5000);</code></pre>
+<table>
+<thead><tr><th>Method</th><th>Description</th></tr></thead>
+<tbody>
+<tr><td><code>images(array|Closure)</code></td><td>Array of image URLs.</td></tr>
+<tr><td><code>captions(array|Closure)</code></td><td>Optional captions (same index as images).</td></tr>
+<tr><td><code>autoplay(int $ms)</code></td><td>Auto-advance interval in milliseconds. <code>0</code> = no autoplay.</td></tr>
+<tr><td><code>span(int)</code></td><td>Grid columns to span.</td></tr>
+</tbody>
+</table>
+</section>
+
+<section id="quick-form-panel">
+<h2>QuickFormPanel</h2>
+<p>Embed a lightweight form directly in a dashboard panel.</p>
+<pre><code>use Entelechy\Architect\Panels\Panels\QuickFormPanel;
+use Entelechy\Architect\Forms\Fields\TextField;
+use Entelechy\Architect\Forms\Fields\SelectField;
+
+QuickFormPanel::make('quick-add-member')
+    ->span(4)
+    ->title('Quick Add Member')
+    ->fields([
+        TextField::make('name')->required(),
+        TextField::make('email')->type('email')->required(),
+        SelectField::make('status')->options(['active' => 'Active']),
+    ])
+    ->saveRoute('members.store')
+    ->successMessage('Member added.');</code></pre>
+</section>
+
+<section id="embedded-table-panel">
+<h2>EmbeddedTablePanel</h2>
+<p>Embed an Architect table definition as a panel.</p>
+<pre><code>use Entelechy\Architect\Panels\Panels\EmbeddedTablePanel;
+
+EmbeddedTablePanel::make('recent-members')
+    ->span(12)
+    ->title('Recently Joined Members')
+    ->definitionClass(\App\Modules\Members\Components\Tables\MembersTableDefinition::class)
+    ->limit(10);</code></pre>
+</section>
+</main>
+<aside id="toc"></aside>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
+<script src="_assets/docs.js"></script>
+</body>
+</html>

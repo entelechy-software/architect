@@ -1,0 +1,34 @@
+includes:
+    - vendor/larastan/larastan/extension.neon
+
+parameters:
+    level: 8
+    paths:
+        - src
+    ignoreErrors:
+        -
+            # Public convenience trait for host-app data model implementations
+            # (see Phase 3.2 canActOn() examples) — never used inside the
+            # package itself, so PHPStan can't analyse it in this scope.
+            message: '#Trait Entelechy\\Architect\\Table\\Concerns\\EnforcesRecordScope is used zero times and is not analysed#'
+            path: src/Table/Concerns/EnforcesRecordScope.php
+        -
+            # Larastan's view-string literal check requires the analysed app
+            # to have the package's views actually registered via a booted
+            # ServiceProvider (loadViewsFrom('architect')). When analysing
+            # the package standalone (no host app bootstrapped), Larastan
+            # can't resolve the 'architect::' namespace, so every view()
+            # call is flagged even though the views genuinely exist — see
+            # resources/views/ and ArchitectServiceProvider::boot().
+            message: '#Parameter \#1 \$view of function view expects view-string\|null, string given#'
+            path: src/*
+        -
+            # DB::raw() requires a literal-string, but toggleColumn() builds
+            # a CASE-WHEN fragment around a column identifier that has
+            # already been validated against the table definition's known
+            # columns (Engine::toggleColumn() throws on an unknown key
+            # before this line runs) — the dynamic piece is a safe,
+            # whitelisted identifier wrapped via the grammar, never raw
+            # user input, so this can't express as a literal-string.
+            message: '#Parameter \#1 \$value of static method Illuminate\\Database\\Connection::raw\(\) expects float\|int\|literal-string, non-falsy-string given#'
+            path: src/Table/Livewire/Engine.php

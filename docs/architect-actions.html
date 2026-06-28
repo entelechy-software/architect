@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Actions — Architect</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="_assets/docs.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+<script>(function(){var t=localStorage.getItem('arch-docs-theme');if(t==='light')document.documentElement.setAttribute('data-theme','light');})()</script>
+</head>
+<body>
+<nav id="sidebar">
+  <div class="nav-brand"><h1>Architect</h1><p>entelechy/architect</p></div>
+  <div class="nav-section">Getting Started</div>
+  <a href="index.html">Home</a><a href="quick-start.html">Quick Start</a><a href="concepts.html">Core Concepts</a>
+  <div class="nav-section">Core Subsystems</div>
+  <a href="architect-tables.html">CRUD Tables</a><a href="architect-navigation.html">Navigation</a><a href="architect-stats.html">Stats Dashboard</a><a href="architect-toolbar.html">Toolbar</a><a href="architect-supersearch.html">Supersearch ⌘K</a>
+  <div class="nav-section">Components &amp; Forms</div>
+  <a href="architect-forms.html">Form Controls</a><a href="architect-content.html">Content / Entries</a><a href="architect-actions.html">Actions</a><a href="architect-panels.html">Panels</a><a href="architect-notifications.html">Notifications</a>
+  <div class="nav-section">Tooling</div>
+  <a href="architect-styling.html">Styling Guide</a><a href="architect-mcp.html">MCP Tools</a>
+  <button id="theme-toggle"></button>
+</nav>
+<main>
+<div class="page-badge">Components &amp; Forms</div>
+<h1>Actions</h1>
+<p class="lead">Row actions, header actions, bulk actions, and a Livewire ActionEngine — with built-in CRUD actions and confirmation dialogs.</p>
+
+<section id="two-action-systems">
+<h2>Two Action Systems</h2>
+<p>Architect has two distinct action APIs:</p>
+<ul>
+  <li><strong>Table-level actions</strong> (<code>RowAction</code>, <code>HeaderAction</code>, <code>BulkAction</code>) — configured on the <code>TableBuilder</code> and rendered inside the <code>TableEngine</code>.</li>
+  <li><strong>ActionEngine actions</strong> (<code>Action</code> subclasses) — standalone action classes consumed by the <code>ActionEngine</code> Livewire component, used outside of tables (e.g. on detail pages).</li>
+</ul>
+</section>
+
+<section id="table-actions">
+<h2>Table Actions</h2>
+
+<h3>RowAction</h3>
+<p>Appears in each row of the table (the "..." button or inline buttons).</p>
+<pre><code>use Entelechy\Architect\Table\Actions\RowAction;
+
+RowAction::make('view-profile')
+    ->label('View Profile')
+    ->icon('fas fa-eye')
+    ->url(fn($row) => route('members.show', $row['id']))
+    ->newWindow()
+    ->permission('members.view')
+    ->confirm('Are you sure you want to delete this record?')
+    ->visible(fn($row) => $row['status'] !== 'deleted');</code></pre>
+
+<h3>HeaderAction</h3>
+<p>Appears in the table header (alongside the search bar and create button).</p>
+<pre><code>use Entelechy\Architect\Table\Actions\HeaderAction;
+
+HeaderAction::make('import')
+    ->label('Import CSV')
+    ->icon('fas fa-file-upload')
+    ->url(route('members.import'))
+    ->color('secondary')
+    ->permission('members.import');</code></pre>
+
+<h3>Bulk Actions</h3>
+<pre><code>use Entelechy\Architect\Table\Actions\BulkDeleteAction;
+use Entelechy\Architect\Table\Actions\BulkArchiveAction;
+use Entelechy\Architect\Table\Actions\BulkExportAction;
+
+$this->bulkDelete(reasonRequired: false)
+     ->bulkActions([
+         BulkArchiveAction::make(),
+         BulkExportAction::make(['csv', 'xlsx']),
+     ]);</code></pre>
+
+<table>
+<thead><tr><th>Class</th><th>Description</th></tr></thead>
+<tbody>
+<tr><td><code>BulkDeleteAction</code></td><td>Delete selected rows.</td></tr>
+<tr><td><code>BulkArchiveAction</code></td><td>Soft-delete (archive) selected rows.</td></tr>
+<tr><td><code>BulkRestoreAction</code></td><td>Restore archived rows.</td></tr>
+<tr><td><code>BulkCopyAction</code></td><td>Duplicate selected rows.</td></tr>
+<tr><td><code>BulkEmailAction</code></td><td>Send a bulk email to selected rows (requires email field).</td></tr>
+<tr><td><code>BulkStatusAction</code></td><td>Set a status field on selected rows.</td></tr>
+<tr><td><code>BulkExportAction</code></td><td>Export selected rows to CSV or XLSX.</td></tr>
+</tbody>
+</table>
+</section>
+
+<section id="action-engine">
+<h2>ActionEngine Actions</h2>
+<p>Standalone action classes used outside of tables — for detail pages, slide-overs, and workspace contexts.</p>
+
+<h3>Action Base Class API</h3>
+<pre><code>use Entelechy\Architect\Actions\Actions\Action;
+
+class ArchiveMemberAction extends Action
+{
+    public function label(string $label): static { return parent::label('Archive'); }
+
+    // Actions are configured via the static builder pattern:
+    public static function make(): static
+    {
+        return (new static)
+            ->label('Archive Member')
+            ->icon('fas fa-archive')
+            ->color('warning')
+            ->requiresConfirmation('Archive this member?', 'This will hide the member from active lists.')
+            ->authorize(fn($record) => auth()->user()->can('archive', $record))
+            ->action(function ($record) {
+                $record->archive();
+                Architect::toast()->success('Member archived.')->send();
+            });
+    }
+}</code></pre>
+
+<table>
+<thead><tr><th>Method</th><th>Description</th></tr></thead>
+<tbody>
+<tr><td><code>label(string)</code></td><td>Button label.</td></tr>
+<tr><td><code>icon(string)</code></td><td>Icon class.</td></tr>
+<tr><td><code>color(string)</code></td><td>Button colour: <code>'primary'|'secondary'|'danger'|'warning'|'success'</code>.</td></tr>
+<tr><td><code>destructive(bool)</code></td><td>Mark as destructive (renders in danger colour with extra warning).</td></tr>
+<tr><td><code>requiresConfirmation(bool|string $title, string $body)</code></td><td>Show a confirmation dialog before running. Pass a string as the first arg to set the dialog title.</td></tr>
+<tr><td><code>authorize(Closure)</code></td><td>Authorization callback. Receives the record; return <code>bool</code>.</td></tr>
+<tr><td><code>action(Closure)</code></td><td>The action callback. Receives the record and optional form data.</td></tr>
+<tr><td><code>modelClass(string)</code></td><td>Eloquent model class used to resolve the record by ID.</td></tr>
+</tbody>
+</table>
+
+<h3>Built-in Action Classes</h3>
+<table>
+<thead><tr><th>Class</th><th>Description</th></tr></thead>
+<tbody>
+<tr><td><code>DeleteAction</code></td><td>Soft-deletes the record. Confirmation required by default.</td></tr>
+<tr><td><code>ForceDeleteAction</code></td><td>Permanently deletes. Requires explicit destructive confirmation.</td></tr>
+<tr><td><code>RestoreAction</code></td><td>Restores a soft-deleted record.</td></tr>
+<tr><td><code>ReplicateAction</code></td><td>Duplicates the record.</td></tr>
+<tr><td><code>CreateAction</code></td><td>Opens a create form modal.</td></tr>
+<tr><td><code>EditAction</code></td><td>Opens an edit form modal for the current record.</td></tr>
+<tr><td><code>ViewAction</code></td><td>Opens a read-only content panel for the current record.</td></tr>
+<tr><td><code>ProceduralAction</code></td><td>Custom action with a closure — use for one-off operations.</td></tr>
+</tbody>
+</table>
+
+<h3>ActionBuilder</h3>
+<pre><code>use Entelechy\Architect\Actions\ActionBuilder;
+
+$actions = ActionBuilder::make()
+    ->add(EditAction::class)
+    ->add(DeleteAction::class)
+    ->add(ArchiveMemberAction::class)
+    ->build();</code></pre>
+</section>
+
+<section id="rendering">
+<h2>Rendering</h2>
+<pre><code>&lt;x-architect :definition="$actions" /&gt;
+
+&lt;!-- Or inline with the model being acted on: --&gt;
+&lt;x-architect :definition="$actions" :model="$member" /&gt;</code></pre>
+</section>
+</main>
+<aside id="toc"></aside>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
+<script src="_assets/docs.js"></script>
+</body>
+</html>
