@@ -38,7 +38,7 @@
 
     {{-- Page navigation --}}
     @if ($paginator->hasPages())
-        <nav aria-label="{{ __('Pagination') }}">
+        <nav aria-label="Pagination">
             <ul class="arch-pagination">
                 {{-- Previous --}}
                 @if ($paginator->onFirstPage())
