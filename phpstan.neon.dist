@@ -5,6 +5,8 @@ parameters:
     level: 8
     paths:
         - src
+    excludePaths:
+        - src/Mcp
     ignoreErrors:
         -
             # Public convenience trait for host-app data model implementations

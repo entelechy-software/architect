@@ -5,15 +5,17 @@ declare(strict_types=1);
 namespace Entelechy\Architect\Tests;
 
 use Entelechy\Architect\ArchitectServiceProvider;
+use Illuminate\Foundation\Application;
+use Livewire\LivewireServiceProvider;
 use Orchestra\Testbench\TestCase as OrchestraTestCase;
 
 abstract class TestCase extends OrchestraTestCase
 {
-    /** @param \Illuminate\Foundation\Application $app */
+    /** @param Application $app */
     protected function getPackageProviders($app): array
     {
         return [
-            \Livewire\LivewireServiceProvider::class,
+            LivewireServiceProvider::class,
             ArchitectServiceProvider::class,
         ];
     }

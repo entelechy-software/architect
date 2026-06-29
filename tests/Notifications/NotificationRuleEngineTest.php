@@ -23,12 +23,12 @@ class NotificationRuleEngineTest extends TestCase
     public function test_fire_with_disabled_rule_skips_delivery(): void
     {
         NotificationRule::create([
-            'trigger'           => 'test.skipped',
+            'trigger' => 'test.skipped',
             'notification_type' => 'alert',
-            'severity'          => 'info',
-            'message_template'  => 'Should not appear',
+            'severity' => 'info',
+            'message_template' => 'Should not appear',
             'recipient_resolver' => null,
-            'enabled'           => false,
+            'enabled' => false,
         ]);
 
         app(NotificationRuleEngine::class)->fire('test.skipped');
@@ -39,12 +39,12 @@ class NotificationRuleEngineTest extends TestCase
     public function test_fire_alert_rule_writes_to_session(): void
     {
         NotificationRule::create([
-            'trigger'           => 'member.approved',
+            'trigger' => 'member.approved',
             'notification_type' => 'alert',
-            'severity'          => 'success',
-            'message_template'  => 'Member {{name}} was approved.',
+            'severity' => 'success',
+            'message_template' => 'Member {{name}} was approved.',
             'recipient_resolver' => null,
-            'enabled'           => true,
+            'enabled' => true,
         ]);
 
         app(NotificationRuleEngine::class)->fire('member.approved', ['name' => 'Alice']);
@@ -60,16 +60,16 @@ class NotificationRuleEngineTest extends TestCase
     public function test_template_interpolation_replaces_multiple_variables(): void
     {
         NotificationRule::create([
-            'trigger'           => 'order.placed',
+            'trigger' => 'order.placed',
             'notification_type' => 'alert',
-            'severity'          => 'info',
-            'message_template'  => 'Order #{{orderId}} placed by {{customerName}}.',
+            'severity' => 'info',
+            'message_template' => 'Order #{{orderId}} placed by {{customerName}}.',
             'recipient_resolver' => null,
-            'enabled'           => true,
+            'enabled' => true,
         ]);
 
         app(NotificationRuleEngine::class)->fire('order.placed', [
-            'orderId'      => 42,
+            'orderId' => 42,
             'customerName' => 'Bob',
         ]);
 
@@ -80,12 +80,12 @@ class NotificationRuleEngineTest extends TestCase
     public function test_template_interpolation_leaves_unmatched_placeholders(): void
     {
         NotificationRule::create([
-            'trigger'           => 'test.unmatched',
+            'trigger' => 'test.unmatched',
             'notification_type' => 'alert',
-            'severity'          => 'info',
-            'message_template'  => 'Hello {{unknown}}.',
+            'severity' => 'info',
+            'message_template' => 'Hello {{unknown}}.',
             'recipient_resolver' => null,
-            'enabled'           => true,
+            'enabled' => true,
         ]);
 
         app(NotificationRuleEngine::class)->fire('test.unmatched', []);

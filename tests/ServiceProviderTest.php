@@ -7,7 +7,6 @@ namespace Entelechy\Architect\Tests;
 use Entelechy\Architect\Contracts\PermissionResolver;
 use Entelechy\Architect\Notifications\NotificationRuleEngine;
 use Entelechy\Architect\Permissions\AllowAllPermissionResolver;
-use Entelechy\Architect\Tests\TestCase;
 use Illuminate\Support\Facades\Schema;
 
 class ServiceProviderTest extends TestCase
