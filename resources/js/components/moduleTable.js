@@ -10,7 +10,7 @@
  *   - Duplicate-instance detection guards against two tables with the same
  *     definition class appearing simultaneously (they would collide on the
  *     Alpine store key and on Livewire event routing).
- *   - A page-wide Alpine store (`window.Alpine.store('architectModuleTable')`) mirrors
+ *   - A page-wide Alpine store (`window.Alpine.store('moduleTable')`) mirrors
  *     each instance's reactive state so external components can subscribe
  *     without tight coupling.
  *
@@ -93,7 +93,7 @@ export function registerModuleTable(Alpine) {
      *
      * @returns {object} Alpine data object.
      */
-    Alpine.data('architectModuleTable', (options) => ({
+    Alpine.data('moduleTable', (options) => ({
 
         /* ── UI state ────────────────────────────────────────────────── */
         showEditSuccess:  false,
@@ -800,11 +800,11 @@ export function registerModuleTable(Alpine) {
 
             // Ensure the global store namespace exists. Alpine is always
             // booted by the time init() runs (Livewire guarantees this).
-            if (!window.Alpine.store('architectModuleTable')) {
-                window.Alpine.store('architectModuleTable', {});
+            if (!window.Alpine.store('moduleTable')) {
+                window.Alpine.store('moduleTable', {});
             }
 
-            const store = window.Alpine.store('architectModuleTable');
+            const store = window.Alpine.store('moduleTable');
 
             if (store[this._instanceKey] && store[this._instanceKey]._registered) {
                 // The same definition is already mounted — flag the error
@@ -828,7 +828,7 @@ export function registerModuleTable(Alpine) {
                 const el = this.$el;
                 if (!el._x_cleanups) el._x_cleanups = [];
                 el._x_cleanups.push(() => {
-                    const s = window.Alpine.store('architectModuleTable');
+                    const s = window.Alpine.store('moduleTable');
                     if (s && s[instanceKey]) {
                         delete s[instanceKey];
                     }

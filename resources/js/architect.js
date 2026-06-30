@@ -10,6 +10,7 @@
  *       registerArchitectComponents(window.Alpine);
  *   });
  */
+import flatpickr                        from 'flatpickr';
 import { registerArchitectToolbar }     from './components/architectToolbar.js';
 import { registerArchitectSupersearch } from './components/architectSupersearch.js';
 import { registerModuleTabs }           from './components/moduleTabs.js';
@@ -18,6 +19,7 @@ import { registerArchitectChart }       from './components/architectChart.js';
 import { registerStepperGuard }         from './components/stepperGuard.js';
 import { registerToastStore }           from './components/toastStore.js';
 import { registerArchitectForms }       from './components/architectForms.js';
+import { registerDashboardEdit }        from './components/dashboardEdit.js';
 
 export function registerArchitectComponents(Alpine) {
     registerArchitectToolbar(Alpine);
@@ -28,12 +30,28 @@ export function registerArchitectComponents(Alpine) {
     registerStepperGuard(Alpine);
     registerToastStore(Alpine);
     registerArchitectForms(Alpine);
+    registerDashboardEdit(Alpine);
 }
 
-// IIFE auto-boot: when @architectScripts loads this without a bundler,
-// Livewire has already fired livewire:init — use the late-init event.
+// Expose flatpickr globally so blade views can call flatpickr(...) directly.
 if (typeof window !== 'undefined') {
-    document.addEventListener('livewire:init', () => {
-        if (window.Alpine) registerArchitectComponents(window.Alpine);
-    });
+    window.flatpickr = flatpickr;
+}
+
+// IIFE auto-boot: when @architectScripts loads this as a plain <script>,
+// ensure components are registered regardless of whether livewire:init has
+// already fired (deferred script loaded after Livewire) or not yet.
+if (typeof window !== 'undefined') {
+    let registered = false;
+    const boot = () => {
+        if (!registered && window.Alpine) {
+            registered = true;
+            registerArchitectComponents(window.Alpine);
+        }
+    };
+    document.addEventListener('livewire:init', boot);
+    // Immediate fallback: if livewire:init already fired before this script ran,
+    // Alpine is already available — register components now so the next
+    // Livewire-driven Alpine initialisation picks them up.
+    boot();
 }

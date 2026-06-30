@@ -6,6 +6,8 @@
    app's CSS (loaded after this file). See §0.3 for the full contract.
    ======================================================================= */
 
+@import 'flatpickr/dist/flatpickr.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
