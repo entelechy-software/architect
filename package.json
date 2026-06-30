@@ -4,10 +4,11 @@
     "scripts": {
         "build:architect": "npm run build:architect:css && npm run build:architect:js",
         "watch:architect": "npx tailwindcss -i ./resources/css/architect.css -o ./resources/dist/architect.css --watch",
-        "build:architect:css": "npx tailwindcss -i ./resources/css/architect.css -o ./resources/dist/architect.css --minify",
+        "build:architect:css": "npx tailwindcss -i ./resources/css/architect.css -o ./resources/dist/architect.css --minify && sed -i '' 's|url(\\.\\./webfonts/|url(webfonts/|g' ./resources/dist/architect.css && mkdir -p ./resources/dist/webfonts && cp ./node_modules/@fortawesome/fontawesome-free/webfonts/*.woff2 ./resources/dist/webfonts/",
         "build:architect:js": "vite build"
     },
     "dependencies": {
+        "@fortawesome/fontawesome-free": "^7.3.0",
         "apexcharts": "^5.14.0",
         "flatpickr": "^4.6.13"
     },
