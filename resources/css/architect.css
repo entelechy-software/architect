@@ -360,11 +360,11 @@
 
 /* Tables */
 .arch-table { width: 100%; border-collapse: separate; border-spacing: 0; }
-.arch-th { font-size: var(--arch-font-size-xs); font-weight: var(--arch-font-weight-semibold); color: var(--arch-color-text-muted); @apply px-4 py-3 text-left uppercase tracking-wide; }
-.arch-td { font-size: var(--arch-font-size-sm); @apply px-4 py-3; }
-.arch-tr { border-bottom: 1px solid var(--arch-color-border); }
-.arch-tr:hover { background-color: var(--arch-color-surface-alt); }
-.arch-tr[data-state="selected"] { background-color: var(--arch-color-primary-muted); }
+.arch-th, .arch-table th { font-size: var(--arch-font-size-xs); font-weight: var(--arch-font-weight-semibold); color: var(--arch-color-text-muted); @apply px-4 py-3 text-left uppercase tracking-wide; }
+.arch-td, .arch-table td { font-size: var(--arch-font-size-sm); @apply px-4 py-3; }
+.arch-tr, .arch-table tr { border-bottom: 1px solid var(--arch-color-border); }
+.arch-tr:hover, .arch-table tr:hover { background-color: var(--arch-color-surface-alt); }
+.arch-tr[data-state="selected"], .arch-table tr[data-state="selected"] { background-color: var(--arch-color-primary-muted); }
 
 /* Forms */
 .arch-form { @apply flex flex-col; gap: var(--arch-gap-lg); }
@@ -669,13 +669,20 @@
 .arch-slide-over-footer { border-top: 1px solid var(--arch-color-border); @apply flex items-center justify-end gap-3 px-6 py-4; }
 
 /* Table modifiers (compose with .arch-table/.arch-th/.arch-td/.arch-tr above) */
-.arch-table-hover .arch-tr:hover { background-color: var(--arch-color-surface-alt); }
+.arch-table-hover .arch-tr:hover,
+.arch-table.arch-table-hover tr:hover { background-color: var(--arch-color-surface-alt); }
 .arch-table-bordered .arch-td,
-.arch-table-bordered .arch-th { border: 1px solid var(--arch-color-border); }
+.arch-table-bordered .arch-th,
+.arch-table.arch-table-bordered td,
+.arch-table.arch-table-bordered th { border: 1px solid var(--arch-color-border); }
 .arch-table-borderless .arch-td,
-.arch-table-borderless .arch-th { border: none; }
+.arch-table-borderless .arch-th,
+.arch-table.arch-table-borderless td,
+.arch-table.arch-table-borderless th { border: none; }
 .arch-table-sm .arch-td,
-.arch-table-sm .arch-th { @apply px-2 py-1.5; }
+.arch-table-sm .arch-th,
+.arch-table.arch-table-sm td,
+.arch-table.arch-table-sm th { @apply px-2 py-1.5; }
 
 /* Form panel (Table create/edit — slide-over | modal | page modes) */
 .arch-panel { }
