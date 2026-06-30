@@ -93,14 +93,14 @@ class ArchitectServiceProvider extends ServiceProvider
         // Blade directives
         Blade::directive('architectStyles', function (): string {
             $v = $this->assetVersion();
-            $url = asset('vendor/architect/architect.css').'?v='.$v;
+            $url = url('vendor/architect/architect.css').'?v='.$v;
 
             return "<link rel=\"stylesheet\" href=\"{$url}\">";
         });
 
         Blade::directive('architectScripts', function (): string {
             $v = $this->assetVersion();
-            $url = asset('vendor/architect/architect.js').'?v='.$v;
+            $url = url('vendor/architect/architect.js').'?v='.$v;
 
             return "<script src=\"{$url}\"><\/script>";
         });
