@@ -160,7 +160,7 @@
                         <x-architect::button
                             size="sm"
                             icon="heroicon-m-plus"
-                            wire:click="$dispatch('architect:open-create', { definitionClass: '{{ addslashes($definitionClass) }}' })"
+                            @click="$dispatch('architect:open-create', { definitionClass: '{{ addslashes($definitionClass) }}' })"
                         >
                             New
                         </x-architect::button>
@@ -255,7 +255,7 @@
                         color="gray"
                         outlined
                         icon="heroicon-m-arrow-up-tray"
-                        wire:click="$dispatch('architect:open-import', { definitionClass: '{{ addslashes($definitionClass) }}' })"
+                        @click="$dispatch('architect:open-import', { definitionClass: '{{ addslashes($definitionClass) }}' })"
                     />
                 @endif
 
@@ -1193,7 +1193,7 @@
                                     outlined
                                     icon="heroicon-m-pencil-square"
                                     color="primary"
-                                    wire:click="$dispatch('architect:open-edit', { definitionClass: '{{ addslashes($definitionClass) }}', id: {{ (int) ($row['id'] ?? 0) }} })"
+                                    @click="$dispatch('architect:open-edit', { definitionClass: '{{ addslashes($definitionClass) }}', id: {{ (int) ($row['id'] ?? 0) }} })"
                                     tooltip="Edit"
                                 />
                             @endif
