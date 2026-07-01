@@ -171,13 +171,11 @@
 
                 {{-- Search --}}
                 @if (!$definition->hideSearchBar)
-                <div class="arch-input-group mt-search-group">
-                    <span class="arch-input-addon mt-search-icon">
-                        <i class="fas fa-search text-gray-500 dark:text-gray-400"></i>
-                    </span>
+                <div class="mt-search-group">
+                    <i class="fas fa-search mt-search-icon"></i>
                     <input
                         type="search"
-                        class="arch-input pl-0"
+                        class="arch-input"
                         placeholder="Search…"
                         wire:model.live.debounce.300ms="search"
                         aria-label="Search"
@@ -188,7 +186,7 @@
             </div>
 
             {{-- Controls — right side, order: filters, refresh, print, columns, import, export, archived --}}
-            <div class="flex flex-wrap gap-2 items-center">
+            <div class="arch-table-controls flex flex-wrap gap-2 items-center">
 
                 {{-- 1. Filters button — shown when there are declared filters OR when the table is archivable. --}}
                 @if (count($definition->filters) > 0 || $definition->archivable)
@@ -1117,7 +1115,7 @@
                                 @endif
                             </td>
                         @endforeach
-                        <td class="text-right">
+                        <td class="arch-row-actions text-right">
                             @php $rowIsArchived = (bool) ($row['archived'] ?? false); @endphp
 
                             {{-- Row-mode Save / Cancel: only visible while a row-edit is open

@@ -92,15 +92,19 @@
     --arch-row-enter-duration:  0.2s;
     --arch-row-flash-duration:  1.4s;
     --arch-shake-duration:      0.4s;
+
+    /* Frosted-glass surface — semi-transparent, used for sticky headers and footers */
+    --arch-color-surface-glass: rgba(255, 255, 255, 0.85);
 }
 
 /* Dark mode token overrides */
 [data-theme="dark"] {
-    --arch-color-surface:      #0f172a;
-    --arch-color-surface-alt:  #1e293b;
-    --arch-color-border:       #334155;
-    --arch-color-text:         #f1f5f9;
-    --arch-color-text-muted:   #94a3b8;
+    --arch-color-surface:       #0f172a;
+    --arch-color-surface-alt:   #1e293b;
+    --arch-color-border:        #334155;
+    --arch-color-text:          #f1f5f9;
+    --arch-color-text-muted:    #94a3b8;
+    --arch-color-surface-glass: rgba(15, 23, 42, 0.88);
 }
 
 /* Reduced motion — one block covers every component automatically */
@@ -213,6 +217,12 @@
 .arch-button[data-size="sm"] { @apply px-3 py-1.5 text-sm; }
 .arch-button[data-size="md"] { @apply px-4 py-2 text-sm; }
 .arch-button[data-size="lg"] { @apply px-5 py-2.5 text-base; }
+/* Uniform square icon buttons in toolbar controls + row action cells */
+.arch-table-controls .arch-button[data-size="sm"],
+.arch-row-actions .arch-button[data-size="sm"] { width: 2.2rem; height: 2rem; padding: 0; }
+.arch-table-controls .arch-button[data-size="sm"]:has(.arch-badge) { width: auto; padding: 0 0.5rem; }
+/* Old-style save/cancel row-edit buttons (arch-btn) */
+.arch-row-actions .arch-btn.arch-btn-sm { width: 2.2rem; height: 2rem; padding: 0; display: inline-flex; align-items: center; justify-content: center; }
 /* Solid */
 .arch-button[data-variant="solid"][data-color="primary"] { background-color: var(--arch-color-primary); color: #fff; }
 .arch-button[data-variant="solid"][data-color="primary"]:hover { background-color: var(--arch-color-primary-dark); }
@@ -373,10 +383,16 @@
 /* Tables */
 .arch-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
 .arch-table-wrap--container { overflow-y: auto; }
+/* Frosted-glass header row — all scroll modes */
+.arch-table thead th,
+.arch-table thead td {
+    -webkit-backdrop-filter: blur(16px) saturate(200%);
+    backdrop-filter: blur(16px) saturate(200%);
+}
+/* Container mode: additionally sticky + divider shadow */
 .arch-table-wrap--container .arch-table thead th,
 .arch-table-wrap--container .arch-table thead td {
     position: sticky; top: 0; z-index: 2;
-    background-color: var(--arch-color-surface);
     box-shadow: 0 1px 0 var(--arch-color-border);
 }
 .arch-table { width: 100%; border-collapse: separate; border-spacing: 0; }
@@ -786,7 +802,7 @@
 .arch-card-header { border-bottom: 1px solid var(--arch-color-border); @apply flex items-center justify-between px-4 py-3; }
 .arch-card-title  { font-weight: var(--arch-font-weight-semibold); color: var(--arch-color-text); }
 .arch-card-body   { @apply p-4; }
-.arch-card-footer { border-top: 1px solid var(--arch-color-border); @apply px-4 py-3; }
+.arch-card-footer { border-top: 1px solid var(--arch-color-border); -webkit-backdrop-filter: blur(16px) saturate(200%); backdrop-filter: blur(16px) saturate(200%); @apply px-4 py-3; }
 
 /* Section */
 .arch-section { @apply flex flex-col gap-4; }
@@ -905,6 +921,10 @@
 .arch-form-hint { font-size: var(--arch-font-size-xs); color: var(--arch-color-text-muted); }
 .arch-input-group { @apply flex items-stretch; }
 .arch-input-addon { @apply inline-flex items-center px-3 text-sm; background: var(--arch-color-surface-alt); border: 1px solid var(--arch-color-border); }
+/* Inline-icon search wrapper */
+.mt-search-group { position: relative; display: inline-flex; align-items: center; }
+.mt-search-icon { position: absolute; left: 0.625rem; font-size: 0.8125rem; pointer-events: none; z-index: 1; color: var(--arch-color-text-muted); }
+.mt-search-group .arch-input { padding-left: 2rem; }
 .arch-input-color { width: 2.5rem; height: 2.5rem; padding: 0.25rem; border: 1px solid var(--arch-color-border); border-radius: var(--arch-radius-md); }
 .arch-input-sm { @apply px-2 py-1 text-sm; }
 .arch-select-sm { @apply px-2 py-1 text-sm; }
