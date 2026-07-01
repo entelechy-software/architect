@@ -273,8 +273,7 @@
             >
                 {{-- Floating section controls: drag handle, width/height steppers, fullscreen --}}
                 <div
-                    class="absolute top-2 right-2 z-10 flex items-center rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 shadow-sm overflow-hidden opacity-0 group-hover/section:opacity-100 transition-opacity duration-150"
-                    :class="editMode ? 'opacity-100' : ''"
+                    class="arch-section-controls absolute top-0 right-3 -translate-y-1/2 z-10 flex items-center rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 shadow-sm overflow-hidden"
                     x-show="fullscreenKey !== '{{ $sectionKey }}'"
                 >
                     {{-- Edit-mode controls (drag + width + height) — hidden until Customise is active --}}
