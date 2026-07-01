@@ -474,6 +474,12 @@ class FormPanel extends Component
             }
         }
 
+        // Livewire v4 throws MissingRulesException when validate() is
+        // called with an empty rule set. Skip it entirely in that case.
+        if (empty($rules)) {
+            return array_intersect_key($this->form, array_flip($applicable));
+        }
+
         $validated = $this->validate($rules);
 
         /** @var array<string, mixed> $formPart */
