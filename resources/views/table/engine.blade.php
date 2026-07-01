@@ -1384,13 +1384,10 @@
             <x-architect::pagination :paginator="$paginator" />
         @endif
     </div>
-</div>
-</x-architect::table.shell>
 
-{{-- Floating bulk action bar — visible only when at least one row is
-     selected and the definition opts in to checkbox selection. --}}
-@if ($definition->selectableRows && count($selected) > 0)
-    @php
+    {{-- Bulk action bar — confined to the table card, sticky to viewport bottom --}}
+    @if ($definition->selectableRows && count($selected) > 0)
+        @php
         // Build a TSV-ready clipboard payload for the selected rows visible on
         // the current page. Only display columns (already visibility-filtered)
         // are included — edit keys and the primary key are excluded.
@@ -1423,8 +1420,8 @@
             JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT
         );
     @endphp
-    <div class="fixed bottom-0 left-1/2 -translate-x-1/2 mb-4 mt-bulk-bar">
-        <div class="arch-bulk-bar">
+        <div class="sticky bottom-4 z-10 flex justify-center pointer-events-none">
+            <div class="arch-bulk-bar">
             <div
                 class="arch-card-body flex flex-wrap gap-2 items-center py-2"
                 x-data="{
@@ -1525,9 +1522,11 @@
                     <i class="fas fa-times"></i>
                 </button>
             </div>
+            </div>
         </div>
-    </div>
-@endif
+    @endif
+</div>
+</x-architect::table.shell>
 
 @if ($bulkMessage)
     <div class="arch-alert arch-alert-success mt-2" role="alert" wire:key="bulk-msg">{{ $bulkMessage }}</div>
