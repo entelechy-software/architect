@@ -70,12 +70,12 @@ class MembersTableDefinition extends ArchitectTableDefinition
 <tr><td><code>field(ArchitectField)</code></td><td>Add a single form field for create/edit modals.</td></tr>
 <tr><td><code>filter(ArchitectFilter)</code></td><td>Add a table filter.</td></tr>
 <tr><td><code>defaultFilters(array)</code></td><td>Pre-applied filter values on first load.</td></tr>
-<tr><td><code>archivable(string $column, string $label)</code></td><td>Soft-delete support with archive/restore UI.</td></tr>
-<tr><td><code>deletable(bool, bool $reasonRequired)</code></td><td>Enable hard delete with optional reason prompt.</td></tr>
-<tr><td><code>requiresDeletionReason(bool)</code></td><td>Force user to supply a reason before deleting.</td></tr>
+<tr><td><code>archivable(bool $archivable, bool $reasonRequired, bool $allowUnarchive, bool $allowDelete, bool $phraseRequired, ?string $confirmationPhrase)</code></td><td>Soft-delete support with archive/restore UI. Stack <code>reasonRequired</code> and <code>phraseRequired</code> to require both. <code>confirmationPhrase: null</code> uses the record’s name/title field.</td></tr>
+<tr><td><code>deletable(bool $deletable, bool $reasonRequired, bool $phraseRequired, ?string $confirmationPhrase)</code></td><td>Enable hard delete. Opens an Architect modal on every click. Stack flags freely: reason-only, phrase-only, or both. <code>confirmationPhrase: null</code> uses the record’s name/title.</td></tr>
+<tr><td><code>requiresDeletionReason(bool)</code></td><td><em>Deprecated.</em> Use <code>archivable(reasonRequired: true)</code> instead.</td></tr>
 <tr><td><code>selectableRows(bool)</code></td><td>Show checkboxes for bulk selection.</td></tr>
 <tr><td><code>bulkActions(array)</code></td><td>Register bulk action definitions.</td></tr>
-<tr><td><code>bulkDelete(bool $reasonRequired)</code></td><td>Add a built-in bulk delete action.</td></tr>
+<tr><td><code>bulkDelete(bool $reasonRequired, bool $phraseRequired, ?string $confirmationPhrase)</code></td><td>Add a built-in bulk delete action. Supports the same stacking flags as <code>deletable()</code>. For bulk actions, <code>confirmationPhrase: null</code> shows a generic ‘confirm’ prompt.</td></tr>
 <tr><td><code>exportable(array|bool $formats)</code></td><td>Enable CSV/XLSX export. Pass <code>true</code> for all formats or an array of format strings.</td></tr>
 <tr><td><code>rowAction(RowAction)</code></td><td>Add a per-row action button.</td></tr>
 <tr><td><code>headerAction(HeaderAction)</code></td><td>Add an action button to the table header.</td></tr>
