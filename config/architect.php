@@ -36,6 +36,21 @@ return [
         'enabled' => env('ARCHITECT_PLAYGROUND', false),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Animations
+    |--------------------------------------------------------------------------
+    | Master switch for all UI animations. Set to false to disable all
+    | animations package-wide (e.g. for accessibility-first deployments).
+    | Individual animations can also be controlled per-definition via the
+    | ->animateRows(), ->animatePanels(), ->animateErrors(), ->animateButtons()
+    | methods on TableBuilder, and ->countUp() on MetricCard.
+    |
+    | Note: prefers-reduced-motion is always respected regardless of this flag.
+    |
+    */
+    'animations' => true,
+
     'features' => [
         'tables' => true,
         'navigator' => true,

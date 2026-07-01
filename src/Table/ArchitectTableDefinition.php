@@ -145,6 +145,14 @@ final class ArchitectTableDefinition
         public readonly bool $archivablePhraseRequired = false,
         /** Fixed phrase to type when archiving; null = use the record's name/title. */
         public readonly ?string $archivablePhrase = null,
+        /** Whether to animate table rows (enter, state changes, save flash). Default true. */
+        public readonly bool $animateRows = true,
+        /** Whether to animate form panel slide-over / modal transitions. Default true. */
+        public readonly bool $animatePanels = true,
+        /** Whether to animate validation error messages with a shake effect. Default true. */
+        public readonly bool $animateErrors = true,
+        /** Whether to apply a press micro-interaction to buttons in this table. Default true. */
+        public readonly bool $animateButtons = true,
     ) {
         if (! in_array($formMode, ['slide-over', 'page', 'modal'], true)) {
             throw new \InvalidArgumentException("formMode must be 'slide-over', 'page', or 'modal', got '{$formMode}'");

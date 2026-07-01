@@ -10,6 +10,20 @@
     $value = $item['value'];
     $live  = $item['live'] ?? false;
     $trend = $card->getTrend();
+
+    // Determine whether to use count-up animation.
+    // Only for static (non-live) numeric values when animations are enabled.
+    $numericValue  = null;
+    $useCountUp    = false;
+    if (! $live
+        && $card->shouldCountUp()
+        && config('architect.animations', true)
+        && $value !== null
+        && is_numeric((string) $value)
+    ) {
+        $numericValue = (float) $value;
+        $useCountUp   = true;
+    }
 @endphp
 
 <div class="arch-card h-full">
@@ -29,6 +43,27 @@
                 <p class="text-2xl font-semibold text-gray-800 dark:text-gray-100">
                     {{ $value ?? '—' }}
                 </p>
+            @elseif ($useCountUp)
+                <p class="text-2xl font-semibold text-gray-800 dark:text-gray-100"
+                    x-data="{ n: 0 }"
+                    x-init="
+                        (function() {
+                            var target = {{ $numericValue }};
+                            var start  = null;
+                            var dur    = 800;
+                            var ease   = function(p) { return p < 0.5 ? 2*p*p : -1+(4-2*p)*p; };
+                            function step(ts) {
+                                if (!start) start = ts;
+                                var p = Math.min((ts - start) / dur, 1);
+                                $data.n = Math.round(ease(p) * target);
+                                if (p < 1) requestAnimationFrame(step);
+                                else $data.n = target;
+                            }
+                            requestAnimationFrame(step);
+                        })();
+                    "
+                    x-text="n.toLocaleString()"
+                >{{ $value }}</p>
             @else
                 <p class="text-2xl font-semibold text-gray-800 dark:text-gray-100">
                     {{ $value ?? '—' }}

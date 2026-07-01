@@ -777,6 +777,7 @@ class Engine extends Component
         );
 
         $this->dispatch('edit-saved');
+        $this->dispatch('architect:row-saved', id: $rowId);
     }
 
     /**
@@ -843,6 +844,7 @@ class Engine extends Component
         $this->dataModel()->modify($rowId, $coerced);
 
         $this->dispatch('edit-saved');
+        $this->dispatch('architect:row-saved', id: $rowId);
     }
 
     /**

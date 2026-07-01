@@ -61,6 +61,12 @@ final class MetricCard
     /** Polling interval in seconds (only meaningful when $liveCallable is set). */
     private int $liveEvery = 30;
 
+    /**
+     * Whether to animate the displayed value counting up from 0 on first render.
+     * Only applies to static (non-live) cards with numeric values.
+     */
+    private bool $countUp = true;
+
     private function __construct(string $label)
     {
         $this->label = $label;
@@ -157,6 +163,26 @@ final class MetricCard
     public function isLive(): bool
     {
         return $this->liveCallable !== null;
+    }
+
+    /**
+     * Enable or disable the count-up animation for this card.
+     *
+     * The animation is enabled by default for non-live cards with a
+     * numeric value. Pass false to render the value statically.
+     * Respects the global config('architect.animations') master switch.
+     */
+    public function countUp(bool $enabled = true): self
+    {
+        $clone = clone $this;
+        $clone->countUp = $enabled;
+
+        return $clone;
+    }
+
+    public function shouldCountUp(): bool
+    {
+        return $this->countUp;
     }
 
     public function getLiveCallable(): ?Closure

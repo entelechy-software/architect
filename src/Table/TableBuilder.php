@@ -96,6 +96,14 @@ final class TableBuilder
 
     private ?string $archivablePhrase = null;
 
+    private bool $animateRows = true;
+
+    private bool $animatePanels = true;
+
+    private bool $animateErrors = true;
+
+    private bool $animateButtons = true;
+
     private bool $selectableRows = false;
 
     private ?string $createMode = null;
@@ -869,6 +877,62 @@ final class TableBuilder
         return $clone;
     }
 
+    /**
+     * Control row-level animations: enter transition, save flash, and
+     * pending-delete / pending-archive state highlights.
+     *
+     * Pass false to disable all row animations on this table.
+     * Respects the global config('architect.animations') master switch.
+     */
+    public function animateRows(bool $enabled = true): self
+    {
+        $clone = clone $this;
+        $clone->animateRows = $enabled;
+
+        return $clone;
+    }
+
+    /**
+     * Control form panel transition animations (slide-over and modal).
+     *
+     * Pass false to use instant open/close with no transition on this table.
+     */
+    public function animatePanels(bool $enabled = true): self
+    {
+        $clone = clone $this;
+        $clone->animatePanels = $enabled;
+
+        return $clone;
+    }
+
+    /**
+     * Control whether validation error banners shake when they appear
+     * or re-trigger (e.g. repeated failed submits).
+     *
+     * Pass false to render error banners without the shake animation.
+     */
+    public function animateErrors(bool $enabled = true): self
+    {
+        $clone = clone $this;
+        $clone->animateErrors = $enabled;
+
+        return $clone;
+    }
+
+    /**
+     * Control the button press micro-interaction (scale-down on :active)
+     * for all buttons rendered within this table component.
+     *
+     * Pass false to disable the press effect on this table's buttons.
+     */
+    public function animateButtons(bool $enabled = true): self
+    {
+        $clone = clone $this;
+        $clone->animateButtons = $enabled;
+
+        return $clone;
+    }
+
     public function build(): ArchitectTableDefinition
     {
         if ($this->dataModelClass === null) {
@@ -992,6 +1056,10 @@ final class TableBuilder
             deletablePhrase: $this->deletablePhrase,
             archivablePhraseRequired: $this->archivablePhraseRequired,
             archivablePhrase: $this->archivablePhrase,
+            animateRows: $this->animateRows,
+            animatePanels: $this->animatePanels,
+            animateErrors: $this->animateErrors,
+            animateButtons: $this->animateButtons,
             selectableRows: $this->selectableRows,
             bulkActions: $this->bulkActions,
             exportFormats: $this->exportFormats,

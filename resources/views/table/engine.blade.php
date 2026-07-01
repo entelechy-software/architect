@@ -43,6 +43,7 @@
 
 <div
     data-loading="{{ $isLoading ? 'true' : 'false' }}"
+    @if (config('architect.animations', true) && $definition->animateButtons) data-arch-anim-buttons @endif
     x-data="moduleTable({
         instanceKey:             '{{ $instanceKey }}',
         tablePrefix:             'moduleTable_{{ md5($definitionClass) }}_u{{ (int) (auth()->id() ?? 0) }}_',
@@ -504,7 +505,10 @@
                     <th class="w-1 text-right"></th>
                 </tr>
             </thead>
-            <tbody>
+            <tbody
+                class="arch-table-body"
+                @if (config('architect.animations', true) && $definition->animateRows) data-arch-anim-rows @endif
+            >
                 {{-- Table-level inline-edit vars ($rowDependentEditKeys, $cascadeChildren,
                      $cascadeChildrenJson, $inlineUnsupportedTypes) are computed at the very
                      top of this template (before <div x-data>) so they can be seeded into
@@ -535,7 +539,18 @@
                     @endphp
                     <tr
                         wire:key="row-{{ $row['id'] ?? $loop->index }}"
-                        :class="rowEdit.isActive({{ $rowId }}) ? 'mt-row-editing' : ''"
+                        @if (config('architect.animations', true) && $definition->animateRows)
+                        x-data="{ _flash: false }"
+                        @architect:row-saved.window="if ($event.detail.id == {{ $rowId }}) { _flash = true; setTimeout(() => _flash = false, 1400); }"
+                        :class="{
+                            'arch-row--editing':   rowEdit.isActive({{ $rowId }}),
+                            'arch-row--deleting':  $wire.pendingDeleteId   === {{ $rowId }},
+                            'arch-row--archiving': $wire.pendingArchiveId  === {{ $rowId }},
+                            'arch-row--saved':     _flash,
+                        }"
+                        @else
+                        :class="rowEdit.isActive({{ $rowId }}) ? 'arch-row--editing' : ''"
+                        @endif
                     >
                         @if ($definition->selectableRows)
                             <td>

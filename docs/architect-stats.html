@@ -118,6 +118,7 @@ MetricCard::make('Revenue This Month')
 <tr><td><code>value(Closure)</code></td><td>Value resolver. Receives an optional <code>DateRange</code> argument if the user selects a date range. Return a number or string.</td></tr>
 <tr><td><code>trend(float)</code></td><td>Trend percentage (positive = up/green, negative = down/red).</td></tr>
 <tr><td><code>live(Closure, int $every)</code></td><td>Override the value with a live-polling closure that runs every N seconds independently of the date range selector.</td></tr>
+<tr><td><code>countUp(bool)</code></td><td>Animate the displayed value counting up from 0 on first render. Only applies to static (non-live) numeric values. Default: <code>true</code>. Pass <code>false</code> to render instantly.</td></tr>
 </tbody>
 </table>
 </section>

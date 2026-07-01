@@ -117,6 +117,53 @@
 ],</code></pre>
 </section>
 
+<section id="animations">
+<h2>Animations</h2>
+<p>Architect ships with a suite of opt-out UI animations. All animations respect <code>prefers-reduced-motion</code> automatically via the existing CSS custom property pattern.</p>
+
+<h3>Always-on animations</h3>
+<table>
+<thead><tr><th>Animation</th><th>Trigger</th></tr></thead>
+<tbody>
+<tr><td>Button press micro-interaction</td><td><code>:active</code> scale(0.95) on <code>.arch-button</code> elements within a table</td></tr>
+<tr><td>Panel transitions</td><td>Slide-over uses a spring curve; modal uses a gentle bounce open</td></tr>
+<tr><td>Row enter</td><td>New <code>&lt;tr&gt;</code> elements fade in with a 2 px slide (page change, filter, create)</td></tr>
+<tr><td>Row pending-delete highlight</td><td>Row dims to danger colour while the delete confirmation modal is open</td></tr>
+<tr><td>Row pending-archive highlight</td><td>Row dims to warning colour while the archive confirmation modal is open</td></tr>
+<tr><td>Row save flash</td><td>Row briefly flashes green after a successful inline edit save</td></tr>
+<tr><td>Validation error shake</td><td>Error banner shakes when it appears or re-triggers on repeated failed submits</td></tr>
+</tbody>
+</table>
+
+<h3>Per-definition control (TableBuilder)</h3>
+<pre><code>TableBuilder::make()
+    ->animateRows(false)    // row enter, save flash, pending highlights
+    ->animatePanels(false)  // slide-over / modal open & close
+    ->animateErrors(false)  // validation error banner shake
+    ->animateButtons(false) // button press scale micro-interaction</code></pre>
+<p>All four methods accept a boolean and default to <code>true</code>. Pass <code>false</code> to disable the corresponding animation group on that table instance only.</p>
+
+<h3>Per-card control (MetricCard)</h3>
+<pre><code>MetricCard::make('Revenue')
+    ->value(fn() => Order::sum('total'))
+    ->countUp(false);  // disable count-up animation for this card</code></pre>
+<p>Count-up is enabled by default for static (non-live) cards with a numeric value. Pass <code>false</code> to render the value instantly.</p>
+
+<h3>Global master switch</h3>
+<pre><code>// config/architect.php
+'animations' => false,  // disables all package animations</code></pre>
+<p>Set <code>animations</code> to <code>false</code> in <code>config/architect.php</code> to disable all animations package-wide. This takes precedence over every per-definition flag. Useful for accessibility-first deployments or enterprise apps where motion is undesirable.</p>
+
+<h3>CSS custom properties</h3>
+<p>Animation durations are CSS custom properties — override them in your app CSS to tune timing without touching Blade templates:</p>
+<pre><code>:root {
+    --arch-row-enter-duration:  0.3s;  /* default 0.2s */
+    --arch-row-flash-duration:  2s;    /* default 1.4s */
+    --arch-shake-duration:      0.6s;  /* default 0.4s */
+}</code></pre>
+<p>The <code>prefers-reduced-motion</code> media query sets all three to <code>0ms</code> automatically, so users who prefer reduced motion are never affected regardless of your overrides.</p>
+</section>
+
 <section id="colour-names">
 <h2>Colour Name Reference</h2>
 <p>Several Architect builder methods accept a colour name string (e.g. <code>->color('primary')</code>, <code>->badge('3', 'danger')</code>). The accepted values are:</p>

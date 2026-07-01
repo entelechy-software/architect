@@ -93,6 +93,10 @@ class MembersTableDefinition extends ArchitectTableDefinition
 <tr><td><code>autoRefresh(int $seconds, bool $countdown)</code></td><td>Auto-refresh the table every N seconds.</td></tr>
 <tr><td><code>persistOnCreate(bool)</code></td><td>Keep the create modal open after saving (for rapid data entry).</td></tr>
 <tr><td><code>perPage(int $default, array $options)</code></td><td>Default page size and available page size options.</td></tr>
+<tr><td><code>animateRows(bool)</code></td><td>Row enter, save flash, and pending delete/archive highlights. Default: <code>true</code>.</td></tr>
+<tr><td><code>animatePanels(bool)</code></td><td>Slide-over and modal open/close transition animations. Default: <code>true</code>.</td></tr>
+<tr><td><code>animateErrors(bool)</code></td><td>Validation error banner shake on appear / re-trigger. Default: <code>true</code>.</td></tr>
+<tr><td><code>animateButtons(bool)</code></td><td>Button press scale micro-interaction (<code>scale(0.95)</code> on <code>:active</code>). Default: <code>true</code>.</td></tr>
 <tr><td><code>build()</code></td><td>Returns the <code>ArchitectTableDefinition</code> value object.</td></tr>
 </tbody>
 </table>

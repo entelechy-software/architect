@@ -38,7 +38,18 @@
 
                 <div class="arch-card-body">
                     @if ($errorMessage)
-                        <div class="arch-alert arch-alert-danger" role="alert">
+                        <div class="arch-alert arch-alert-danger"
+                            role="alert"
+                            @if (config('architect.animations', true) && $definition->animateErrors)
+                            x-data
+                            x-init="$watch('$wire.errorMessage', v => {
+                                if (!v) return;
+                                $el.classList.remove('arch-shake');
+                                void $el.offsetWidth;
+                                $el.classList.add('arch-shake');
+                            })"
+                            @endif
+                        >
                             {{ $errorMessage }}
                         </div>
                     @endif
@@ -108,7 +119,7 @@
                 role="dialog"
                 aria-modal="true"
                 aria-labelledby="module-table-panel-title"
-                x-transition:enter="transition ease-out duration-200"
+                x-transition:enter="transition arch-ease-bounce duration-300"
                 x-transition:enter-start="opacity-0 scale-95"
                 x-transition:enter-end="opacity-100 scale-100"
                 x-transition:leave="transition ease-in duration-150"
@@ -130,7 +141,18 @@
 
                         <div class="arch-panel__body">
                             @if ($errorMessage && ($panelState === 'create' || $panelState === 'edit'))
-                                <div class="arch-alert arch-alert-danger" role="alert">{{ $errorMessage }}</div>
+                                <div class="arch-alert arch-alert-danger"
+                                    role="alert"
+                                    @if (config('architect.animations', true) && $definition->animateErrors)
+                                    x-data
+                                    x-init="$watch('$wire.errorMessage', v => {
+                                        if (!v) return;
+                                        $el.classList.remove('arch-shake');
+                                        void $el.offsetWidth;
+                                        $el.classList.add('arch-shake');
+                                    })"
+                                    @endif
+                                >{{ $errorMessage }}</div>
                             @endif
 
                             @if ($panelState === 'create' || $panelState === 'edit')
@@ -210,10 +232,10 @@
                 role="dialog"
                 aria-modal="true"
                 aria-labelledby="module-table-panel-title"
-                x-transition:enter="transform transition ease-out duration-200"
+                x-transition:enter="transform transition arch-ease-spring duration-300"
                 x-transition:enter-start="translate-x-full"
                 x-transition:enter-end="translate-x-0"
-                x-transition:leave="transform transition ease-in duration-150"
+                x-transition:leave="transform transition ease-in duration-200"
                 x-transition:leave-start="translate-x-0"
                 x-transition:leave-end="translate-x-full"
             >
@@ -237,7 +259,18 @@
 
                 <div class="arch-panel__body">
                     @if ($errorMessage && ($panelState === 'create' || $panelState === 'edit'))
-                        <div class="arch-alert arch-alert-danger" role="alert">{{ $errorMessage }}</div>
+                        <div class="arch-alert arch-alert-danger"
+                            role="alert"
+                            @if (config('architect.animations', true) && $definition->animateErrors)
+                            x-data
+                            x-init="$watch('$wire.errorMessage', v => {
+                                if (!v) return;
+                                $el.classList.remove('arch-shake');
+                                void $el.offsetWidth;
+                                $el.classList.add('arch-shake');
+                            })"
+                            @endif
+                        >{{ $errorMessage }}</div>
                     @endif
 
                     @if ($panelState === 'create' || $panelState === 'edit')

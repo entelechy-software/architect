@@ -87,6 +87,11 @@
     /* Sustained animations */
     --arch-animation-pulse: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
     --arch-animation-spin:  spin  1s linear infinite;
+
+    /* One-shot animation durations — set to 0ms or 0s in prefers-reduced-motion */
+    --arch-row-enter-duration:  0.2s;
+    --arch-row-flash-duration:  1.4s;
+    --arch-shake-duration:      0.4s;
 }
 
 /* Dark mode token overrides */
@@ -101,10 +106,17 @@
 /* Reduced motion — one block covers every component automatically */
 @media (prefers-reduced-motion: reduce) {
     :root {
-        --arch-animation-pulse: none;
-        --arch-animation-spin:  none;
-        --arch-transition:      0ms;
+        --arch-animation-pulse:    none;
+        --arch-animation-spin:     none;
+        --arch-transition:         0ms;
+        --arch-row-enter-duration: 0ms;
+        --arch-row-flash-duration: 0ms;
+        --arch-shake-duration:     0ms;
     }
+    .arch-table-body[data-arch-anim-rows] tr,
+    .arch-row--saved,
+    .arch-shake { animation: none; }
+    [data-arch-anim-buttons] .arch-button:active { transform: none !important; }
 }
 
 /* ── Layout hooks ───────────────────────────────────────────────────────
@@ -563,6 +575,72 @@
     border-radius: 50%;
     animation: spin 0.65s linear infinite;
 }
+
+/* ── Button press micro-interaction ─────────────────────────────────────────
+   Scoped to tables that opt in via data-arch-anim-buttons on the wrapper.
+   ─────────────────────────────────────────────────────────────────────── */
+[data-arch-anim-buttons] .arch-button:active:not([disabled]):not([data-disabled]) {
+    transform: scale(0.95);
+    transition: transform 0.08s ease-out, background-color 0.15s;
+}
+
+/* ── Row animations ──────────────────────────────────────────────────────────
+   Row enter: fires on new <tr> elements (page change, filter, create).
+   Scoped to tbody with data-arch-anim-rows so only opt-in tables animate.
+   ─────────────────────────────────────────────────────────────────────── */
+@keyframes arch-row-enter {
+    from { opacity: 0; transform: translateY(-2px); }
+    to   { opacity: 1; transform: none; }
+}
+
+.arch-table-body[data-arch-anim-rows] tr {
+    animation: arch-row-enter var(--arch-row-enter-duration, 0.2s) ease-out both;
+}
+
+/* Row pending-state highlights (delete / archive confirmation open) */
+.arch-row--deleting {
+    background-color: var(--arch-color-danger-muted) !important;
+    opacity: 0.5;
+    transition: background-color 0.2s, opacity 0.2s;
+}
+
+.arch-row--archiving {
+    background-color: var(--arch-color-warning-muted) !important;
+    opacity: 0.65;
+    transition: background-color 0.2s, opacity 0.2s;
+}
+
+/* Row save flash (green flash after inline edit save) */
+@keyframes arch-row-flash-success {
+    0%   { background-color: var(--arch-color-success-muted); }
+    70%  { background-color: var(--arch-color-success-muted); }
+    100% { background-color: transparent; }
+}
+
+.arch-row--saved {
+    animation: arch-row-flash-success var(--arch-row-flash-duration, 1.4s) ease-out both;
+}
+
+/* ── Validation error shake ──────────────────────────────────────────────────
+   Applied/removed via Alpine $watch in form-panel.blade.php.
+   ─────────────────────────────────────────────────────────────────────── */
+@keyframes arch-shake {
+    0%, 100% { transform: none; }
+    20%       { transform: translateX(-5px); }
+    40%       { transform: translateX(5px); }
+    60%       { transform: translateX(-3px); }
+    80%       { transform: translateX(3px); }
+}
+
+.arch-shake {
+    animation: arch-shake var(--arch-shake-duration, 0.4s) ease-in-out;
+}
+
+/* ── Panel transition timing classes ────────────────────────────────────────
+   Used in x-transition directives on slide-over and modal panels.
+   ─────────────────────────────────────────────────────────────────────── */
+.arch-ease-spring { transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1); }
+.arch-ease-bounce { transition-timing-function: cubic-bezier(0.34, 1.56, 0.64, 1); }
 
 /* ── Table / Navigator / Stats / Toolbar subsystem classes ──────────────────
    Flat (non-data-attribute) class families used by views migrated from the
