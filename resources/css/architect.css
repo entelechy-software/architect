@@ -688,10 +688,10 @@
 .arch-panel { }
 .arch-panel-backdrop { position: fixed; inset: 0; z-index: calc(var(--arch-z-slide-over) - 1); background: rgb(0 0 0 / 0.4); }
 .arch-panel--slide-over { position: fixed; top: 0; right: 0; height: 100%; z-index: var(--arch-z-slide-over); background: var(--arch-color-surface); box-shadow: var(--arch-shadow-lg); display: flex; flex-direction: column; }
-.arch-panel--modal { position: relative; background: var(--arch-color-surface); border-radius: var(--arch-radius-lg); box-shadow: var(--arch-shadow-lg); display: flex; flex-direction: column; max-height: 90vh; }
+.arch-panel--modal { position: fixed; inset: 0; z-index: var(--arch-z-slide-over); display: flex; align-items: center; justify-content: center; }
 .arch-panel__window { display: flex; flex-direction: column; height: 100%; }
 .arch-panel__window--slide-over { width: 36rem; }
-.arch-panel__window--modal { width: 32rem; margin: auto; }
+.arch-panel__window--modal { width: 32rem; background: var(--arch-color-surface); border-radius: var(--arch-radius-lg); box-shadow: var(--arch-shadow-lg); display: flex; flex-direction: column; max-height: 90vh; height: auto; }
 .arch-panel__window--xl { width: 56rem; }
 .arch-panel__header { border-bottom: 1px solid var(--arch-color-border); @apply flex items-center justify-between px-6 py-4; }
 .arch-panel__header-copy { @apply flex flex-col; }
