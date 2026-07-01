@@ -640,17 +640,22 @@ final class TableBuilder
     /**
      * Configure record creation mode and editable columns.
      *
-     * @param  string  $mode  'inline' for in-place editing, 'slide-out' for slide-over panel
+     * @param  string  $mode  'inline' for in-place editing, 'slide-out' for slide-over panel, 'modal' for centered modal panel
      * @param  list<string>|null  $columns  Column keys that are editable (null = all columns with ->type())
      */
     public function create(string $mode, ?array $columns = null): self
     {
         $clone = clone $this;
-        if (! in_array($mode, ['inline', 'slide-out'], true)) {
-            throw new \InvalidArgumentException("Create mode must be 'inline' or 'slide-out', got '{$mode}'");
+        if (! in_array($mode, ['inline', 'slide-out', 'modal'], true)) {
+            throw new \InvalidArgumentException("Create mode must be 'inline', 'slide-out', or 'modal', got '{$mode}'");
         }
 
-        $clone->createMode = $mode;
+        if ($mode === 'modal') {
+            $clone->formMode = 'modal';
+            $clone->createMode = 'slide-out';
+        } else {
+            $clone->createMode = $mode;
+        }
         $clone->createColumns = $columns;
 
         return $clone;
@@ -659,17 +664,22 @@ final class TableBuilder
     /**
      * Configure record modification mode and editable columns.
      *
-     * @param  string  $mode  'inline' for in-place editing, 'slide-out' for slide-over panel
+     * @param  string  $mode  'inline' for in-place editing, 'slide-out' for slide-over panel, 'modal' for centered modal panel
      * @param  list<string>|null  $columns  Column keys that are editable (null = all columns with ->type())
      */
     public function modify(string $mode, ?array $columns = null): self
     {
         $clone = clone $this;
-        if (! in_array($mode, ['inline', 'slide-out'], true)) {
-            throw new \InvalidArgumentException("Modify mode must be 'inline' or 'slide-out', got '{$mode}'");
+        if (! in_array($mode, ['inline', 'slide-out', 'modal'], true)) {
+            throw new \InvalidArgumentException("Modify mode must be 'inline', 'slide-out', or 'modal', got '{$mode}'");
         }
 
-        $clone->modifyMode = $mode;
+        if ($mode === 'modal') {
+            $clone->formMode = 'modal';
+            $clone->modifyMode = 'slide-out';
+        } else {
+            $clone->modifyMode = $mode;
+        }
         $clone->modifyColumns = $columns;
 
         return $clone;
