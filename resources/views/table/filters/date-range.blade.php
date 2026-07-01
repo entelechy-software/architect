@@ -30,22 +30,3 @@
         aria-label="{{ $filter->getLabel() }} to"
     >
 </div>
-    class="flex gap-2"
->
-    <input
-        type="date"
-        class="arch-input arch-input-sm"
-        x-model="from"
-        @change="update()"
-        placeholder="From"
-        aria-label="{{ $filter->getLabel() }} from"
-    >
-    <input
-        type="date"
-        class="arch-input arch-input-sm"
-        x-model="to"
-        @change="update()"
-        placeholder="To"
-        aria-label="{{ $filter->getLabel() }} to"
-    >
-</div>
