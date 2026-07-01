@@ -257,7 +257,7 @@
             @endphp
             <div
                 wire:key="{{ $sectionKey }}"
-                class="{{ $colClass }} relative group/section"
+                class="{{ $colClass }} relative group/section arch-dash-section"
                 data-section-key="{{ $sectionKey }}"
                 x-show="isVisible('{{ $sectionKey }}')"
                 x-transition:leave="transition-opacity duration-200"
@@ -266,9 +266,10 @@
                 :style="{
                     'grid-column': fullscreenKey !== '{{ $sectionKey }}' ? 'span ' + getSpan('{{ $sectionKey }}') + ' / span ' + getSpan('{{ $sectionKey }}') : undefined,
                 }"
-                :class="fullscreenKey === '{{ $sectionKey }}'
-                    ? 'fixed inset-0 z-50 overflow-y-auto bg-gray-50 dark:bg-gray-950 p-6'
-                    : ''"
+                :class="{
+                    'fixed inset-0 z-50 overflow-y-auto bg-gray-50 dark:bg-gray-950 p-6': fullscreenKey === '{{ $sectionKey }}',
+                    'arch-section--editing': editMode && fullscreenKey !== '{{ $sectionKey }}',
+                }"
             >
                 {{-- Floating section controls: drag handle, width/height steppers, fullscreen --}}
                 <div

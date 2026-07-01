@@ -510,6 +510,27 @@
 .arch-fieldset__legend { font-size: var(--arch-font-size-sm); font-weight: var(--arch-font-weight-semibold); color: var(--arch-color-text); @apply px-1; }
 
 /* Stats & Charts */
+
+/* Dashboard section layout-edit ring — uses outline so it never disturbs box-shadow/ring utilities */
+.arch-dash-section {
+    outline: 2px solid transparent;
+    outline-offset: 3px;
+    border-radius: 0.75rem;
+    transition: outline-color 0.15s ease;
+}
+.arch-dash-section:hover {
+    outline-color: rgba(99, 102, 241, 0.25);
+}
+.arch-dash-section.arch-section--editing {
+    outline-color: rgba(99, 102, 241, 0.55);
+}
+[data-theme="dark"] .arch-dash-section:hover {
+    outline-color: rgba(129, 140, 248, 0.25);
+}
+[data-theme="dark"] .arch-dash-section.arch-section--editing {
+    outline-color: rgba(129, 140, 248, 0.55);
+}
+
 .arch-stat { }
 .arch-stat__value { font-size: var(--arch-font-size-2xl); font-weight: var(--arch-font-weight-bold); color: var(--arch-color-text); }
 .arch-stat__label { font-size: var(--arch-font-size-sm); color: var(--arch-color-text-muted); }
