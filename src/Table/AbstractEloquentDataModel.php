@@ -105,8 +105,14 @@ abstract class AbstractEloquentDataModel implements ArchitectDataModel
 
     public function delete(int $id, ?string $reason = null): void
     {
-        // @phpstan-ignore staticMethod.notFound
-        $this->modelClass()::withTrashed()->findOrFail($id)->forceDelete();
+        $modelClass = $this->modelClass();
+
+        if (in_array(\Illuminate\Database\Eloquent\SoftDeletes::class, class_uses_recursive($modelClass))) {
+            // @phpstan-ignore staticMethod.notFound
+            $modelClass::withTrashed()->findOrFail($id)->forceDelete();
+        } else {
+            $modelClass::findOrFail($id)->delete();
+        }
     }
 
     /**
