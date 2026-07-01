@@ -19,6 +19,10 @@ final class BulkDeleteAction implements ArchitectBulkAction
 {
     private bool $reasonRequired = false;
 
+    private bool $phraseRequired = false;
+
+    private ?string $phrase = null;
+
     public static function make(): self
     {
         return new self;
@@ -32,6 +36,20 @@ final class BulkDeleteAction implements ArchitectBulkAction
     {
         $clone = clone $this;
         $clone->reasonRequired = true;
+
+        return $clone;
+    }
+
+    /**
+     * Mark this action as requiring a typed phrase before executing.
+     *
+     * @param  string|null  $phrase  Fixed phrase to type; null = use a generic prompt
+     */
+    public function withPhraseRequired(?string $phrase = null): self
+    {
+        $clone = clone $this;
+        $clone->phraseRequired = true;
+        $clone->phrase = $phrase;
 
         return $clone;
     }
@@ -66,6 +84,16 @@ final class BulkDeleteAction implements ArchitectBulkAction
     public function requiresReason(): bool
     {
         return $this->reasonRequired;
+    }
+
+    public function requiresPhrase(): bool
+    {
+        return $this->phraseRequired;
+    }
+
+    public function getPhrase(): ?string
+    {
+        return $this->phrase;
     }
 
     public function permissionNode(): ?string

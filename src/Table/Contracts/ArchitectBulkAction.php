@@ -42,6 +42,17 @@ interface ArchitectBulkAction
      */
     public function requiresReason(): bool;
 
+    /**
+     * When true the engine shows a phrase-confirmation input before executing.
+     * The user must type the exact phrase (case-sensitive) to proceed.
+     */
+    public function requiresPhrase(): bool;
+
+    /**
+     * The phrase the user must type. Null = display a generic 'confirm' prompt.
+     */
+    public function getPhrase(): ?string;
+
     public function permissionNode(): ?string;
 
     /**

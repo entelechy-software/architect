@@ -137,6 +137,14 @@ final class ArchitectTableDefinition
          * Null = no header section. Populate via TableBuilder::header() when implemented.
          */
         public readonly ?ArchitectStatDefinition $headerSection = null,
+        /** Whether deletion requires the user to type a confirmation phrase. */
+        public readonly bool $deletablePhraseRequired = false,
+        /** Fixed phrase to type when deleting; null = use the record's name/title. */
+        public readonly ?string $deletablePhrase = null,
+        /** Whether archiving requires the user to type a confirmation phrase. */
+        public readonly bool $archivablePhraseRequired = false,
+        /** Fixed phrase to type when archiving; null = use the record's name/title. */
+        public readonly ?string $archivablePhrase = null,
     ) {
         if (! in_array($formMode, ['slide-over', 'page', 'modal'], true)) {
             throw new \InvalidArgumentException("formMode must be 'slide-over', 'page', or 'modal', got '{$formMode}'");

@@ -77,6 +77,16 @@ final class BulkStatusAction implements ArchitectBulkAction
         return false;
     }
 
+    public function requiresPhrase(): bool
+    {
+        return false;
+    }
+
+    public function getPhrase(): ?string
+    {
+        return null;
+    }
+
     public function permissionNode(): ?string
     {
         return null;

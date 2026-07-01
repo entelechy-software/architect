@@ -88,6 +88,14 @@ final class TableBuilder
 
     private bool $deletableReasonRequired = false;
 
+    private bool $deletablePhraseRequired = false;
+
+    private ?string $deletablePhrase = null;
+
+    private bool $archivablePhraseRequired = false;
+
+    private ?string $archivablePhrase = null;
+
     private bool $selectableRows = false;
 
     private ?string $createMode = null;
@@ -387,12 +395,16 @@ final class TableBuilder
         bool $reasonRequired = false,
         bool $allowUnarchive = true,
         bool $allowDelete = false,
+        bool $phraseRequired = false,
+        ?string $confirmationPhrase = null,
     ): self {
         $clone = clone $this;
         $clone->archivable = $archivable;
         $clone->requiresDeletionReason = $reasonRequired;
         $clone->allowUnarchive = $allowUnarchive;
         $clone->allowDelete = $allowDelete;
+        $clone->archivablePhraseRequired = $phraseRequired;
+        $clone->archivablePhrase = $confirmationPhrase;
 
         return $clone;
     }
@@ -413,17 +425,22 @@ final class TableBuilder
     /**
      * Enable permanent deletion (hard delete) for this table.
      *
-     * Adds a delete button to each row that permanently removes the record.
-     * Requires 'remove' permission. Use archivable() for soft deletion.
-     *
      * @param  bool  $deletable  Whether deletion is enabled
-     * @param  bool  $reasonRequired  Whether a deletion reason must be provided
+     * @param  bool  $reasonRequired  Whether a reason must be provided (opens a textarea)
+     * @param  bool  $phraseRequired  Whether the user must type a phrase to confirm
+     * @param  string|null  $confirmationPhrase  Fixed phrase to type; null = use the record's name/title
      */
-    public function deletable(bool $deletable = true, bool $reasonRequired = false): self
-    {
+    public function deletable(
+        bool $deletable = true,
+        bool $reasonRequired = false,
+        bool $phraseRequired = false,
+        ?string $confirmationPhrase = null,
+    ): self {
         $clone = clone $this;
         $clone->deletable = $deletable;
         $clone->deletableReasonRequired = $reasonRequired;
+        $clone->deletablePhraseRequired = $phraseRequired;
+        $clone->deletablePhrase = $confirmationPhrase;
 
         return $clone;
     }
@@ -511,12 +528,29 @@ final class TableBuilder
     /**
      * Enable bulk permanent deletion for this table.
      *
-     * @deprecated Use ->bulkActions(['delete' => true]) or
-     *             ->bulkActions(['delete' => ['reasonRequired' => true]]) instead.
+     * @param  bool  $reasonRequired  Whether a reason must be provided
+     * @param  bool  $phraseRequired  Whether the user must type a phrase to confirm
+     * @param  string|null  $confirmationPhrase  Fixed phrase to type; null = ignored for bulk
      */
-    public function bulkDelete(bool $reasonRequired = false): self
+    public function bulkDelete(bool $reasonRequired = false, bool $phraseRequired = false, ?string $confirmationPhrase = null): self
     {
-        return $this->bulkActions(['delete' => $reasonRequired ? ['reasonRequired' => true] : true]);
+        $action = BulkDeleteAction::make();
+        if ($reasonRequired) {
+            $action = $action->withReasonRequired();
+        }
+        if ($phraseRequired) {
+            $action = $action->withPhraseRequired($confirmationPhrase);
+        }
+
+        $clone = clone $this;
+        $clone->selectableRows = true;
+        // Replace any existing delete bulk action rather than duplicating it
+        $clone->bulkActions = array_values(
+            array_filter($clone->bulkActions, fn ($a) => $a->getKey() !== 'delete')
+        );
+        $clone->bulkActions[] = $action;
+
+        return $clone;
     }
 
     /**
@@ -954,6 +988,10 @@ final class TableBuilder
             allowDelete: $this->allowDelete,
             deletable: $this->deletable,
             deletableReasonRequired: $this->deletableReasonRequired,
+            deletablePhraseRequired: $this->deletablePhraseRequired,
+            deletablePhrase: $this->deletablePhrase,
+            archivablePhraseRequired: $this->archivablePhraseRequired,
+            archivablePhrase: $this->archivablePhrase,
             selectableRows: $this->selectableRows,
             bulkActions: $this->bulkActions,
             exportFormats: $this->exportFormats,

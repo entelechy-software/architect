@@ -124,6 +124,12 @@ class Engine extends Component
 
     public ?string $archiveError = null;
 
+    /** Phrase the user has typed into the archive confirmation input. */
+    public string $archivePhraseInput = '';
+
+    /** The exact phrase the user must type to confirm archiving (null = phrase check disabled). */
+    public ?string $pendingArchiveRequiredPhrase = null;
+
     /**
      * Delete flow state.
      *
@@ -137,6 +143,12 @@ class Engine extends Component
 
     public ?string $deleteError = null;
 
+    /** Phrase the user has typed into the delete confirmation input. */
+    public string $deletePhraseInput = '';
+
+    /** The exact phrase the user must type to confirm deletion (null = phrase check disabled). */
+    public ?string $pendingDeleteRequiredPhrase = null;
+
     /**
      * Bulk delete flow state.
      *
@@ -149,6 +161,12 @@ class Engine extends Component
     public string $bulkActionReason = '';
 
     public ?string $bulkActionError = null;
+
+    /** Phrase the user has typed into the bulk-action phrase input. */
+    public string $bulkPhraseInput = '';
+
+    /** The exact phrase required for the pending bulk action (null = phrase check disabled). */
+    public ?string $pendingBulkRequiredPhrase = null;
 
     /**
      * Selected row ids for bulk actions. Populated only when the
@@ -399,12 +417,12 @@ class Engine extends Component
     }
 
     /**
-     * Open the deletion-reason modal. Called by the per-row archive
-     * button when the definition declares ->requiresDeletionReason().
-     * Definitions without the reason flag bypass this and call
-     * archive($id) directly.
+     * Open the archive confirmation modal. Always opens a modal so the user
+     * can confirm the action — even when no reason or phrase is required.
+     * The phraseHint is the record name/title supplied by the blade for
+     * definitions that use confirmationPhrase: null (record-specific phrase).
      */
-    public function confirmArchive(int $id): void
+    public function confirmArchive(int $id, string $phraseHint = ''): void
     {
         $def = $this->definition();
 
@@ -412,16 +430,13 @@ class Engine extends Component
             throw new \LogicException('TableBuilder engine: archive requested on a non-archivable definition');
         }
 
-        if (! $def->requiresDeletionReason) {
-            // Definition does not require a reason — caller should
-            // invoke archive() directly. Treat this as a no-op so a
-            // mistakenly-wired button cannot leak data.
-            return;
-        }
-
         $this->pendingArchiveId = $id;
         $this->archiveReason = '';
         $this->archiveError = null;
+        $this->archivePhraseInput = '';
+        $this->pendingArchiveRequiredPhrase = $def->archivablePhraseRequired
+            ? ($def->archivablePhrase ?? ($phraseHint !== '' ? $phraseHint : 'this record'))
+            : null;
     }
 
     public function cancelArchive(): void
@@ -429,17 +444,33 @@ class Engine extends Component
         $this->pendingArchiveId = null;
         $this->archiveReason = '';
         $this->archiveError = null;
+        $this->archivePhraseInput = '';
+        $this->pendingArchiveRequiredPhrase = null;
     }
 
     /**
-     * Modal-driven archive submit. Reads pendingArchiveId and
-     * archiveReason from the component state, validates the reason
-     * (the modal is only ever shown for definitions that declare
-     * ->requiresDeletionReason()) and delegates to archive().
+     * Modal-driven archive submit. Validates phrase (if required) and
+     * reason (if required) before delegating to archive().
      */
     public function submitArchive(): void
     {
         if ($this->pendingArchiveId === null) {
+            return;
+        }
+
+        $def = $this->definition();
+
+        if ($this->pendingArchiveRequiredPhrase !== null) {
+            if ($this->archivePhraseInput !== $this->pendingArchiveRequiredPhrase) {
+                $this->archiveError = 'Please type the exact phrase to confirm.';
+
+                return;
+            }
+        }
+
+        if ($def->requiresDeletionReason && trim($this->archiveReason) === '') {
+            $this->archiveError = 'A reason is required to archive this record.';
+
             return;
         }
 
@@ -510,12 +541,12 @@ class Engine extends Component
     }
 
     /**
-     * Open the deletion-reason modal. Called by the per-row delete
-     * button when the definition declares ->deletable(reasonRequired: true).
-     * Definitions without the reason flag bypass this and call
-     * delete($id) directly.
+     * Open the delete confirmation modal. Always opens a modal so the user
+     * must confirm — even when no reason or phrase is required.
+     * The phraseHint is the record name/title supplied by the blade for
+     * definitions that use confirmationPhrase: null.
      */
-    public function confirmDelete(int $id): void
+    public function confirmDelete(int $id, string $phraseHint = ''): void
     {
         $def = $this->definition();
 
@@ -523,15 +554,13 @@ class Engine extends Component
             throw new \LogicException('TableBuilder engine: delete requested on a non-deletable definition');
         }
 
-        if (! $def->deletableReasonRequired) {
-            // Definition does not require a reason — caller should
-            // invoke delete() directly. Treat this as a no-op.
-            return;
-        }
-
         $this->pendingDeleteId = $id;
         $this->deleteReason = '';
         $this->deleteError = null;
+        $this->deletePhraseInput = '';
+        $this->pendingDeleteRequiredPhrase = $def->deletablePhraseRequired
+            ? ($def->deletablePhrase ?? ($phraseHint !== '' ? $phraseHint : 'this record'))
+            : null;
     }
 
     public function cancelDelete(): void
@@ -539,6 +568,8 @@ class Engine extends Component
         $this->pendingDeleteId = null;
         $this->deleteReason = '';
         $this->deleteError = null;
+        $this->deletePhraseInput = '';
+        $this->pendingDeleteRequiredPhrase = null;
     }
 
     public function cancelPendingBulkAction(): void
@@ -546,12 +577,13 @@ class Engine extends Component
         $this->pendingBulkActionKey = null;
         $this->bulkActionReason = '';
         $this->bulkActionError = null;
+        $this->bulkPhraseInput = '';
+        $this->pendingBulkRequiredPhrase = null;
     }
 
     /**
-     * Modal-driven bulk action submit (for actions with requiresReason() = true).
-     * Validates the reason is non-empty, then delegates to the action's handle()
-     * passing the reason through so the data model can persist it for audit.
+     * Modal-driven bulk action submit (for actions with requiresReason() or requiresPhrase() = true).
+     * Validates phrase (if required) and reason (if required), then delegates to the action's handle().
      */
     public function submitPendingBulkAction(): void
     {
@@ -576,7 +608,15 @@ class Engine extends Component
 
         $reason = trim($this->bulkActionReason);
 
-        if ($reason === '') {
+        if ($this->pendingBulkRequiredPhrase !== null) {
+            if ($this->bulkPhraseInput !== $this->pendingBulkRequiredPhrase) {
+                $this->bulkActionError = 'Please type the exact phrase to confirm.';
+
+                return;
+            }
+        }
+
+        if ($action->requiresReason() && $reason === '') {
             $this->bulkActionError = 'A reason is required to proceed.';
 
             return;
@@ -601,16 +641,33 @@ class Engine extends Component
         $this->pendingBulkActionKey = null;
         $this->bulkActionReason = '';
         $this->bulkActionError = null;
+        $this->bulkPhraseInput = '';
+        $this->pendingBulkRequiredPhrase = null;
     }
 
     /**
-     * Modal-driven delete submit. Reads pendingDeleteId and
-     * deleteReason from the component state, validates the reason
-     * and delegates to delete().
+     * Modal-driven delete submit. Validates phrase (if required) and
+     * reason (if required) before delegating to delete().
      */
     public function submitDelete(): void
     {
         if ($this->pendingDeleteId === null) {
+            return;
+        }
+
+        $def = $this->definition();
+
+        if ($this->pendingDeleteRequiredPhrase !== null) {
+            if ($this->deletePhraseInput !== $this->pendingDeleteRequiredPhrase) {
+                $this->deleteError = 'Please type the exact phrase to confirm.';
+
+                return;
+            }
+        }
+
+        if ($def->deletableReasonRequired && trim($this->deleteReason) === '') {
+            $this->deleteError = 'A reason is required to delete this record.';
+
             return;
         }
 
@@ -941,11 +998,13 @@ class Engine extends Component
             return;
         }
 
-        // For actions that require a reason, open the generic modal.
-        if ($action->requiresReason()) {
+        // For actions that require a reason or phrase, open the generic modal.
+        if ($action->requiresReason() || $action->requiresPhrase()) {
             $this->pendingBulkActionKey = $key;
             $this->bulkActionReason = '';
             $this->bulkActionError = null;
+            $this->bulkPhraseInput = '';
+            $this->pendingBulkRequiredPhrase = $action->requiresPhrase() ? ($action->getPhrase() ?? 'confirm') : null;
 
             return;
         }

@@ -1211,23 +1211,13 @@
                                         wire:confirm="Unarchive this record?"
                                         tooltip="Unarchive"
                                     />
-                                @elseif (! $rowIsArchived && $definition->requiresDeletionReason)
-                                    <x-architect::button
-                                        size="sm"
-                                        outlined
-                                        color="warning"
-                                        icon="heroicon-m-archive-box"
-                                        wire:click="confirmArchive({{ (int) ($row['id'] ?? 0) }})"
-                                        tooltip="Archive"
-                                    />
                                 @elseif (! $rowIsArchived)
                                     <x-architect::button
                                         size="sm"
                                         outlined
                                         color="warning"
                                         icon="heroicon-m-archive-box"
-                                        wire:click="archive({{ (int) ($row['id'] ?? 0) }})"
-                                        wire:confirm="Archive this record?"
+                                        wire:click="confirmArchive({{ (int) ($row['id'] ?? 0) }}, '{{ addslashes($row['name'] ?? $row['title'] ?? '') }}')"
                                         tooltip="Archive"
                                     />
                                 @endif
@@ -1235,50 +1225,26 @@
 
                             {{-- Delete Button: active records (requires deletable()) --}}
                             @if (! $rowIsArchived && $definition->deletable && in_array('remove', $definition->sections, true))
-                                @if ($definition->deletableReasonRequired)
-                                    <x-architect::button
-                                        size="sm"
-                                        outlined
-                                        color="danger"
-                                        icon="heroicon-m-trash"
-                                        wire:click="confirmDelete({{ (int) ($row['id'] ?? 0) }})"
-                                        tooltip="Delete permanently"
-                                    />
-                                @else
-                                    <x-architect::button
-                                        size="sm"
-                                        outlined
-                                        color="danger"
-                                        icon="heroicon-m-trash"
-                                        wire:click="delete({{ (int) ($row['id'] ?? 0) }})"
-                                        wire:confirm="Permanently delete this record? This cannot be undone."
-                                        tooltip="Delete permanently"
-                                    />
-                                @endif
+                                <x-architect::button
+                                    size="sm"
+                                    outlined
+                                    color="danger"
+                                    icon="heroicon-m-trash"
+                                    wire:click="confirmDelete({{ (int) ($row['id'] ?? 0) }}, '{{ addslashes($row['name'] ?? $row['title'] ?? '') }}')"
+                                    tooltip="Delete permanently"
+                                />
                             @endif
 
                             {{-- Delete Button: archived records (requires allowDelete on archivable()) --}}
                             @if ($rowIsArchived && $definition->archivable && $definition->allowDelete)
-                                @if ($definition->deletableReasonRequired)
-                                    <x-architect::button
-                                        size="sm"
-                                        outlined
-                                        color="danger"
-                                        icon="heroicon-m-trash"
-                                        wire:click="confirmDelete({{ (int) ($row['id'] ?? 0) }})"
-                                        tooltip="Delete permanently"
-                                    />
-                                @else
-                                    <x-architect::button
-                                        size="sm"
-                                        outlined
-                                        color="danger"
-                                        icon="heroicon-m-trash"
-                                        wire:click="delete({{ (int) ($row['id'] ?? 0) }})"
-                                        wire:confirm="Permanently delete this archived record? This cannot be undone."
-                                        tooltip="Delete permanently"
-                                    />
-                                @endif
+                                <x-architect::button
+                                    size="sm"
+                                    outlined
+                                    color="danger"
+                                    icon="heroicon-m-trash"
+                                    wire:click="confirmDelete({{ (int) ($row['id'] ?? 0) }}, '{{ addslashes($row['name'] ?? $row['title'] ?? '') }}')"
+                                    tooltip="Delete permanently"
+                                />
                             @endif
 
                             @if (! $rowIsArchived
@@ -1472,9 +1438,8 @@
     <div class="arch-alert arch-alert-danger mt-2" role="alert" wire:key="bulk-err">{{ $bulkError }}</div>
 @endif
 
-{{-- ── Archive reason dialog ─────────────────────────────────────────────── --}}
-{{-- Shown by Livewire when ->requiresDeletionReason() and user clicks Archive --}}
-@if ($definition->requiresDeletionReason && $pendingArchiveId !== null)
+{{-- ── Archive confirmation dialog ────────────────────────────────────────── --}}
+@if ($definition->archivable && $pendingArchiveId !== null)
     <div class="arch-dialog-backdrop" aria-hidden="true"></div>
     <div class="arch-dialog-wrap" role="dialog" aria-modal="true" aria-labelledby="arch-archive-dialog-title">
         <div class="arch-dialog" @keydown.escape.window="$wire.call('cancelArchive')">
@@ -1485,22 +1450,40 @@
                 <button type="button" class="arch-btn-close" wire:click="cancelArchive" aria-label="Close"></button>
             </div>
             <div class="arch-dialog-body">
-                <p class="text-gray-500 dark:text-gray-400 text-sm mb-3">
-                    Please record a reason for archiving this {{ $definition->title }} entry.
-                    The reason is preserved with the soft-deleted record for audit purposes.
-                </p>
-                <div class="mb-2">
-                    <label class="arch-label" for="module-table-archive-reason">Reason</label>
-                    <textarea
-                        id="module-table-archive-reason"
-                        class="arch-input"
-                        wire:model="archiveReason"
-                        rows="3"
-                        maxlength="500"
-                        required
-                        autofocus
-                    ></textarea>
-                </div>
+                @if ($definition->archivablePhraseRequired && $pendingArchiveRequiredPhrase !== null)
+                    <div class="mb-4">
+                        <p class="text-gray-500 dark:text-gray-400 text-sm mb-2">
+                            Type <strong class="text-gray-700 dark:text-gray-200">{{ $pendingArchiveRequiredPhrase }}</strong> to confirm archiving this record.
+                        </p>
+                        <input
+                            type="text"
+                            class="arch-input"
+                            wire:model="archivePhraseInput"
+                            placeholder="{{ $pendingArchiveRequiredPhrase }}"
+                            autocomplete="off"
+                            autofocus
+                        />
+                    </div>
+                @endif
+                @if ($definition->requiresDeletionReason)
+                    <div class="mb-2">
+                        <label class="arch-label" for="module-table-archive-reason">Reason</label>
+                        <textarea
+                            id="module-table-archive-reason"
+                            class="arch-input"
+                            wire:model="archiveReason"
+                            rows="3"
+                            maxlength="500"
+                            required
+                            {{ !$definition->archivablePhraseRequired ? 'autofocus' : '' }}
+                        ></textarea>
+                    </div>
+                @endif
+                @if (!$definition->requiresDeletionReason && !$definition->archivablePhraseRequired)
+                    <p class="text-gray-500 dark:text-gray-400 text-sm">
+                        Archive this {{ $definition->title }} entry? It can be restored later.
+                    </p>
+                @endif
                 @if ($archiveError)
                     <div class="arch-alert arch-alert-danger" role="alert">{{ $archiveError }}</div>
                 @endif
@@ -1517,9 +1500,8 @@
     </div>
 @endif
 
-{{-- ── Delete reason dialog ──────────────────────────────────────────────── --}}
-{{-- Shown by Livewire when ->deletable(reasonRequired:true) and user clicks Delete --}}
-@if ($definition->deletable && $definition->deletableReasonRequired && $pendingDeleteId !== null)
+{{-- ── Delete confirmation dialog ─────────────────────────────────────────── --}}
+@if ($definition->deletable && $pendingDeleteId !== null)
     <div class="arch-dialog-backdrop" aria-hidden="true"></div>
     <div class="arch-dialog-wrap" role="dialog" aria-modal="true" aria-labelledby="arch-delete-dialog-title">
         <div class="arch-dialog" @keydown.escape.window="$wire.call('cancelDelete')">
@@ -1534,22 +1516,40 @@
                     <i class="fas fa-exclamation-triangle mr-2"></i>
                     <span><strong>Warning:</strong> This action cannot be undone.</span>
                 </div>
-                <p class="text-gray-500 dark:text-gray-400 text-sm mb-3">
-                    Please record a reason for deleting this {{ $definition->title }} entry.
-                    The reason is preserved for audit purposes.
-                </p>
-                <div class="mb-2">
-                    <label class="arch-label" for="module-table-delete-reason">Reason</label>
-                    <textarea
-                        id="module-table-delete-reason"
-                        class="arch-input"
-                        wire:model="deleteReason"
-                        rows="3"
-                        maxlength="500"
-                        required
-                        autofocus
-                    ></textarea>
-                </div>
+                @if ($definition->deletablePhraseRequired && $pendingDeleteRequiredPhrase !== null)
+                    <div class="mb-4">
+                        <p class="text-gray-500 dark:text-gray-400 text-sm mb-2">
+                            Type <strong class="text-gray-700 dark:text-gray-200">{{ $pendingDeleteRequiredPhrase }}</strong> to confirm permanent deletion.
+                        </p>
+                        <input
+                            type="text"
+                            class="arch-input"
+                            wire:model="deletePhraseInput"
+                            placeholder="{{ $pendingDeleteRequiredPhrase }}"
+                            autocomplete="off"
+                            autofocus
+                        />
+                    </div>
+                @endif
+                @if ($definition->deletableReasonRequired)
+                    <div class="mb-2">
+                        <label class="arch-label" for="module-table-delete-reason">Reason</label>
+                        <textarea
+                            id="module-table-delete-reason"
+                            class="arch-input"
+                            wire:model="deleteReason"
+                            rows="3"
+                            maxlength="500"
+                            required
+                            {{ !$definition->deletablePhraseRequired ? 'autofocus' : '' }}
+                        ></textarea>
+                    </div>
+                @endif
+                @if (!$definition->deletableReasonRequired && !$definition->deletablePhraseRequired)
+                    <p class="text-gray-500 dark:text-gray-400 text-sm">
+                        Are you sure you want to permanently delete this {{ $definition->title }} entry?
+                    </p>
+                @endif
                 @if ($deleteError)
                     <div class="arch-alert arch-alert-danger" role="alert">{{ $deleteError }}</div>
                 @endif
@@ -1591,22 +1591,39 @@
                 <button type="button" class="arch-btn-close" wire:click="cancelPendingBulkAction" aria-label="Close"></button>
             </div>
             <div class="arch-dialog-body">
-                <p class="text-gray-500 dark:text-gray-400 text-sm mb-3">
-                    Please record a reason for this action on {{ count($selected) }} record(s).
-                    The reason is preserved for audit purposes.
-                </p>
-                <div class="mb-2">
-                    <label class="arch-label" for="arch-bulk-reason-input">Reason</label>
-                    <textarea
-                        id="arch-bulk-reason-input"
-                        class="arch-input"
-                        wire:model="bulkActionReason"
-                        rows="3"
-                        maxlength="500"
-                        required
-                        autofocus
-                    ></textarea>
-                </div>
+                @if ($pendingBulkRequiredPhrase !== null)
+                    <div class="mb-4">
+                        <p class="text-gray-500 dark:text-gray-400 text-sm mb-2">
+                            Type <strong class="text-gray-700 dark:text-gray-200">{{ $pendingBulkRequiredPhrase }}</strong> to confirm this action on {{ count($selected) }} record(s).
+                        </p>
+                        <input
+                            type="text"
+                            class="arch-input"
+                            wire:model="bulkPhraseInput"
+                            placeholder="{{ $pendingBulkRequiredPhrase }}"
+                            autocomplete="off"
+                            {{ !$pendingAction->requiresReason() ? 'autofocus' : '' }}
+                        />
+                    </div>
+                @endif
+                @if ($pendingAction->requiresReason())
+                    <p class="text-gray-500 dark:text-gray-400 text-sm mb-3">
+                        Please record a reason for this action on {{ count($selected) }} record(s).
+                        The reason is preserved for audit purposes.
+                    </p>
+                    <div class="mb-2">
+                        <label class="arch-label" for="arch-bulk-reason-input">Reason</label>
+                        <textarea
+                            id="arch-bulk-reason-input"
+                            class="arch-input"
+                            wire:model="bulkActionReason"
+                            rows="3"
+                            maxlength="500"
+                            required
+                            {{ !$pendingAction->requiresPhrase() ? 'autofocus' : '' }}
+                        ></textarea>
+                    </div>
+                @endif
                 @if ($bulkActionError)
                     <div class="arch-alert arch-alert-danger" role="alert">{{ $bulkActionError }}</div>
                 @endif

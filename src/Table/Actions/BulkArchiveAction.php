@@ -67,6 +67,16 @@ final class BulkArchiveAction implements ArchitectBulkAction
         return $this->reasonRequired;
     }
 
+    public function requiresPhrase(): bool
+    {
+        return false;
+    }
+
+    public function getPhrase(): ?string
+    {
+        return null;
+    }
+
     public function permissionNode(): ?string
     {
         return null;
