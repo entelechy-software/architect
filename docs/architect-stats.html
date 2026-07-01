@@ -123,6 +123,37 @@ MetricCard::make('Revenue This Month')
 </table>
 </section>
 
+<section id="layout-customisation">
+<h2>Layout Customisation</h2>
+<p>Every stats dashboard rendered via <code>StatsEngine</code> ships with a built-in <strong>Customise</strong> toolbar that lets users rearrange the layout without any additional code.</p>
+
+<h3>What users can do</h3>
+<table>
+<thead><tr><th>Control</th><th>How</th><th>Persisted</th></tr></thead>
+<tbody>
+<tr><td>Reorder sections</td><td>Drag the grip handle in the section's controls pill</td><td>localStorage per dashboard key</td></tr>
+<tr><td>Reorder metric cards</td><td>Drag the grip handle that appears on each card in edit mode</td><td>localStorage per dashboard key</td></tr>
+<tr><td>Resize section width</td><td>W stepper (1–12 grid columns) in the controls pill</td><td>localStorage</td></tr>
+<tr><td>Set section height</td><td>H stepper (100–1200 px, 50 px steps) in the controls pill</td><td>localStorage</td></tr>
+<tr><td>Hide/show sections</td><td>Configure menu in the edit toolbar</td><td>localStorage</td></tr>
+<tr><td>Save named presets</td><td>Presets menu in the edit toolbar</td><td>localStorage</td></tr>
+<tr><td>Reset to defaults</td><td>Reset button in the edit toolbar</td><td>clears localStorage</td></tr>
+</tbody>
+</table>
+
+<h3>How it works</h3>
+<p>Section order and card order are stored purely client-side in <strong>localStorage</strong> under the key <code>architect_dashboard_{dashboardKey}</code>. Visual reordering is achieved via CSS <code>order</code> on the grid items — the server-rendered DOM order never changes, keeping Livewire and SSR compatibility intact.</p>
+<p>The dashboard key defaults to a slug of <code>pageTitle</code>. Set an explicit key to ensure layout preferences survive title changes:</p>
+<pre><code>StatBuilder::make()
+    ->pageTitle('User Metrics')
+    ->key('user-metrics')   // stable localStorage key
+    ->section(...)
+    ->build();</code></pre>
+
+<h3>Disabling customisation</h3>
+<p>There is currently no server-side flag to disable the Customise toolbar — it is always available to authenticated users who can see the dashboard. If you need to restrict it, hide the Customise button via CSS or a permission check in your layout.</p>
+</section>
+
 <section id="date-range">
 <h2>DateRange</h2>
 <p>When the user selects a date range in the dashboard header, each card's <code>value()</code> closure receives a <code>DateRange</code> object:</p>

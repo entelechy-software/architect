@@ -544,6 +544,52 @@
     outline-color: rgba(129, 140, 248, 0.75);
 }
 
+/* Card-level drag-to-reorder (metrics sections) */
+.arch-card-drag-wrapper {
+    position: relative;
+}
+.arch-card-drag-handle {
+    position: absolute;
+    top: 0.375rem;
+    right: 0.375rem;
+    z-index: 20;
+    padding: 0.25rem;
+    border-radius: 0.25rem;
+    font-size: 0.625rem;
+    cursor: grab;
+    color: transparent;
+    transition: color 0.15s ease, background-color 0.15s ease;
+    pointer-events: none;
+}
+/* Visible (dimly) in edit mode; bright on card hover */
+.arch-section--editing .arch-card-drag-handle {
+    color: rgba(0, 0, 0, 0.2);
+    pointer-events: auto;
+}
+.arch-section--editing .arch-card-drag-wrapper:hover .arch-card-drag-handle {
+    color: rgba(0, 0, 0, 0.55);
+    background-color: rgba(0, 0, 0, 0.05);
+}
+[data-theme="dark"] .arch-section--editing .arch-card-drag-handle {
+    color: rgba(255, 255, 255, 0.2);
+}
+[data-theme="dark"] .arch-section--editing .arch-card-drag-wrapper:hover .arch-card-drag-handle {
+    color: rgba(255, 255, 255, 0.55);
+    background-color: rgba(255, 255, 255, 0.06);
+}
+/* Drag state for individual cards */
+.arch-card-drag-wrapper.arch-card--dragging {
+    opacity: 0.4;
+}
+.arch-card-drag-wrapper.arch-card--drag-over {
+    outline: 2px dashed rgba(99, 102, 241, 0.55);
+    outline-offset: 3px;
+    border-radius: 0.5rem;
+}
+[data-theme="dark"] .arch-card-drag-wrapper.arch-card--drag-over {
+    outline-color: rgba(129, 140, 248, 0.55);
+}
+
 .arch-stat { }
 .arch-stat__value { font-size: var(--arch-font-size-2xl); font-weight: var(--arch-font-weight-bold); color: var(--arch-color-text); }
 .arch-stat__label { font-size: var(--arch-font-size-sm); color: var(--arch-color-text-muted); }

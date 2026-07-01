@@ -49,6 +49,26 @@ export function registerDashboardEdit(Alpine) {
         /** Timer reference for debouncing dragleave (avoids child-element flicker). */
         _dragLeaveTimer: null,
 
+        // ── Card drag-to-reorder state ────────────────────────────────────
+
+        /** Per-section card order: { [sectionKey]: [phpIdx, ...] } in visual order. */
+        cardOrders: {},
+
+        /** Section key whose card is currently being dragged. */
+        cardDragSectionKey: null,
+
+        /** PHP array index of the card being dragged. */
+        cardDragIdx: null,
+
+        /** PHP array index of the card currently dragged over. */
+        cardDragOverIdx: null,
+
+        /** True only when drag was initiated via a card drag handle. */
+        _cardCanDrag: false,
+
+        /** Debounce timer for card dragleave. */
+        _cardDragLeaveTimer: null,
+
         // ── Computed getters ───────────────────────────────────────────────
 
         /** Keys of currently-visible sections (used by the export button). */
@@ -100,7 +120,8 @@ export function registerDashboardEdit(Alpine) {
                     visible: true,
                 }));
             }
-            this.presets = saved.presets ?? [];
+            this.presets    = saved.presets ?? [];
+            this.cardOrders = saved.cardOrders ?? {};
         },
 
         // ── Edit mode ──────────────────────────────────────────────────────
@@ -194,7 +215,8 @@ export function registerDashboardEdit(Alpine) {
             this.presets = this.presets.filter(p => p.name !== name);
             this.presets.push({
                 name,
-                sections: this.sections.map(({ key, span, height, visible }) => ({ key, span, height, visible })),
+                sections:   this.sections.map(({ key, span, height, visible }) => ({ key, span, height, visible })),
+                cardOrders: { ...this.cardOrders },
             });
             this.newPresetName = '';
             this._save();
@@ -215,6 +237,7 @@ export function registerDashboardEdit(Alpine) {
                 // Any sections not in the preset (appended at end).
                 ...this.sections.filter(s => !presetKeys.includes(s.key)),
             ];
+            this.cardOrders = { ...(preset.cardOrders ?? {}) };
             this._save();
         },
 
@@ -226,12 +249,13 @@ export function registerDashboardEdit(Alpine) {
         // ── Reset ──────────────────────────────────────────────────────────
 
         reset() {
-            this.sections = sectionDefs.map(def => ({
+            this.sections   = sectionDefs.map(def => ({
                 key:     def.key,
                 span:    def.defaultSpan ?? 12,
                 height:  null,
                 visible: true,
             }));
+            this.cardOrders = {};
             this._save();
         },
 
@@ -295,6 +319,70 @@ export function registerDashboardEdit(Alpine) {
             return idx === -1 ? 0 : idx;
         },
 
+        // ── Card drag-to-reorder ─────────────────────────────────────────────
+
+        /** CSS order value for a card within its section. */
+        getCardVisualOrder(sectionKey, cardIdx) {
+            const order = this.cardOrders[sectionKey];
+            if (!order) return cardIdx;
+            const pos = order.indexOf(cardIdx);
+            return pos === -1 ? cardIdx : pos;
+        },
+
+        /** Arms card drag — call on card handle mousedown. */
+        handleCardMouseDown() {
+            this._cardCanDrag = true;
+            window.addEventListener('mouseup', () => { this._cardCanDrag = false; }, { once: true });
+        },
+
+        cardDragStart(sectionKey, cardIdx, event) {
+            if (!this._cardCanDrag) { event.preventDefault(); return; }
+            this.cardDragSectionKey = sectionKey;
+            this.cardDragIdx        = cardIdx;
+            event.dataTransfer.effectAllowed = 'move';
+            event.dataTransfer.setData('text/plain', String(cardIdx));
+        },
+
+        cardDragEnd() {
+            this.cardDragSectionKey = null;
+            this.cardDragIdx        = null;
+            this.cardDragOverIdx    = null;
+            this._cardCanDrag       = false;
+            clearTimeout(this._cardDragLeaveTimer);
+        },
+
+        cardDragOver(sectionKey, cardIdx, event) {
+            if (this.cardDragIdx === null || this.cardDragSectionKey !== sectionKey || this.cardDragIdx === cardIdx) return;
+            event.dataTransfer.dropEffect = 'move';
+            clearTimeout(this._cardDragLeaveTimer);
+            this.cardDragOverIdx = cardIdx;
+        },
+
+        cardDragLeave(sectionKey, cardIdx) {
+            if (this.cardDragOverIdx !== cardIdx || this.cardDragSectionKey !== sectionKey) return;
+            this._cardDragLeaveTimer = setTimeout(() => {
+                if (this.cardDragOverIdx === cardIdx) this.cardDragOverIdx = null;
+            }, 50);
+        },
+
+        cardDrop(sectionKey, toIdx, totalCards) {
+            const fromIdx = this.cardDragIdx;
+            if (fromIdx === null || this.cardDragSectionKey !== sectionKey || fromIdx === toIdx) {
+                this.cardDragEnd(); return;
+            }
+            const current  = this.cardOrders[sectionKey] ?? [...Array(totalCards).keys()];
+            const fromPos  = current.indexOf(fromIdx);
+            const toPos    = current.indexOf(toIdx);
+            if (fromPos !== -1 && toPos !== -1) {
+                const next = [...current];
+                next.splice(fromPos, 1);
+                next.splice(toPos, 0, fromIdx);
+                this.cardOrders = { ...this.cardOrders, [sectionKey]: next };
+                this._save();
+            }
+            this.cardDragEnd();
+        },
+
         // ── Persistence helpers ────────────────────────────────────────────
 
         _storageKey() {
@@ -312,8 +400,9 @@ export function registerDashboardEdit(Alpine) {
         _save() {
             try {
                 localStorage.setItem(this._storageKey(), JSON.stringify({
-                    sections: this.sections.map(({ key, span, height, visible }) => ({ key, span, height, visible })),
-                    presets:  this.presets,
+                    sections:   this.sections.map(({ key, span, height, visible }) => ({ key, span, height, visible })),
+                    cardOrders: this.cardOrders,
+                    presets:    this.presets,
                 }));
             } catch {
                 // localStorage may be unavailable (private browsing, quota exceeded)

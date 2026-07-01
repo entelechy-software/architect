@@ -374,6 +374,7 @@
                         'section'     => $section,
                         'data'        => $data,
                         'granularity' => $granularity,
+                        'sectionKey'  => $sectionKey,
                     ])
                 </div>
 

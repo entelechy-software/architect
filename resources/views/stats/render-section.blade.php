@@ -21,5 +21,6 @@
         'section'     => $section,
         'data'        => $data,
         'granularity' => $granularity ?? 'D',
+        'sectionKey'  => $sectionKey ?? null,
     ])
 @endif
