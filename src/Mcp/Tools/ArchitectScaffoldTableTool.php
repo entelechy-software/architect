@@ -138,7 +138,7 @@ final class {$entity}TableDefinition
                 modify: '{$permModule}_{$permEntity}.modify',
                 remove: '{$permModule}_{$permEntity}.remove',
             )
-            ->sections(['create', 'modify', 'archive'])
+            ->operations(['create', 'modify', 'archive'])
             ->formMode('slide-over')
             ->archivable()
             ->selectableRows()

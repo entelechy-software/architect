@@ -42,8 +42,8 @@ final class ArchitectTableDefinition
 
     /**
      * @param  class-string<ArchitectDataModel>  $dataModelClass
-     * @param  array<int, string>  $sections  Subset of ['create','modify','archive']
-     * @param  array<string, array<string, mixed>>  $sectionConfigs  Per-section config (e.g. openInTab)
+     * @param  array<int, string>  $operations  Subset of ['create','modify','archive','remove']
+     * @param  array<string, array<string, mixed>>  $operationConfigs  Per-operation config (e.g. openInTab)
      * @param  list<Column>  $columns
      * @param  list<ArchitectField>  $fields
      * @param  list<ArchitectFilter>  $filters
@@ -65,7 +65,7 @@ final class ArchitectTableDefinition
         public array $breadcrumbs,
         public readonly string $dataModelClass,
         public readonly PermissionMap $permissions,
-        public readonly array $sections,
+        public readonly array $operations,
         public readonly string $formMode,
         public readonly bool $filterPersistence,
         public readonly bool $filterBookmarkFilters,
@@ -93,11 +93,11 @@ final class ArchitectTableDefinition
         public readonly ?string $modifyMode = null,
         public readonly ?array $modifyColumns = null,
         /**
-         * Per-section config overrides (e.g. openInTab for the create section).
+         * Per-operation config overrides (e.g. openInTab for the create operation).
          *
          * @var array<string, array<string, mixed>>
          */
-        public readonly array $sectionConfigs = [],
+        public readonly array $operationConfigs = [],
         /**
          * CSV import configuration. Null = no import button rendered.
          */
@@ -170,9 +170,9 @@ final class ArchitectTableDefinition
             );
         }
 
-        foreach ($sections as $s) {
+        foreach ($operations as $s) {
             if (! in_array($s, ['create', 'modify', 'archive', 'remove'], true)) {
-                throw new \InvalidArgumentException("Unknown section '{$s}' (allowed: create, modify, archive, remove)");
+                throw new \InvalidArgumentException("Unknown operation '{$s}' (allowed: create, modify, archive, remove)");
             }
         }
 

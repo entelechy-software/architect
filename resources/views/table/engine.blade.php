@@ -93,8 +93,8 @@
     @php
         $_allAlerts = $definition->alerts;
         if (! $definition->suppressAutoAlerts
-            && ! in_array('create', $definition->sections, true)
-            && ! in_array('modify', $definition->sections, true)) {
+            && ! in_array('create', $definition->operations, true)
+            && ! in_array('modify', $definition->operations, true)) {
             $_allAlerts[] = ['type' => 'info', 'message' => 'This table is view-only.'];
         }
     @endphp
@@ -145,9 +145,9 @@
             <div class="flex flex-wrap gap-2 items-center">
 
                 {{-- Create button (Layer 2 gate is enforced by FormPanel) --}}
-                @if (in_array('create', $definition->sections, true))
+                @if (in_array('create', $definition->operations, true))
                     @php
-                        $_createCfg       = $definition->sectionConfigs['create'] ?? [];
+                        $_createCfg       = $definition->operationConfigs['create'] ?? [];
                         $_createOpenInTab = ! empty($_createCfg['openInTab']) && ! empty($_createCfg['tabType']);
                     @endphp
                     @if ($_createOpenInTab)
@@ -1294,7 +1294,7 @@
                             @endif
 
                             {{-- Standard Edit Button --}}
-                            @if (! $rowIsArchived && in_array('modify', $definition->sections, true))
+                            @if (! $rowIsArchived && in_array('modify', $definition->operations, true))
                                 <x-architect::button
                                     size="sm"
                                     outlined
@@ -1306,7 +1306,7 @@
                             @endif
 
                             {{-- Archive / Unarchive Buttons --}}
-                            @if ($definition->archivable && in_array('archive', $definition->sections, true))
+                            @if ($definition->archivable && in_array('archive', $definition->operations, true))
                                 @if ($rowIsArchived && $definition->allowUnarchive)
                                     <x-architect::button
                                         size="sm"
@@ -1330,7 +1330,7 @@
                             @endif
 
                             {{-- Delete Button: active records (requires deletable()) --}}
-                            @if (! $rowIsArchived && $definition->deletable && in_array('remove', $definition->sections, true))
+                            @if (! $rowIsArchived && $definition->deletable && in_array('remove', $definition->operations, true))
                                 <x-architect::button
                                     size="sm"
                                     outlined
@@ -1355,8 +1355,8 @@
 
                             @if (! $rowIsArchived
                                 && count($definition->rowActions) === 0
-                                && ! in_array('modify', $definition->sections, true)
-                                && ! ($definition->archivable && in_array('archive', $definition->sections, true)))
+                                && ! in_array('modify', $definition->operations, true)
+                                && ! ($definition->archivable && in_array('archive', $definition->operations, true)))
                                 <span class="text-gray-500 dark:text-gray-400 text-sm">—</span>
                             @endif
                             </span>{{-- /x-show: standard row actions --}}

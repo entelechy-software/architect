@@ -53,10 +53,10 @@ final class TableBuilder
     private ?PermissionMap $permissions = null;
 
     /** @var array<int, string> */
-    private array $sections = ['create', 'modify'];
+    private array $operations = ['create', 'modify'];
 
     /** @var array<string, array<string, mixed>> Section-level config overrides (e.g. openInTab). */
-    private array $sectionConfigs = [];
+    private array $operationConfigs = [];
 
     private string $formMode = 'slide-over';
 
@@ -255,12 +255,12 @@ final class TableBuilder
     }
 
     /**
-     * Configure which built-in CRUD sections are active.
+     * Configure which built-in CRUD operations are active.
      *
      * Accepts either plain strings or associative entries with config:
      *
-     *   ->sections(['remove'])                // plain — suppress create & modify
-     *   ->sections([
+     *   ->operations(['remove'])                // plain — suppress create & modify
+     *   ->operations([
      *       'create' => [
      *           'openInTab' => true,
      *           'tabType'   => 'case',
@@ -274,15 +274,15 @@ final class TableBuilder
      *   tabType   (string) — DynamicTabType key
      *   url       (string) — fallback URL when no ModuleTabsManager is present
      *
-     * @param  array<int|string, string|array<string, mixed>>  $sections
+     * @param  array<int|string, string|array<string, mixed>>  $operations
      */
-    public function sections(array $sections): self
+    public function operations(array $operations): self
     {
         $clone = clone $this;
         $plain = [];
         $configs = [];
 
-        foreach ($sections as $key => $value) {
+        foreach ($operations as $key => $value) {
             if (is_string($key) && is_array($value)) {
                 // Associative entry: 'create' => ['openInTab' => true, ...]
                 $plain[] = $key;
@@ -292,13 +292,13 @@ final class TableBuilder
                 $plain[] = $value;
             } else {
                 throw new \InvalidArgumentException(
-                    "TableBuilder::sections() entries must be a section name string or 'name' => [config], got a non-string value at key '{$key}'."
+                    "TableBuilder::operations() entries must be an operation name string or 'name' => [config], got a non-string value at key '{$key}'."
                 );
             }
         }
 
-        $clone->sections = $plain;
-        $clone->sectionConfigs = $configs;
+        $clone->operations = $plain;
+        $clone->operationConfigs = $configs;
 
         return $clone;
     }
@@ -340,7 +340,7 @@ final class TableBuilder
         // Panel-render style — fall back to create's style when modify is inline.
         $clone->formMode = $modify === 'inline' ? $create : $modify;
 
-        // Auto-enable create + modify sections (legacy ->create()/->modify() flags).
+        // Auto-enable create + modify operations (legacy ->create()/->modify() flags).
         $clone->createMode = 'slide-out';
         $clone->modifyMode = $modify === 'inline' ? 'inline' : 'slide-out';
 
@@ -784,7 +784,7 @@ final class TableBuilder
      *
      * Multiple calls stack vertically in declaration order. The engine
      * may also auto-emit defaults (e.g. "This table is view-only" when
-     * no create/modify sections are configured) — call ->suppressAutoAlerts()
+     * no create/modify operations are configured) — call ->suppressAutoAlerts()
      * to opt out of those.
      *
      * @param  string  $type  One of: info, success, warning, danger.
@@ -818,7 +818,7 @@ final class TableBuilder
 
     /**
      * Suppress auto-detected default alert banners (e.g. the read-only
-     * notice rendered when no create/modify sections exist).
+     * notice rendered when no create/modify operations exist).
      */
     public function suppressAutoAlerts(bool $suppress = true): self
     {
@@ -1020,27 +1020,27 @@ final class TableBuilder
             }
         }
 
-        // Auto-derive sections from create/modify/archivable/deletable declarations
-        $sections = $this->sections;
+        // Auto-derive operations from create/modify/archivable/deletable declarations
+        $operations = $this->operations;
 
         // Auto-add 'create' if create() was called
-        if ($this->createMode !== null && ! in_array('create', $sections, true)) {
-            $sections[] = 'create';
+        if ($this->createMode !== null && ! in_array('create', $operations, true)) {
+            $operations[] = 'create';
         }
 
         // Auto-add 'modify' if modify() was called
-        if ($this->modifyMode !== null && ! in_array('modify', $sections, true)) {
-            $sections[] = 'modify';
+        if ($this->modifyMode !== null && ! in_array('modify', $operations, true)) {
+            $operations[] = 'modify';
         }
 
-        // Auto-add 'archive' section if archivable is enabled
-        if ($this->archivable && ! in_array('archive', $sections, true)) {
-            $sections[] = 'archive';
+        // Auto-add 'archive' operation if archivable is enabled
+        if ($this->archivable && ! in_array('archive', $operations, true)) {
+            $operations[] = 'archive';
         }
 
-        // Auto-add 'remove' section if deletable is enabled
-        if ($this->deletable && ! in_array('remove', $sections, true)) {
-            $sections[] = 'remove';
+        // Auto-add 'remove' operation if deletable is enabled
+        if ($this->deletable && ! in_array('remove', $operations, true)) {
+            $operations[] = 'remove';
         }
 
         // Auto-add row actions for clonable and auditable features
@@ -1105,8 +1105,8 @@ final class TableBuilder
             breadcrumbs: $this->breadcrumbs,
             dataModelClass: $this->dataModelClass,
             permissions: $this->permissions,
-            sections: $sections,
-            sectionConfigs: $this->sectionConfigs,
+            operations: $operations,
+            operationConfigs: $this->operationConfigs,
             formMode: $this->formMode,
             filterPersistence: $this->filterPersistence,
             filterBookmarkFilters: $this->filterBookmarkFilters,
