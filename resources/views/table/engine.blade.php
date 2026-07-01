@@ -393,28 +393,45 @@
                                   @endif
                               </x-architect::button>
                           @elseif ($headerActionWireClick)
-                              <x-architect::button
-                                  size="sm"
-                                  :color="$headerAction->getColor()"
-                                  :outlined="! $headerAction->isFilled()"
-                                  :icon="$headerActionUsesBladeIcon ? $headerActionIcon : null"
-                                  :href="$headerAction->getUrl()"
-                                  :target="$headerAction->isNewWindow() ? '_blank' : null"
-                                  :tooltip="$headerAction->getLabel()"
-                                  wire:click="{{ $headerActionWireClick }}"
-                                  class="{{ $headerActionAnimClass }}"
-                                  @if ($headerActionAnimation === 'loading')
+                              @if ($headerActionAnimation === 'loading')
+                                  <x-architect::button
+                                      size="sm"
+                                      :color="$headerAction->getColor()"
+                                      :outlined="! $headerAction->isFilled()"
+                                      :icon="$headerActionUsesBladeIcon ? $headerActionIcon : null"
+                                      :href="$headerAction->getUrl()"
+                                      :target="$headerAction->isNewWindow() ? '_blank' : null"
+                                      :tooltip="$headerAction->getLabel()"
+                                      wire:click="{{ $headerActionWireClick }}"
                                       wire:loading.class="arch-btn--loading"
                                       wire:loading.attr="disabled"
                                       wire:target="{{ $headerActionWireClick }}"
-                                  @endif
-                              >
-                                  @if ($headerActionUsesLegacyIcon)
-                                      <i class="{{ $headerActionIcon }}"></i>
-                                  @elseif (! $headerActionUsesBladeIcon)
-                                      {{ $headerAction->getLabel() }}
-                                  @endif
-                              </x-architect::button>
+                                  >
+                                      @if ($headerActionUsesLegacyIcon)
+                                          <i class="{{ $headerActionIcon }}"></i>
+                                      @elseif (! $headerActionUsesBladeIcon)
+                                          {{ $headerAction->getLabel() }}
+                                      @endif
+                                  </x-architect::button>
+                              @else
+                                  <x-architect::button
+                                      size="sm"
+                                      :color="$headerAction->getColor()"
+                                      :outlined="! $headerAction->isFilled()"
+                                      :icon="$headerActionUsesBladeIcon ? $headerActionIcon : null"
+                                      :href="$headerAction->getUrl()"
+                                      :target="$headerAction->isNewWindow() ? '_blank' : null"
+                                      :tooltip="$headerAction->getLabel()"
+                                      wire:click="{{ $headerActionWireClick }}"
+                                      class="{{ $headerActionAnimClass }}"
+                                  >
+                                      @if ($headerActionUsesLegacyIcon)
+                                          <i class="{{ $headerActionIcon }}"></i>
+                                      @elseif (! $headerActionUsesBladeIcon)
+                                          {{ $headerAction->getLabel() }}
+                                      @endif
+                                  </x-architect::button>
+                              @endif
                           @else
                               <x-architect::button
                                   size="sm"
@@ -1174,48 +1191,79 @@
                                         @else
                                             {{-- Livewire-handled action (toggle, custom, clone, etc.) --}}
                                             @if ($rowAction->getConfirm())
-                                                <x-architect::button
-                                                    size="sm"
-                                                    outlined
-                                                      :icon="$rowActionUsesBladeIcon ? $rowActionIcon : null"
-                                                    color="{{ $rowAction->getColor() }}"
-                                                    wire:click="{{ $wireTarget }}"
-                                                    wire:confirm="{{ $rowAction->getConfirm() }}"
-                                                    :tooltip="$rowAction->getLabel()"
-                                                    class="{{ $rowActionAnimClass }}"
-                                                    @if ($rowActionAnimation === 'loading')
+                                                @if ($rowActionAnimation === 'loading')
+                                                    <x-architect::button
+                                                        size="sm"
+                                                        outlined
+                                                          :icon="$rowActionUsesBladeIcon ? $rowActionIcon : null"
+                                                        color="{{ $rowAction->getColor() }}"
+                                                        wire:click="{{ $wireTarget }}"
+                                                        wire:confirm="{{ $rowAction->getConfirm() }}"
+                                                        :tooltip="$rowAction->getLabel()"
                                                         wire:loading.class="arch-btn--loading"
                                                         wire:loading.attr="disabled"
                                                         wire:target="{{ $wireTarget }}"
-                                                    @endif
-                                                >
-                                                      @if ($rowActionUsesLegacyIcon)
-                                                          <i class="{{ $rowActionIcon }}"></i>
-                                                      @elseif (! $rowActionUsesBladeIcon)
-                                                        {{ $rowAction->getLabel() }}
-                                                    @endif
-                                                </x-architect::button>
+                                                    >
+                                                          @if ($rowActionUsesLegacyIcon)
+                                                              <i class="{{ $rowActionIcon }}"></i>
+                                                          @elseif (! $rowActionUsesBladeIcon)
+                                                            {{ $rowAction->getLabel() }}
+                                                        @endif
+                                                    </x-architect::button>
+                                                @else
+                                                    <x-architect::button
+                                                        size="sm"
+                                                        outlined
+                                                          :icon="$rowActionUsesBladeIcon ? $rowActionIcon : null"
+                                                        color="{{ $rowAction->getColor() }}"
+                                                        wire:click="{{ $wireTarget }}"
+                                                        wire:confirm="{{ $rowAction->getConfirm() }}"
+                                                        :tooltip="$rowAction->getLabel()"
+                                                        class="{{ $rowActionAnimClass }}"
+                                                    >
+                                                          @if ($rowActionUsesLegacyIcon)
+                                                              <i class="{{ $rowActionIcon }}"></i>
+                                                          @elseif (! $rowActionUsesBladeIcon)
+                                                            {{ $rowAction->getLabel() }}
+                                                        @endif
+                                                    </x-architect::button>
+                                                @endif
                                             @else
-                                                <x-architect::button
-                                                    size="sm"
-                                                    outlined
-                                                      :icon="$rowActionUsesBladeIcon ? $rowActionIcon : null"
-                                                    color="{{ $rowAction->getColor() }}"
-                                                    wire:click="{{ $wireTarget }}"
-                                                    :tooltip="$rowAction->getLabel()"
-                                                    class="{{ $rowActionAnimClass }}"
-                                                    @if ($rowActionAnimation === 'loading')
+                                                @if ($rowActionAnimation === 'loading')
+                                                    <x-architect::button
+                                                        size="sm"
+                                                        outlined
+                                                          :icon="$rowActionUsesBladeIcon ? $rowActionIcon : null"
+                                                        color="{{ $rowAction->getColor() }}"
+                                                        wire:click="{{ $wireTarget }}"
+                                                        :tooltip="$rowAction->getLabel()"
                                                         wire:loading.class="arch-btn--loading"
                                                         wire:loading.attr="disabled"
                                                         wire:target="{{ $wireTarget }}"
-                                                    @endif
-                                                >
-                                                      @if ($rowActionUsesLegacyIcon)
-                                                          <i class="{{ $rowActionIcon }}"></i>
-                                                      @elseif (! $rowActionUsesBladeIcon)
-                                                        {{ $rowAction->getLabel() }}
-                                                    @endif
-                                                </x-architect::button>
+                                                    >
+                                                          @if ($rowActionUsesLegacyIcon)
+                                                              <i class="{{ $rowActionIcon }}"></i>
+                                                          @elseif (! $rowActionUsesBladeIcon)
+                                                            {{ $rowAction->getLabel() }}
+                                                        @endif
+                                                    </x-architect::button>
+                                                @else
+                                                    <x-architect::button
+                                                        size="sm"
+                                                        outlined
+                                                          :icon="$rowActionUsesBladeIcon ? $rowActionIcon : null"
+                                                        color="{{ $rowAction->getColor() }}"
+                                                        wire:click="{{ $wireTarget }}"
+                                                        :tooltip="$rowAction->getLabel()"
+                                                        class="{{ $rowActionAnimClass }}"
+                                                    >
+                                                          @if ($rowActionUsesLegacyIcon)
+                                                              <i class="{{ $rowActionIcon }}"></i>
+                                                          @elseif (! $rowActionUsesBladeIcon)
+                                                            {{ $rowAction->getLabel() }}
+                                                        @endif
+                                                    </x-architect::button>
+                                                @endif
                                             @endif
                                         @endif
                                     @endif
