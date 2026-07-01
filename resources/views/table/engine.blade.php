@@ -610,9 +610,9 @@
                                     @elseif ($column->isBadge())
                                         @php
                                             $key = is_bool($value) ? ($value ? 'yes' : 'no') : (string) $value;
-                                            $colour = $column->getColors()[$key] ?? 'secondary';
+                                            $colour = $column->getColors()[$key] ?? 'gray';
                                         @endphp
-                                        <span class="arch-badge bg-{{ $colour }}-lt">
+                                        <span class="arch-badge" data-variant="soft" data-color="{{ $colour }}" data-size="sm">
                                             {{ is_bool($value) ? ($value ? 'Yes' : 'No') : $value }}
                                         </span>
                                     @else
