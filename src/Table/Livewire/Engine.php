@@ -242,6 +242,12 @@ class Engine extends Component
             $this->perPage = $def->defaultPerPage;
         }
 
+        // Non-paginated (static) tables load all records in a single pass.
+        // Only use for small datasets — no LIMIT cap is applied to the query.
+        if (! $def->isPaginated) {
+            $this->perPage = PHP_INT_MAX;
+        }
+
         // Layer 2: must hold the table's read node to even land here.
         app(PermissionGate::class)->assertCanRead($this->currentUser(), $def);
 

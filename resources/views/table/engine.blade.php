@@ -460,7 +460,17 @@
         </div>
     </div>{{-- end card-body --}}
 
-    <div class="table-responsive mt-table-scroll">
+    @php
+        $tableWrapClass = 'arch-table-wrap mt-table-scroll';
+        $tableWrapStyle = '';
+        if ($definition->scrollMode === 'container') {
+            $tableWrapClass .= ' arch-table-wrap--container';
+            if ($definition->visibleRows !== null) {
+                $tableWrapStyle = 'max-height:calc(' . $definition->visibleRows . '*3.25rem + 2.75rem)';
+            }
+        }
+    @endphp
+    <div class="{{ $tableWrapClass }}"@if($tableWrapStyle) style="{{ $tableWrapStyle }}"@endif>
         <table class="arch-table arch-table-hover card-table">
             <thead>
                 <tr>
@@ -1506,6 +1516,7 @@
         </div>
     @endif
 
+    @if ($definition->isPaginated)
     <div class="arch-card-footer">
         {{--
             Filament's pagination component handles everything natively:
@@ -1525,6 +1536,7 @@
             <x-architect::pagination :paginator="$paginator" />
         @endif
     </div>
+    @endif
 </div>
 </x-architect::table.shell>
 

@@ -183,6 +183,15 @@ final class TableBuilder
 
     private int $defaultPerPage = 25;
 
+    /** Scroll mode; null = derived automatically from whether paginate() was called. */
+    private ?string $scrollMode = null;
+
+    /** For container scroll: number of visible body rows before overflow. */
+    private ?int $visibleRows = null;
+
+    /** Whether paginate() was explicitly configured. */
+    private bool $isPaginated = false;
+
     public static function make(): self
     {
         return new self;
@@ -858,6 +867,8 @@ final class TableBuilder
     /**
      * Configure the records-per-page selector in the pagination footer.
      *
+     * @deprecated Use paginate() instead.
+     *
      * @param  int  $default  Initial page size (must be in $options).
      * @param  list<int>  $options  Ordered list of selectable sizes.
      *                              Pass an empty array to hide the selector.
@@ -873,6 +884,63 @@ final class TableBuilder
 
         $clone->defaultPerPage = $default;
         $clone->perPageOptions = $options;
+
+        return $clone;
+    }
+
+    /**
+     * Set the table scroll behaviour.
+     *
+     * - 'page'      — table scrolls with the page; no height constraint.
+     * - 'container' — table body has a fixed visible height and scrolls
+     *                 independently of the page. Default when paginate() is called.
+     * - 'static'    — no scroll; all rows rendered inline. Default when
+     *                 paginate() is not called.
+     */
+    public function scroll(string $mode): self
+    {
+        if (! in_array($mode, ['page', 'container', 'static'], true)) {
+            throw new \InvalidArgumentException(
+                "scroll() mode must be 'page', 'container', or 'static'. Got '{$mode}'"
+            );
+        }
+
+        $clone = clone $this;
+        $clone->scrollMode = $mode;
+
+        return $clone;
+    }
+
+    /**
+     * Configure pagination.
+     *
+     * When not called the table loads all records without a pagination footer
+     * (equivalent to scroll mode 'static'). Only use for small datasets.
+     *
+     * @param  int       $perPage      Records fetched and shown per page.
+     * @param  int|null  $visibleRows  For 'container' scroll: number of body rows
+     *                                visible before the container scrolls. Null = no cap.
+     * @param  list<int>  $perPageOptions  Per-page selector options shown in the footer.
+     *                                    Empty array (default) hides the selector.
+     */
+    public function paginate(int $perPage, ?int $visibleRows = null, array $perPageOptions = []): self
+    {
+        if ($perPageOptions !== [] && ! in_array($perPage, $perPageOptions, true)) {
+            throw new \InvalidArgumentException(
+                "paginate() default ({$perPage}) must be present in \$perPageOptions."
+            );
+        }
+
+        $clone = clone $this;
+        $clone->isPaginated = true;
+        $clone->defaultPerPage = $perPage;
+        $clone->perPageOptions = $perPageOptions;
+        $clone->visibleRows = $visibleRows;
+
+        // Default scroll to 'container' unless already explicitly set via scroll().
+        if ($clone->scrollMode === null) {
+            $clone->scrollMode = 'container';
+        }
 
         return $clone;
     }
@@ -1084,6 +1152,9 @@ final class TableBuilder
             defaultPerPage: $this->defaultPerPage,
             navigator: $this->navigator,
             headerSection: null,
+            scrollMode: $this->scrollMode ?? 'static',
+            visibleRows: $this->visibleRows,
+            isPaginated: $this->isPaginated,
         );
     }
 }

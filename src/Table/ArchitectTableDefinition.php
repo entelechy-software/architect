@@ -153,9 +153,21 @@ final class ArchitectTableDefinition
         public readonly bool $animateErrors = true,
         /** Whether to apply a press micro-interaction to buttons in this table. Default true. */
         public readonly bool $animateButtons = true,
+        /** Scroll behaviour applied to the table-body wrapper. */
+        public readonly string $scrollMode = 'static',
+        /** For 'container' scroll: visible body-row count before overflow scrolling begins. Null = no height cap. */
+        public readonly ?int $visibleRows = null,
+        /** Whether paginate() was called. False → all records fetched in one pass; no pagination footer shown. */
+        public readonly bool $isPaginated = false,
     ) {
         if (! in_array($formMode, ['slide-over', 'page', 'modal'], true)) {
             throw new \InvalidArgumentException("formMode must be 'slide-over', 'page', or 'modal', got '{$formMode}'");
+        }
+
+        if (! in_array($scrollMode, ['page', 'container', 'static'], true)) {
+            throw new \InvalidArgumentException(
+                "scrollMode must be 'page', 'container', or 'static', got '{$scrollMode}'"
+            );
         }
 
         foreach ($sections as $s) {

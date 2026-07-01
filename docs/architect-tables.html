@@ -16,7 +16,9 @@
   <div class="nav-section">Getting Started</div>
   <a href="index.html">Home</a><a href="quick-start.html">Quick Start</a><a href="concepts.html">Core Concepts</a>
   <div class="nav-section">Core Subsystems</div>
-  <a href="architect-tables.html">CRUD Tables</a><a href="architect-navigation.html">Navigation</a><a href="architect-stats.html">Stats Dashboard</a><a href="architect-toolbar.html">Toolbar</a><a href="architect-supersearch.html">Supersearch ⌘K</a>
+  <a href="architect-tables.html">CRUD Tables</a>
+  <div class="nav-sub"><a href="architect-tables.html#scroll-pagination">Scroll &amp; Pagination</a></div>
+  <a href="architect-navigation.html">Navigation</a><a href="architect-stats.html">Stats Dashboard</a><a href="architect-toolbar.html">Toolbar</a><a href="architect-supersearch.html">Supersearch ⌘K</a>
   <div class="nav-section">Components &amp; Forms</div>
   <a href="architect-forms.html">Form Controls</a><a href="architect-content.html">Content / Entries</a><a href="architect-actions.html">Actions</a><a href="architect-panels.html">Panels</a><a href="architect-notifications.html">Notifications</a>
   <div class="nav-section">Tooling</div>
@@ -92,7 +94,9 @@ class MembersTableDefinition extends ArchitectTableDefinition
 <tr><td><code>hideSearchBar(bool)</code></td><td>Remove the search input.</td></tr>
 <tr><td><code>autoRefresh(int $seconds, bool $countdown)</code></td><td>Auto-refresh the table every N seconds.</td></tr>
 <tr><td><code>persistOnCreate(bool)</code></td><td>Keep the create modal open after saving (for rapid data entry).</td></tr>
-<tr><td><code>perPage(int $default, array $options)</code></td><td>Default page size and available page size options.</td></tr>
+<tr><td><code>perPage(int $default, array $options)</code></td><td><em>Deprecated.</em> Use <code>paginate()</code> instead.</td></tr>
+<tr><td><code>paginate(int $perPage, ?int $visibleRows, array $perPageOptions)</code></td><td>Configure pagination with a fixed page size. <code>$visibleRows</code> caps the container height for <code>container</code> scroll mode. <code>$perPageOptions</code> shows a per-page selector (empty array hides it). Omitting <code>paginate()</code> loads all records without a footer — small datasets only.</td></tr>
+<tr><td><code>scroll(string $mode)</code></td><td><code>'container'</code> (default when <code>paginate()</code> called) — body scrolls in a fixed-height box with a sticky header. <code>'page'</code> — table scrolls with the page. <code>'static'</code> — no scroll (default when <code>paginate()</code> not called).</td></tr>
 <tr><td><code>animateRows(bool)</code></td><td>Row enter, save flash, and pending delete/archive highlights. Default: <code>true</code>.</td></tr>
 <tr><td><code>animatePanels(bool)</code></td><td>Slide-over and modal open/close transition animations. Default: <code>true</code>.</td></tr>
 <tr><td><code>animateErrors(bool)</code></td><td>Validation error banner shake on appear / re-trigger. Default: <code>true</code>.</td></tr>
@@ -100,6 +104,43 @@ class MembersTableDefinition extends ArchitectTableDefinition
 <tr><td><code>build()</code></td><td>Returns the <code>ArchitectTableDefinition</code> value object.</td></tr>
 </tbody>
 </table>
+</section>
+
+<section id="scroll-pagination">
+<h2>Scroll &amp; Pagination</h2>
+<p>Every table has a <em>scroll mode</em> and an optional pagination configuration. The two concepts are independent but have sensible defaults that work together.</p>
+
+<h3>Scroll modes</h3>
+<table>
+<thead><tr><th>Mode</th><th>Behaviour</th><th>Default for</th></tr></thead>
+<tbody>
+<tr><td><code>'container'</code></td><td>Table body scrolls inside a fixed-height box; header row stays sticky.</td><td><code>paginate()</code> called</td></tr>
+<tr><td><code>'page'</code></td><td>Table grows to full height; rows scroll with the page.</td><td>—</td></tr>
+<tr><td><code>'static'</code></td><td>No overflow constraint at all. All rows rendered inline.</td><td><code>paginate()</code> <em>not</em> called</td></tr>
+</tbody>
+</table>
+
+<h3>paginate()</h3>
+<p>Calling <code>paginate()</code> enables the pagination footer and tells the engine how many records to fetch per page. When <code>paginate()</code> is <strong>not called</strong>, the engine loads <em>all</em> records in a single query — only suitable for small, bounded datasets.</p>
+<pre><code class="language-php">// 25 records per page, 10 rows visible inside a scrolling container
+->paginate(25, 10)
+
+// 25 per page, all 25 rows visible (no height cap), scroll with the page
+->paginate(25)->scroll('page')
+
+// 25 per page, show a per-page selector: 25 / 50 / 100
+->paginate(25, 10, [25, 50, 100])
+
+// No paginate() call: all records loaded, no footer, static layout
+// Warning: do not use on large datasets — no LIMIT is applied to the query.
+TableBuilder::make()->...->build()</code></pre>
+
+<h3>Scroll override</h3>
+<p>Call <code>scroll()</code> explicitly to override the default mode derived from whether <code>paginate()</code> was called.</p>
+<pre><code class="language-php">->paginate(50)            // container scroll, no height cap
+->paginate(50, 15)        // container scroll, 15 rows visible
+->paginate(50)->scroll('page')   // page scroll instead
+->paginate(50)->scroll('static') // disable scroll entirely</code></pre>
 </section>
 
 <section id="columns">

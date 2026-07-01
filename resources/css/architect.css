@@ -371,6 +371,14 @@
 .arch-timeline-item__body { font-size: var(--arch-font-size-sm); @apply mt-1; }
 
 /* Tables */
+.arch-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.arch-table-wrap--container { overflow-y: auto; }
+.arch-table-wrap--container .arch-table thead th,
+.arch-table-wrap--container .arch-table thead td {
+    position: sticky; top: 0; z-index: 2;
+    background-color: var(--arch-color-surface);
+    box-shadow: 0 1px 0 var(--arch-color-border);
+}
 .arch-table { width: 100%; border-collapse: separate; border-spacing: 0; }
 .arch-th, .arch-table th { font-size: var(--arch-font-size-xs); font-weight: var(--arch-font-weight-semibold); color: var(--arch-color-text-muted); @apply px-4 py-3 text-left uppercase tracking-wide; }
 .arch-td, .arch-table td { font-size: var(--arch-font-size-sm); @apply px-4 py-3; }
