@@ -378,6 +378,20 @@
 .arch-tr:hover, .arch-table tr:hover { background-color: var(--arch-color-surface-alt); }
 .arch-tr[data-state="selected"], .arch-table tr[data-state="selected"] { background-color: var(--arch-color-primary-muted); }
 
+/* Floating bulk-action bar */
+.arch-bulk-bar {
+    border: 1px solid var(--arch-color-border);
+    border-radius: var(--arch-radius-lg);
+    background-color: rgba(255, 255, 255, 0.85);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+    overflow: hidden;
+    box-shadow: 0 10px 25px -5px rgba(0,0,0,.12), 0 4px 6px -4px rgba(0,0,0,.08);
+}
+[data-theme="dark"] .arch-bulk-bar {
+    background-color: rgba(15, 23, 42, 0.90);
+}
+
 /* Forms */
 .arch-form { @apply flex flex-col; gap: var(--arch-gap-lg); }
 .arch-form__section { border: 1px solid var(--arch-color-border); border-radius: var(--arch-radius-lg); @apply p-6; }
@@ -755,6 +769,11 @@
 .arch-btn-outline-success   { border: 1px solid var(--arch-color-success); color: var(--arch-color-success); background: transparent; }
 .arch-btn-link  { background: transparent; color: var(--arch-color-primary); text-decoration: underline; padding: 0; }
 .arch-btn-close { @apply inline-flex items-center justify-center w-6 h-6 rounded-full; background: transparent; color: var(--arch-color-text-muted); }
+/* Outline buttons fill solid on hover */
+.arch-btn-outline-primary:hover:not(:disabled)   { background-color: var(--arch-color-primary);  color: #fff; border-color: var(--arch-color-primary); }
+.arch-btn-outline-secondary:hover:not(:disabled) { background-color: #6b7280; color: #fff; border-color: #6b7280; }
+.arch-btn-outline-danger:hover:not(:disabled)    { background-color: var(--arch-color-danger);   color: #fff; border-color: var(--arch-color-danger); }
+.arch-btn-outline-success:hover:not(:disabled)   { background-color: var(--arch-color-success);  color: #fff; border-color: var(--arch-color-success); }
 .arch-btn-close:hover { background-color: var(--arch-color-surface-alt); }
 
 /* Card */

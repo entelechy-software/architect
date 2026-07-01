@@ -1424,7 +1424,7 @@
         );
     @endphp
     <div class="fixed bottom-0 left-1/2 -translate-x-1/2 mb-4 mt-bulk-bar">
-        <div class="card shadow-lg">
+        <div class="arch-bulk-bar">
             <div
                 class="arch-card-body flex flex-wrap gap-2 items-center py-2"
                 x-data="{
