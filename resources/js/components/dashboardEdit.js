@@ -27,12 +27,27 @@ export function registerDashboardEdit(Alpine) {
 
         /**
          * Live section state: [{key, span, height, visible}, ...].
+         * Order of this array controls visual order via CSS `order`.
          * Initialised from localStorage on init(), falls back to defaults.
          */
         sections: [],
 
         /** Named layout presets saved by the user. */
         presets: [],
+
+        // ── Drag-to-reorder state ──────────────────────────────────────────
+
+        /** Key of the section currently being dragged, or null. */
+        dragKey: null,
+
+        /** Key of the section the dragged item is hovering over, or null. */
+        dragOverKey: null,
+
+        /** True only when drag was initiated via the drag handle. */
+        _canDrag: false,
+
+        /** Timer reference for debouncing dragleave (avoids child-element flicker). */
+        _dragLeaveTimer: null,
 
         // ── Computed getters ───────────────────────────────────────────────
 
@@ -54,16 +69,37 @@ export function registerDashboardEdit(Alpine) {
         // ── Lifecycle ──────────────────────────────────────────────────────
 
         init() {
-            const saved = this._load();
-            this.sections = sectionDefs.map(def => {
-                const s = (saved.sections ?? []).find(ss => ss.key === def.key);
-                return {
+            const saved     = this._load();
+            const savedSecs = saved.sections ?? [];
+
+            if (savedSecs.length > 0) {
+                // Restore sections in their saved (possibly reordered) sequence.
+                const savedKeys = savedSecs.map(ss => ss.key);
+                this.sections = [
+                    ...savedSecs
+                        .filter(ss => sectionDefs.some(def => def.key === ss.key))
+                        .map(ss => {
+                            const def = sectionDefs.find(d => d.key === ss.key);
+                            return {
+                                key:     ss.key,
+                                span:    ss.span    ?? def?.defaultSpan ?? 12,
+                                height:  ss.height  ?? null,
+                                visible: ss.visible ?? true,
+                            };
+                        }),
+                    // Any sections added to the definition after the last save.
+                    ...sectionDefs
+                        .filter(def => !savedKeys.includes(def.key))
+                        .map(def => ({ key: def.key, span: def.defaultSpan ?? 12, height: null, visible: true })),
+                ];
+            } else {
+                this.sections = sectionDefs.map(def => ({
                     key:     def.key,
-                    span:    s?.span    ?? def.defaultSpan ?? 12,
-                    height:  s?.height  ?? null,
-                    visible: s?.visible ?? true,
-                };
-            });
+                    span:    def.defaultSpan ?? 12,
+                    height:  null,
+                    visible: true,
+                }));
+            }
             this.presets = saved.presets ?? [];
         },
 
@@ -167,10 +203,18 @@ export function registerDashboardEdit(Alpine) {
         loadPreset(name) {
             const preset = this.presets.find(p => p.name === name);
             if (!preset) return;
-            this.sections = this.sections.map(s => {
-                const ps = preset.sections.find(ps => ps.key === s.key);
-                return ps ? { ...s, span: ps.span, height: ps.height, visible: ps.visible } : s;
-            });
+            const presetKeys = preset.sections.map(ps => ps.key);
+            this.sections = [
+                // Restore preset order and settings.
+                ...preset.sections
+                    .filter(ps => this.sections.some(s => s.key === ps.key))
+                    .map(ps => {
+                        const s = this.sections.find(s => s.key === ps.key);
+                        return { ...s, span: ps.span, height: ps.height, visible: ps.visible };
+                    }),
+                // Any sections not in the preset (appended at end).
+                ...this.sections.filter(s => !presetKeys.includes(s.key)),
+            ];
             this._save();
         },
 
@@ -189,6 +233,66 @@ export function registerDashboardEdit(Alpine) {
                 visible: true,
             }));
             this._save();
+        },
+
+        // ── Drag-to-reorder ────────────────────────────────────────────────
+
+        /** Called on mousedown of the drag handle; arms the drag. */
+        handleMouseDown() {
+            this._canDrag = true;
+            window.addEventListener('mouseup', () => { this._canDrag = false; }, { once: true });
+        },
+
+        /** Fires on the section's dragstart — only allows if initiated via handle. */
+        sectionDragStart(key, event) {
+            if (!this._canDrag) { event.preventDefault(); return; }
+            this.dragKey = key;
+            event.dataTransfer.effectAllowed = 'move';
+            event.dataTransfer.setData('text/plain', key);
+        },
+
+        /** Cleans up all drag state. */
+        sectionDragEnd() {
+            this.dragKey     = null;
+            this.dragOverKey = null;
+            this._canDrag    = false;
+            clearTimeout(this._dragLeaveTimer);
+        },
+
+        /** Marks this section as the drop target. */
+        sectionDragOver(key, event) {
+            if (!this.dragKey || this.dragKey === key) return;
+            event.dataTransfer.dropEffect = 'move';
+            clearTimeout(this._dragLeaveTimer);
+            this.dragOverKey = key;
+        },
+
+        /** Debounced clear of the drop target (prevents child-element flicker). */
+        sectionDragLeave(key) {
+            if (this.dragOverKey !== key) return;
+            this._dragLeaveTimer = setTimeout(() => {
+                if (this.dragOverKey === key) this.dragOverKey = null;
+            }, 50);
+        },
+
+        /** Reorders sections array and persists. */
+        sectionDrop(key) {
+            const fromKey = this.dragKey;
+            if (!fromKey || fromKey === key) { this.sectionDragEnd(); return; }
+            const fromIdx = this.sections.findIndex(s => s.key === fromKey);
+            const toIdx   = this.sections.findIndex(s => s.key === key);
+            if (fromIdx !== -1 && toIdx !== -1) {
+                const [moved] = this.sections.splice(fromIdx, 1);
+                this.sections.splice(toIdx, 0, moved);
+                this._save();
+            }
+            this.sectionDragEnd();
+        },
+
+        /** CSS order index for a section (drives visual reorder without DOM changes). */
+        getSectionOrder(key) {
+            const idx = this.sections.findIndex(s => s.key === key);
+            return idx === -1 ? 0 : idx;
         },
 
         // ── Persistence helpers ────────────────────────────────────────────

@@ -518,14 +518,8 @@
     border-radius: 0.75rem;
     transition: outline-color 0.15s ease;
 }
-.arch-dash-section:hover {
-    outline-color: rgba(99, 102, 241, 0.25);
-}
 .arch-dash-section.arch-section--editing {
     outline-color: rgba(99, 102, 241, 0.55);
-}
-[data-theme="dark"] .arch-dash-section:hover {
-    outline-color: rgba(129, 140, 248, 0.25);
 }
 [data-theme="dark"] .arch-dash-section.arch-section--editing {
     outline-color: rgba(129, 140, 248, 0.55);
@@ -538,6 +532,16 @@
 .arch-dash-section:hover .arch-section-controls,
 .arch-dash-section.arch-section--editing .arch-section-controls {
     opacity: 1;
+}
+/* Drag state */
+.arch-dash-section.arch-section--dragging {
+    opacity: 0.4;
+}
+.arch-dash-section.arch-section--drag-over {
+    outline-color: rgba(99, 102, 241, 0.75);
+}
+[data-theme="dark"] .arch-dash-section.arch-section--drag-over {
+    outline-color: rgba(129, 140, 248, 0.75);
 }
 
 .arch-stat { }

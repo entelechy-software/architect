@@ -263,12 +263,21 @@
                 x-transition:leave="transition-opacity duration-200"
                 x-transition:leave-start="opacity-100"
                 x-transition:leave-end="opacity-0"
+                :draggable="editMode ? 'true' : 'false'"
+                @dragstart="sectionDragStart('{{ $sectionKey }}', $event)"
+                @dragend="sectionDragEnd()"
+                @dragover.prevent="sectionDragOver('{{ $sectionKey }}', $event)"
+                @dragleave="sectionDragLeave('{{ $sectionKey }}')"
+                @drop.prevent="sectionDrop('{{ $sectionKey }}')"
                 :style="{
                     'grid-column': fullscreenKey !== '{{ $sectionKey }}' ? 'span ' + getSpan('{{ $sectionKey }}') + ' / span ' + getSpan('{{ $sectionKey }}') : undefined,
+                    'order': fullscreenKey !== '{{ $sectionKey }}' ? getSectionOrder('{{ $sectionKey }}') : undefined,
                 }"
                 :class="{
                     'fixed inset-0 z-50 overflow-y-auto bg-gray-50 dark:bg-gray-950 p-6': fullscreenKey === '{{ $sectionKey }}',
                     'arch-section--editing': editMode && fullscreenKey !== '{{ $sectionKey }}',
+                    'arch-section--dragging': dragKey === '{{ $sectionKey }}',
+                    'arch-section--drag-over': dragOverKey === '{{ $sectionKey }}',
                 }"
             >
                 {{-- Floating section controls: drag handle, width/height steppers, fullscreen --}}
@@ -283,6 +292,7 @@
                         <span
                             class="dash-drag-handle cursor-grab px-2 py-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 border-r border-gray-200 dark:border-gray-600"
                             title="Drag to reorder"
+                            @mousedown="handleMouseDown()"
                         >
                             <i class="fas fa-grip-vertical text-xs"></i>
                         </span>
