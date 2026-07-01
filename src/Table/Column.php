@@ -545,6 +545,12 @@ final class Column implements HasVisibleWhen
         return $this->key;
     }
 
+    /** Alias for getKey() — used in Blade templates. */
+    public function key(): string
+    {
+        return $this->key;
+    }
+
     public function getLabel(): string
     {
         return $this->label;

@@ -40,6 +40,7 @@
         'granularity' => 'D',
     ])
 @endif
+
 <div
     data-loading="{{ $isLoading ? 'true' : 'false' }}"
     x-data="moduleTable({

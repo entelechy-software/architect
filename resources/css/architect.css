@@ -79,10 +79,10 @@
     --arch-opacity-disabled:  0.5;
 
     /* Z-index stack — prevents stacking conflicts between floating layers */
-    --arch-z-dropdown:   30;
-    --arch-z-slide-over: 35;   /* above dropdowns, below modals */
-    --arch-z-modal:      40;
-    --arch-z-toast:      50;
+    --arch-z-dropdown:   100;
+    --arch-z-slide-over: 200;  /* above dropdowns and sticky headers */
+    --arch-z-modal:      300;
+    --arch-z-toast:      400;
 
     /* Sustained animations */
     --arch-animation-pulse: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
@@ -686,7 +686,7 @@
 
 /* Form panel (Table create/edit — slide-over | modal | page modes) */
 .arch-panel { }
-.arch-panel-backdrop { position: fixed; inset: 0; z-index: var(--arch-z-modal); background: rgb(0 0 0 / 0.4); }
+.arch-panel-backdrop { position: fixed; inset: 0; z-index: calc(var(--arch-z-slide-over) - 1); background: rgb(0 0 0 / 0.4); }
 .arch-panel--slide-over { position: fixed; top: 0; right: 0; height: 100%; z-index: var(--arch-z-slide-over); background: var(--arch-color-surface); box-shadow: var(--arch-shadow-lg); display: flex; flex-direction: column; }
 .arch-panel--modal { position: relative; background: var(--arch-color-surface); border-radius: var(--arch-radius-lg); box-shadow: var(--arch-shadow-lg); display: flex; flex-direction: column; max-height: 90vh; }
 .arch-panel__window { display: flex; flex-direction: column; height: 100%; }
