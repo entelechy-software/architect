@@ -597,12 +597,51 @@
 .arch-entry__code .arch-entry__copy { position: absolute; top: 0.5rem; right: 0.5rem; }
 .arch-entry__repeatable-item { background: var(--arch-color-surface-alt); border-radius: var(--arch-radius-md); @apply p-3; }
 
-/* Checkbox / switch (flat, legacy markup) */
+/* Checkbox */
 .arch-check { @apply inline-flex items-center gap-2; }
-.arch-check-input { width: 1rem; height: 1rem; accent-color: var(--arch-color-primary); }
+.arch-check-input {
+    appearance: none; -webkit-appearance: none;
+    width: 1rem; height: 1rem; flex-shrink: 0;
+    border: 1.5px solid var(--arch-color-border-strong, #9ca3af);
+    border-radius: var(--arch-radius-sm);
+    background: var(--arch-color-surface);
+    cursor: pointer; position: relative;
+    transition: background 120ms, border-color 120ms;
+}
+.arch-check-input:checked {
+    background: var(--arch-color-primary);
+    border-color: var(--arch-color-primary);
+}
+.arch-check-input:checked::after {
+    content: '';
+    position: absolute; inset: 0;
+    background: url("data:image/svg+xml,%3Csvg viewBox='0 0 10 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 4l3 3 5-6' stroke='white' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/0.6rem no-repeat;
+}
+.arch-check-input:focus-visible { outline: 2px solid var(--arch-color-primary); outline-offset: 2px; }
 .arch-check-label { font-size: var(--arch-font-size-sm); color: var(--arch-color-text); }
+
+/* Toggle switch */
 .arch-switch { @apply inline-flex items-center gap-2; }
-.arch-switch-input { width: 2.5rem; height: 1.5rem; accent-color: var(--arch-color-primary); }
+.arch-switch-input {
+    appearance: none; -webkit-appearance: none;
+    width: 2.25rem; height: 1.25rem; flex-shrink: 0;
+    border-radius: 9999px;
+    background: var(--arch-color-border-strong, #9ca3af);
+    cursor: pointer; position: relative;
+    transition: background 150ms ease;
+}
+.arch-switch-input::after {
+    content: ''; position: absolute;
+    width: 0.875rem; height: 0.875rem;
+    border-radius: 50%; background: #fff;
+    top: 50%; left: 1px;
+    transform: translateY(-50%);
+    transition: left 150ms ease;
+    box-shadow: 0 1px 2px rgb(0 0 0 / 0.2);
+}
+.arch-switch-input:checked { background: var(--arch-color-primary); }
+.arch-switch-input:checked::after { left: calc(100% - 0.875rem - 1px); }
+.arch-switch-input:focus-visible { outline: 2px solid var(--arch-color-primary); outline-offset: 2px; }
 
 /* Chip (removable tag) */
 .arch-chip { @apply inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-full; background-color: var(--arch-color-primary-muted); color: var(--arch-color-primary-dark); }
