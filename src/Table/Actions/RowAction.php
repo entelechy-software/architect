@@ -56,6 +56,12 @@ final class RowAction
 
     private ?string $panelTitle = null;
 
+    /**
+     * Optional animation preset for the action button.
+     * Supported: 'loading', 'spin', 'pulse'
+     */
+    private ?string $animation = null;
+
     private function __construct(string $key)
     {
         $this->key = $key;
@@ -184,6 +190,23 @@ final class RowAction
         return $clone;
     }
 
+    /**
+     * Animate the action button.
+     *
+     * - 'loading': While the Livewire round-trip is in-flight, the button is
+     *              disabled and its content replaced with a spinner. Powered
+     *              by wire:loading — only applies to Livewire-handled actions.
+     * - 'spin':    The icon rotates continuously (e.g. refresh / sync).
+     * - 'pulse':   The button pulses continuously (e.g. live indicator).
+     */
+    public function animation(string $type): self
+    {
+        $clone = clone $this;
+        $clone->animation = $type;
+
+        return $clone;
+    }
+
     public function getPanelBlade(): ?string
     {
         return $this->panelBlade;
@@ -192,6 +215,11 @@ final class RowAction
     public function getPanelTitle(): ?string
     {
         return $this->panelTitle;
+    }
+
+    public function getAnimation(): ?string
+    {
+        return $this->animation;
     }
 
     public function getKey(): string

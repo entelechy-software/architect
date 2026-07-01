@@ -362,6 +362,10 @@
                           $headerActionUsesBladeIcon = is_string($headerActionIcon)
                               && ! $headerActionUsesLegacyIcon;
                           $headerActionWireClick = $headerAction->getWireClick();
+                          $headerActionAnimation = $headerAction->getAnimation();
+                          $headerActionAnimClass = ($headerActionAnimation && $headerActionAnimation !== 'loading')
+                              ? 'arch-btn--anim-' . $headerActionAnimation
+                              : '';
                     @endphp
                     @if ($canUseAction)
                           @if ($headerAction->getOpenInTab())
@@ -379,6 +383,7 @@
                                   :outlined="! $headerAction->isFilled()"
                                   :icon="$headerActionUsesBladeIcon ? $headerActionIcon : null"
                                   :tooltip="$headerAction->getLabel()"
+                                  class="{{ $headerActionAnimClass }}"
                                   @click="$dispatch('architect:open-record', { type: '{{ $hTabType }}', props: {}, fallback: '{{ $hTabFallback }}' })"
                               >
                                   @if ($headerActionUsesLegacyIcon)
@@ -397,6 +402,12 @@
                                   :target="$headerAction->isNewWindow() ? '_blank' : null"
                                   :tooltip="$headerAction->getLabel()"
                                   wire:click="{{ $headerActionWireClick }}"
+                                  class="{{ $headerActionAnimClass }}"
+                                  @if ($headerActionAnimation === 'loading')
+                                      wire:loading.class="arch-btn--loading"
+                                      wire:loading.attr="disabled"
+                                      wire:target="{{ $headerActionWireClick }}"
+                                  @endif
                               >
                                   @if ($headerActionUsesLegacyIcon)
                                       <i class="{{ $headerActionIcon }}"></i>
@@ -413,6 +424,7 @@
                                   :href="$headerAction->getUrl()"
                                   :target="$headerAction->isNewWindow() ? '_blank' : null"
                                   :tooltip="$headerAction->getLabel()"
+                                  class="{{ $headerActionAnimClass }}"
                               >
                                   @if ($headerActionUsesLegacyIcon)
                                       <i class="{{ $headerActionIcon }}"></i>
@@ -1106,6 +1118,15 @@
                                               && ! $rowActionUsesLegacyIcon;
                                     @endphp
                                     @if ($canUseAction && $isVisible)
+                                        @php
+                                            $rowActionAnimation = $rowAction->getAnimation();
+                                            // spin/pulse: CSS class applied statically; loading: class added at runtime by wire:loading
+                                            $rowActionAnimClass = ($rowActionAnimation && $rowActionAnimation !== 'loading')
+                                                ? 'arch-btn--anim-' . $rowActionAnimation
+                                                : '';
+                                            $rowId = (int) ($row['id'] ?? 0);
+                                            $wireTarget = "handleRowAction('{$rowAction->getKey()}', {$rowId})";
+                                        @endphp
                                         @if ($rowAction->getOpenInTab())
                                             {{-- ModuleTabs intent event: dispatches architect:open-record so the tab bar
                                                  opens this record in a dynamic tab. Falls back to URL navigation
@@ -1122,6 +1143,7 @@
                                                   :icon="$rowActionUsesBladeIcon ? $rowActionIcon : null"
                                                 color="{{ $rowAction->getColor() }}"
                                                 :tooltip="$rowAction->getLabel()"
+                                                class="{{ $rowActionAnimClass }}"
                                                 @click="$dispatch('architect:open-record', { type: '{{ $tabType }}', props: { id: {{ $tabRowId }} }, fallback: '{{ $tabFallback }}' })"
                                             >
                                                   @if ($rowActionUsesLegacyIcon)
@@ -1141,6 +1163,7 @@
                                                 :target="$rowAction->opensInNewWindow() ? '_blank' : null"
                                                 :tooltip="$rowAction->getLabel()"
                                                 color="{{ $rowAction->getColor() }}"
+                                                class="{{ $rowActionAnimClass }}"
                                             >
                                                   @if ($rowActionUsesLegacyIcon)
                                                       <i class="{{ $rowActionIcon }}"></i>
@@ -1156,9 +1179,15 @@
                                                     outlined
                                                       :icon="$rowActionUsesBladeIcon ? $rowActionIcon : null"
                                                     color="{{ $rowAction->getColor() }}"
-                                                    wire:click="handleRowAction('{{ $rowAction->getKey() }}', {{ (int) ($row['id'] ?? 0) }})"
+                                                    wire:click="{{ $wireTarget }}"
                                                     wire:confirm="{{ $rowAction->getConfirm() }}"
                                                     :tooltip="$rowAction->getLabel()"
+                                                    class="{{ $rowActionAnimClass }}"
+                                                    @if ($rowActionAnimation === 'loading')
+                                                        wire:loading.class="arch-btn--loading"
+                                                        wire:loading.attr="disabled"
+                                                        wire:target="{{ $wireTarget }}"
+                                                    @endif
                                                 >
                                                       @if ($rowActionUsesLegacyIcon)
                                                           <i class="{{ $rowActionIcon }}"></i>
@@ -1172,8 +1201,14 @@
                                                     outlined
                                                       :icon="$rowActionUsesBladeIcon ? $rowActionIcon : null"
                                                     color="{{ $rowAction->getColor() }}"
-                                                    wire:click="handleRowAction('{{ $rowAction->getKey() }}', {{ (int) ($row['id'] ?? 0) }})"
+                                                    wire:click="{{ $wireTarget }}"
                                                     :tooltip="$rowAction->getLabel()"
+                                                    class="{{ $rowActionAnimClass }}"
+                                                    @if ($rowActionAnimation === 'loading')
+                                                        wire:loading.class="arch-btn--loading"
+                                                        wire:loading.attr="disabled"
+                                                        wire:target="{{ $wireTarget }}"
+                                                    @endif
                                                 >
                                                       @if ($rowActionUsesLegacyIcon)
                                                           <i class="{{ $rowActionIcon }}"></i>

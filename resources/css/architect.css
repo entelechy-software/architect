@@ -529,6 +529,41 @@
     to   { transform: rotate(360deg); }
 }
 
+/* ── Action button animation modifiers ──────────────────────────────────────
+   Applied via ->animation('spin' | 'pulse' | 'loading') on RowAction / HeaderAction.
+   The 'loading' class is added at runtime by Livewire wire:loading; spin/pulse
+   are static modifiers set once at render time.
+   ─────────────────────────────────────────────────────────────────────── */
+
+/* 'spin': icon rotates continuously — good for refresh/sync buttons */
+.arch-btn--anim-spin i,
+.arch-btn--anim-spin svg { animation: var(--arch-animation-spin); transform-origin: center; }
+
+/* 'pulse': whole button opacity-pulses — good for live/streaming indicators */
+.arch-btn--anim-pulse { animation: var(--arch-animation-pulse); }
+
+/* 'loading': applied by wire:loading.class while the Livewire round-trip is in-flight */
+.arch-btn--loading {
+    opacity: 0.6;
+    pointer-events: none;
+    cursor: not-allowed;
+    position: relative;
+}
+/* Hide existing button children (icon + text) */
+.arch-btn--loading > * { visibility: hidden; }
+/* Show a centred CSS spinner via ::after — no extra DOM needed */
+.arch-btn--loading::after {
+    content: '';
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 0.85em; height: 0.85em;
+    border: 2px solid currentColor;
+    border-top-color: transparent;
+    border-radius: 50%;
+    animation: spin 0.65s linear infinite;
+}
+
 /* ── Table / Navigator / Stats / Toolbar subsystem classes ──────────────────
    Flat (non-data-attribute) class families used by views migrated from the
    host app's legacy markup. Kept as their own flat-class system rather than

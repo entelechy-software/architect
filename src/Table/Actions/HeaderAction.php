@@ -41,6 +41,12 @@ final class HeaderAction
 
     private bool $newWindow = false;
 
+    /**
+     * Optional animation preset for the action button.
+     * Supported: 'loading', 'spin', 'pulse'
+     */
+    private ?string $animation = null;
+
     private function __construct(string $key)
     {
         $this->key = $key;
@@ -135,6 +141,23 @@ final class HeaderAction
         return $clone;
     }
 
+    /**
+     * Animate the action button.
+     *
+     * - 'loading': While the Livewire round-trip is in-flight, the button is
+     *              disabled and its content replaced with a spinner. Powered
+     *              by wire:loading — only applies when wireClick() is set.
+     * - 'spin':    The icon rotates continuously (e.g. refresh / sync).
+     * - 'pulse':   The button pulses continuously (e.g. live indicator).
+     */
+    public function animation(string $type): self
+    {
+        $clone = clone $this;
+        $clone->animation = $type;
+
+        return $clone;
+    }
+
     public function getKey(): string
     {
         return $this->key;
@@ -188,5 +211,10 @@ final class HeaderAction
     public function isNewWindow(): bool
     {
         return $this->newWindow;
+    }
+
+    public function getAnimation(): ?string
+    {
+        return $this->animation;
     }
 }
