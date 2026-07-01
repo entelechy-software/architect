@@ -272,71 +272,75 @@
             >
                 {{-- Floating section controls: drag handle, width/height steppers, fullscreen --}}
                 <div
-                    class="absolute top-2 right-2 z-10 flex items-center gap-0.5 opacity-0 group-hover/section:opacity-100 transition-opacity duration-150"
+                    class="absolute top-2 right-2 z-10 flex items-center rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 shadow-sm overflow-hidden opacity-0 group-hover/section:opacity-100 transition-opacity duration-150"
                     :class="editMode ? 'opacity-100' : ''"
                     x-show="fullscreenKey !== '{{ $sectionKey }}'"
                 >
-                    {{-- Drag handle (edit mode only) --}}
-                    <span
-                        class="dash-drag-handle cursor-grab p-1 rounded text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700"
-                        x-show="editMode"
-                        title="Drag to reorder"
-                    >
-                        <i class="fas fa-grip-vertical text-[10px]"></i>
-                    </span>
+                    {{-- Edit-mode controls (drag + width + height) — hidden until Customise is active --}}
+                    <div class="flex items-center border-r border-gray-200 dark:border-gray-600" x-show="editMode">
 
-                    {{-- Width stepper (edit mode only) --}}
-                    <div class="flex items-center" x-show="editMode">
-                        <button
-                            type="button"
-                            @click.stop="stepSpan('{{ $sectionKey }}', -1)"
-                            :disabled="atSpanMin('{{ $sectionKey }}')"
-                            class="p-1 rounded text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-40 disabled:cursor-not-allowed"
-                            title="Narrower"
-                        ><i class="fas fa-chevron-left text-[9px]"></i></button>
+                        {{-- Drag handle --}}
                         <span
-                            class="text-[10px] text-gray-500 dark:text-gray-400 w-4 text-center leading-none select-none"
-                            x-text="getSpanLabel('{{ $sectionKey }}')"
-                        ></span>
-                        <button
-                            type="button"
-                            @click.stop="stepSpan('{{ $sectionKey }}', 1)"
-                            :disabled="atSpanMax('{{ $sectionKey }}')"
-                            class="p-1 rounded text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-40 disabled:cursor-not-allowed"
-                            title="Wider"
-                        ><i class="fas fa-chevron-right text-[9px]"></i></button>
+                            class="dash-drag-handle cursor-grab px-2 py-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 border-r border-gray-200 dark:border-gray-600"
+                            title="Drag to reorder"
+                        >
+                            <i class="fas fa-grip-vertical text-xs"></i>
+                        </span>
+
+                        {{-- Width stepper --}}
+                        <div class="flex items-center border-r border-gray-200 dark:border-gray-600">
+                            <button
+                                type="button"
+                                @click.stop="stepSpan('{{ $sectionKey }}', -1)"
+                                :disabled="atSpanMin('{{ $sectionKey }}')"
+                                class="px-1.5 py-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-40 disabled:cursor-not-allowed"
+                                title="Narrower"
+                            ><i class="fas fa-chevron-left text-[9px]"></i></button>
+                            <span class="flex flex-col items-center select-none px-1">
+                                <span class="text-[8px] font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500 leading-none">W</span>
+                                <span class="text-[10px] font-medium text-gray-600 dark:text-gray-300 leading-none mt-0.5 min-w-[1.75rem] text-center" x-text="getSpanLabel('{{ $sectionKey }}')"></span>
+                            </span>
+                            <button
+                                type="button"
+                                @click.stop="stepSpan('{{ $sectionKey }}', 1)"
+                                :disabled="atSpanMax('{{ $sectionKey }}')"
+                                class="px-1.5 py-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-40 disabled:cursor-not-allowed"
+                                title="Wider"
+                            ><i class="fas fa-chevron-right text-[9px]"></i></button>
+                        </div>
+
+                        {{-- Height stepper --}}
+                        <div class="flex items-center">
+                            <button
+                                type="button"
+                                @click.stop="stepHeight('{{ $sectionKey }}', -1)"
+                                :disabled="atHeightMin('{{ $sectionKey }}')"
+                                class="px-1.5 py-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-40 disabled:cursor-not-allowed"
+                                title="Shorter"
+                            ><i class="fas fa-chevron-up text-[9px]"></i></button>
+                            <span class="flex flex-col items-center select-none px-1">
+                                <span class="text-[8px] font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500 leading-none">H</span>
+                                <span class="text-[10px] font-medium text-gray-600 dark:text-gray-300 leading-none mt-0.5 min-w-[1.75rem] text-center" x-text="getHeightLabel('{{ $sectionKey }}')"></span>
+                            </span>
+                            <button
+                                type="button"
+                                @click.stop="stepHeight('{{ $sectionKey }}', 1)"
+                                :disabled="atHeightMax('{{ $sectionKey }}')"
+                                class="px-1.5 py-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-40 disabled:cursor-not-allowed"
+                                title="Taller"
+                            ><i class="fas fa-chevron-down text-[9px]"></i></button>
+                        </div>
+
                     </div>
 
-                    {{-- Height stepper (edit mode only) --}}
-                    <div class="flex items-center" x-show="editMode">
-                        <button
-                            type="button"
-                            @click.stop="stepHeight('{{ $sectionKey }}', -1)"
-                            :disabled="atHeightMin('{{ $sectionKey }}')"
-                            class="p-1 rounded text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-40 disabled:cursor-not-allowed"
-                            title="Shorter"
-                        ><i class="fas fa-chevron-up text-[9px]"></i></button>
-                        <span
-                            class="text-[10px] text-gray-500 dark:text-gray-400 w-4 text-center leading-none select-none"
-                            x-text="getHeightLabel('{{ $sectionKey }}')"
-                        ></span>
-                        <button
-                            type="button"
-                            @click.stop="stepHeight('{{ $sectionKey }}', 1)"
-                            :disabled="atHeightMax('{{ $sectionKey }}')"
-                            class="p-1 rounded text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-40 disabled:cursor-not-allowed"
-                            title="Taller"
-                        ><i class="fas fa-chevron-down text-[9px]"></i></button>
-                    </div>
-
-                    {{-- Fullscreen expand --}}
+                    {{-- Fullscreen expand (always visible on hover) --}}
                     <button
                         type="button"
                         @click.stop="setFullscreen('{{ $sectionKey }}')"
-                        class="p-1 rounded text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700"
+                        class="px-2 py-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700"
                         title="Expand to full screen"
                     >
-                        <i class="fas fa-expand text-[10px]"></i>
+                        <i class="fas fa-expand text-xs"></i>
                     </button>
                 </div>
 
