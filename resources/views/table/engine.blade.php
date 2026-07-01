@@ -1365,27 +1365,7 @@
         </table>
     </div>
 
-    <div class="arch-card-footer">
-        {{--
-            Filament's pagination component handles everything natively:
-            [Showing X–Y of Z]  [Per page: 25▾]  [1 2 3 4]
-            At narrow viewports it collapses to [< Prev] [25▾] [Next >].
-        --}}
-        @php
-            $_pageOptions = $definition->perPageOptions !== [] ? $definition->perPageOptions : [];
-        @endphp
-        @if ($_pageOptions !== [])
-            <x-architect::pagination
-                :paginator="$paginator"
-                :page-options="$_pageOptions"
-                current-page-option-property="perPage"
-            />
-        @else
-            <x-architect::pagination :paginator="$paginator" />
-        @endif
-    </div>
-
-    {{-- Bulk action bar — confined to the table card, sticky to viewport bottom --}}
+    {{-- Bulk action bar — confined to the table body, sticky to viewport bottom --}}
     @if ($definition->selectableRows && count($selected) > 0)
         @php
         // Build a TSV-ready clipboard payload for the selected rows visible on
@@ -1420,7 +1400,7 @@
             JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT
         );
     @endphp
-        <div class="sticky bottom-4 z-10 flex justify-center pointer-events-none">
+        <div class="sticky bottom-4 z-10 flex justify-center pointer-events-none mb-4">
             <div class="arch-bulk-bar">
             <div
                 class="arch-card-body flex flex-wrap gap-2 items-center py-2"
@@ -1525,6 +1505,26 @@
             </div>
         </div>
     @endif
+
+    <div class="arch-card-footer">
+        {{--
+            Filament's pagination component handles everything natively:
+            [Showing X–Y of Z]  [Per page: 25▾]  [1 2 3 4]
+            At narrow viewports it collapses to [< Prev] [25▾] [Next >].
+        --}}
+        @php
+            $_pageOptions = $definition->perPageOptions !== [] ? $definition->perPageOptions : [];
+        @endphp
+        @if ($_pageOptions !== [])
+            <x-architect::pagination
+                :paginator="$paginator"
+                :page-options="$_pageOptions"
+                current-page-option-property="perPage"
+            />
+        @else
+            <x-architect::pagination :paginator="$paginator" />
+        @endif
+    </div>
 </div>
 </x-architect::table.shell>
 
