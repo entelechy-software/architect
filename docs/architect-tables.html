@@ -65,7 +65,9 @@ class MembersTableDefinition extends ArchitectTableDefinition
 <tr><td><code>breadcrumbs(array)</code></td><td>Array of <code>['label' => ..., 'url' => ...]</code> breadcrumb items.</td></tr>
 <tr><td><code>model(string)</code></td><td>Eloquent model FQCN. Architect infers the table name automatically.</td></tr>
 <tr><td><code>permissions(string $read, string $create, string $modify, string $remove)</code></td><td>Permission nodes checked before rendering.</td></tr>
-<tr><td><code>operations(array)</code></td><td>Which built-in CRUD operations are active: <code>create</code>, <code>modify</code>, <code>archive</code>, <code>remove</code>. Accepts plain strings or <code>'name' => [config]</code> entries (e.g. <code>openInTab</code>, <code>tabType</code>, <code>url</code> for create/modify).</td></tr>
+<tr><td><code>readOnly(bool $readOnly = true)</code></td><td>Shortcut for <code>creatable(false)-&gt;modifiable(false)</code>. Hides both the New and Edit buttons. Archive/remove are unaffected — control those via <code>archivable()</code>/<code>deletable()</code>.</td></tr>
+<tr><td><code>creatable(bool $creatable = true)</code></td><td>Enable/disable the New button and create flow. Enabled by default.</td></tr>
+<tr><td><code>modifiable(bool $modifiable = true)</code></td><td>Enable/disable the Edit button and modify flow. Enabled by default.</td></tr>
 <tr><td><code>formMode(string $mode)</code></td><td><code>'modal'</code> (default) or <code>'page'</code> for full-page create/edit forms.</td></tr>
 <tr><td><code>filterPanel(bool $persistence, bool $bookmarkFilters)</code></td><td>Show collapsible filter panel. Optionally persist filter state in URL.</td></tr>
 <tr><td><code>column(Column)</code></td><td>Add a single column definition.</td></tr>
@@ -87,8 +89,8 @@ class MembersTableDefinition extends ArchitectTableDefinition
 <tr><td><code>documentation(string $url)</code></td><td>Add a help icon linking to external documentation.</td></tr>
 <tr><td><code>navigator(?ArchitectNavigatorDefinition)</code></td><td>Attach a tab navigator bar above the table.</td></tr>
 <tr><td><code>hideId()</code></td><td>Remove the ID column from the table.</td></tr>
-<tr><td><code>create(string $mode, ?array $columns)</code></td><td>Override the create form columns list.</td></tr>
-<tr><td><code>modify(string $mode, ?array $columns)</code></td><td>Override the edit form columns list.</td></tr>
+<tr><td><code>create(string $mode, ?array $columns, bool $openInTab, ?string $tabType, ?string $url)</code></td><td>Configure the create form mode/columns. Calling this always enables creation. <code>$openInTab</code>+<code>$tabType</code> dispatch <code>architect:open-record</code> instead of the default create panel; <code>$url</code> is the fallback when no ModuleTabsManager is present.</td></tr>
+<tr><td><code>modify(string $mode, ?array $columns, bool $openInTab, ?string $tabType, ?string $url)</code></td><td>Configure the modify form mode/columns. Calling this always enables modification. Same <code>$openInTab</code>/<code>$tabType</code>/<code>$url</code> behaviour as <code>create()</code>, applied to the Edit button.</td></tr>
 <tr><td><code>importable(array $config)</code></td><td>Enable CSV import with column mapping.</td></tr>
 <tr><td><code>alert(string $type, string $message)</code></td><td>Show a persistent alert banner above the table (<code>'info'|'warning'|'danger'</code>).</td></tr>
 <tr><td><code>hideSearchBar(bool)</code></td><td>Remove the search input.</td></tr>

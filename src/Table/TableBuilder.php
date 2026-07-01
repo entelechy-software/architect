@@ -52,11 +52,27 @@ final class TableBuilder
 
     private ?PermissionMap $permissions = null;
 
-    /** @var array<int, string> */
-    private array $operations = ['create', 'modify'];
+    /** Whether the New button / create flow is enabled. Defaults to on. */
+    private bool $creatable = true;
 
-    /** @var array<string, array<string, mixed>> Section-level config overrides (e.g. openInTab). */
-    private array $operationConfigs = [];
+    /** Whether the Edit button / modify flow is enabled. Defaults to on. */
+    private bool $modifiable = true;
+
+    /** Dispatch architect:open-record instead of the default create panel. */
+    private bool $createOpenInTab = false;
+
+    private ?string $createTabType = null;
+
+    /** Fallback URL when no ModuleTabsManager is present. */
+    private ?string $createUrl = null;
+
+    /** Dispatch architect:open-record instead of the default edit panel. */
+    private bool $modifyOpenInTab = false;
+
+    private ?string $modifyTabType = null;
+
+    /** Fallback URL when no ModuleTabsManager is present. */
+    private ?string $modifyUrl = null;
 
     private string $formMode = 'slide-over';
 
@@ -255,50 +271,39 @@ final class TableBuilder
     }
 
     /**
-     * Configure which built-in CRUD operations are active.
+     * Disable (or re-enable) both the create and modify flows in one call.
      *
-     * Accepts either plain strings or associative entries with config:
-     *
-     *   ->operations(['remove'])                // plain — suppress create & modify
-     *   ->operations([
-     *       'create' => [
-     *           'openInTab' => true,
-     *           'tabType'   => 'case',
-     *           'url'       => '/advice/cases/create',
-     *       ],
-     *       'remove',
-     *   ])
-     *
-     * Supported config keys for 'create'/'modify':
-     *   openInTab (bool)  — dispatch architect:open-record instead of opening slideout
-     *   tabType   (string) — DynamicTabType key
-     *   url       (string) — fallback URL when no ModuleTabsManager is present
-     *
-     * @param  array<int|string, string|array<string, mixed>>  $operations
+     * Shortcut for ->creatable(!$readOnly)->modifiable(!$readOnly). Archiving
+     * and deletion are unaffected — control those independently via
+     * ->archivable() / ->deletable().
      */
-    public function operations(array $operations): self
+    public function readOnly(bool $readOnly = true): self
     {
         $clone = clone $this;
-        $plain = [];
-        $configs = [];
+        $clone->creatable = ! $readOnly;
+        $clone->modifiable = ! $readOnly;
 
-        foreach ($operations as $key => $value) {
-            if (is_string($key) && is_array($value)) {
-                // Associative entry: 'create' => ['openInTab' => true, ...]
-                $plain[] = $key;
-                $configs[$key] = $value;
-            } elseif (is_string($value)) {
-                // Plain string entry: 'remove'
-                $plain[] = $value;
-            } else {
-                throw new \InvalidArgumentException(
-                    "TableBuilder::operations() entries must be an operation name string or 'name' => [config], got a non-string value at key '{$key}'."
-                );
-            }
-        }
+        return $clone;
+    }
 
-        $clone->operations = $plain;
-        $clone->operationConfigs = $configs;
+    /**
+     * Enable or disable the New button / create flow. Enabled by default.
+     */
+    public function creatable(bool $creatable = true): self
+    {
+        $clone = clone $this;
+        $clone->creatable = $creatable;
+
+        return $clone;
+    }
+
+    /**
+     * Enable or disable the Edit button / modify flow. Enabled by default.
+     */
+    public function modifiable(bool $modifiable = true): self
+    {
+        $clone = clone $this;
+        $clone->modifiable = $modifiable;
 
         return $clone;
     }
@@ -340,7 +345,7 @@ final class TableBuilder
         // Panel-render style — fall back to create's style when modify is inline.
         $clone->formMode = $modify === 'inline' ? $create : $modify;
 
-        // Auto-enable create + modify operations (legacy ->create()/->modify() flags).
+        // Auto-enable create + modify (legacy ->create()/->modify() flags).
         $clone->createMode = 'slide-out';
         $clone->modifyMode = $modify === 'inline' ? 'inline' : 'slide-out';
 
@@ -693,9 +698,17 @@ final class TableBuilder
      *
      * @param  string  $mode  'inline' for in-place editing, 'slide-out' for slide-over panel, 'modal' for centered modal panel
      * @param  list<string>|null  $columns  Column keys that are editable (null = all columns with ->type())
+     * @param  bool  $openInTab  Dispatch architect:open-record instead of the default create panel.
+     * @param  string|null  $tabType  DynamicTabType key (required when $openInTab is true).
+     * @param  string|null  $url  Fallback URL when no ModuleTabsManager is present.
      */
-    public function create(string $mode, ?array $columns = null): self
-    {
+    public function create(
+        string $mode,
+        ?array $columns = null,
+        bool $openInTab = false,
+        ?string $tabType = null,
+        ?string $url = null,
+    ): self {
         $clone = clone $this;
         if (! in_array($mode, ['inline', 'slide-out', 'modal'], true)) {
             throw new \InvalidArgumentException("Create mode must be 'inline', 'slide-out', or 'modal', got '{$mode}'");
@@ -708,6 +721,10 @@ final class TableBuilder
             $clone->createMode = $mode;
         }
         $clone->createColumns = $columns;
+        $clone->creatable = true;
+        $clone->createOpenInTab = $openInTab;
+        $clone->createTabType = $tabType;
+        $clone->createUrl = $url;
 
         return $clone;
     }
@@ -717,9 +734,17 @@ final class TableBuilder
      *
      * @param  string  $mode  'inline' for in-place editing, 'slide-out' for slide-over panel, 'modal' for centered modal panel
      * @param  list<string>|null  $columns  Column keys that are editable (null = all columns with ->type())
+     * @param  bool  $openInTab  Dispatch architect:open-record instead of the default edit panel.
+     * @param  string|null  $tabType  DynamicTabType key (required when $openInTab is true).
+     * @param  string|null  $url  Fallback URL when no ModuleTabsManager is present.
      */
-    public function modify(string $mode, ?array $columns = null): self
-    {
+    public function modify(
+        string $mode,
+        ?array $columns = null,
+        bool $openInTab = false,
+        ?string $tabType = null,
+        ?string $url = null,
+    ): self {
         $clone = clone $this;
         if (! in_array($mode, ['inline', 'slide-out', 'modal'], true)) {
             throw new \InvalidArgumentException("Modify mode must be 'inline', 'slide-out', or 'modal', got '{$mode}'");
@@ -732,6 +757,10 @@ final class TableBuilder
             $clone->modifyMode = $mode;
         }
         $clone->modifyColumns = $columns;
+        $clone->modifiable = true;
+        $clone->modifyOpenInTab = $openInTab;
+        $clone->modifyTabType = $tabType;
+        $clone->modifyUrl = $url;
 
         return $clone;
     }
@@ -784,7 +813,7 @@ final class TableBuilder
      *
      * Multiple calls stack vertically in declaration order. The engine
      * may also auto-emit defaults (e.g. "This table is view-only" when
-     * no create/modify operations are configured) — call ->suppressAutoAlerts()
+     * neither create nor modify is enabled) — call ->suppressAutoAlerts()
      * to opt out of those.
      *
      * @param  string  $type  One of: info, success, warning, danger.
@@ -818,7 +847,7 @@ final class TableBuilder
 
     /**
      * Suppress auto-detected default alert banners (e.g. the read-only
-     * notice rendered when no create/modify operations exist).
+     * notice rendered when neither create nor modify is enabled).
      */
     public function suppressAutoAlerts(bool $suppress = true): self
     {
@@ -1020,29 +1049,6 @@ final class TableBuilder
             }
         }
 
-        // Auto-derive operations from create/modify/archivable/deletable declarations
-        $operations = $this->operations;
-
-        // Auto-add 'create' if create() was called
-        if ($this->createMode !== null && ! in_array('create', $operations, true)) {
-            $operations[] = 'create';
-        }
-
-        // Auto-add 'modify' if modify() was called
-        if ($this->modifyMode !== null && ! in_array('modify', $operations, true)) {
-            $operations[] = 'modify';
-        }
-
-        // Auto-add 'archive' operation if archivable is enabled
-        if ($this->archivable && ! in_array('archive', $operations, true)) {
-            $operations[] = 'archive';
-        }
-
-        // Auto-add 'remove' operation if deletable is enabled
-        if ($this->deletable && ! in_array('remove', $operations, true)) {
-            $operations[] = 'remove';
-        }
-
         // Auto-add row actions for clonable and auditable features
         $rowActions = $this->rowActions;
 
@@ -1105,8 +1111,14 @@ final class TableBuilder
             breadcrumbs: $this->breadcrumbs,
             dataModelClass: $this->dataModelClass,
             permissions: $this->permissions,
-            operations: $operations,
-            operationConfigs: $this->operationConfigs,
+            creatable: $this->creatable,
+            modifiable: $this->modifiable,
+            createOpenInTab: $this->createOpenInTab,
+            createTabType: $this->createTabType,
+            createUrl: $this->createUrl,
+            modifyOpenInTab: $this->modifyOpenInTab,
+            modifyTabType: $this->modifyTabType,
+            modifyUrl: $this->modifyUrl,
             formMode: $this->formMode,
             filterPersistence: $this->filterPersistence,
             filterBookmarkFilters: $this->filterBookmarkFilters,

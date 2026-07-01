@@ -42,8 +42,6 @@ final class ArchitectTableDefinition
 
     /**
      * @param  class-string<ArchitectDataModel>  $dataModelClass
-     * @param  array<int, string>  $operations  Subset of ['create','modify','archive','remove']
-     * @param  array<string, array<string, mixed>>  $operationConfigs  Per-operation config (e.g. openInTab)
      * @param  list<Column>  $columns
      * @param  list<ArchitectField>  $fields
      * @param  list<ArchitectFilter>  $filters
@@ -65,7 +63,10 @@ final class ArchitectTableDefinition
         public array $breadcrumbs,
         public readonly string $dataModelClass,
         public readonly PermissionMap $permissions,
-        public readonly array $operations,
+        /** Whether the New button / create flow is enabled. */
+        public readonly bool $creatable,
+        /** Whether the Edit button / modify flow is enabled. */
+        public readonly bool $modifiable,
         public readonly string $formMode,
         public readonly bool $filterPersistence,
         public readonly bool $filterBookmarkFilters,
@@ -92,12 +93,18 @@ final class ArchitectTableDefinition
         public readonly ?array $createColumns = null,
         public readonly ?string $modifyMode = null,
         public readonly ?array $modifyColumns = null,
-        /**
-         * Per-operation config overrides (e.g. openInTab for the create operation).
-         *
-         * @var array<string, array<string, mixed>>
-         */
-        public readonly array $operationConfigs = [],
+        /** Dispatch architect:open-record instead of the default create panel. */
+        public readonly bool $createOpenInTab = false,
+        /** DynamicTabType key for the create flow (used when $createOpenInTab is true). */
+        public readonly ?string $createTabType = null,
+        /** Fallback URL when no ModuleTabsManager is present for the create flow. */
+        public readonly ?string $createUrl = null,
+        /** Dispatch architect:open-record instead of the default edit panel. */
+        public readonly bool $modifyOpenInTab = false,
+        /** DynamicTabType key for the modify flow (used when $modifyOpenInTab is true). */
+        public readonly ?string $modifyTabType = null,
+        /** Fallback URL when no ModuleTabsManager is present for the modify flow. */
+        public readonly ?string $modifyUrl = null,
         /**
          * CSV import configuration. Null = no import button rendered.
          */
@@ -168,12 +175,6 @@ final class ArchitectTableDefinition
             throw new \InvalidArgumentException(
                 "scrollMode must be 'page', 'container', or 'static', got '{$scrollMode}'"
             );
-        }
-
-        foreach ($operations as $s) {
-            if (! in_array($s, ['create', 'modify', 'archive', 'remove'], true)) {
-                throw new \InvalidArgumentException("Unknown operation '{$s}' (allowed: create, modify, archive, remove)");
-            }
         }
 
         // Build O(1) lookup indexes for the engine's hot paths

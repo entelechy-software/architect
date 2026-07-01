@@ -93,8 +93,8 @@
     @php
         $_allAlerts = $definition->alerts;
         if (! $definition->suppressAutoAlerts
-            && ! in_array('create', $definition->operations, true)
-            && ! in_array('modify', $definition->operations, true)) {
+            && ! $definition->creatable
+            && ! $definition->modifiable) {
             $_allAlerts[] = ['type' => 'info', 'message' => 'This table is view-only.'];
         }
     @endphp
@@ -145,16 +145,12 @@
             <div class="flex flex-wrap gap-2 items-center">
 
                 {{-- Create button (Layer 2 gate is enforced by FormPanel) --}}
-                @if (in_array('create', $definition->operations, true))
-                    @php
-                        $_createCfg       = $definition->operationConfigs['create'] ?? [];
-                        $_createOpenInTab = ! empty($_createCfg['openInTab']) && ! empty($_createCfg['tabType']);
-                    @endphp
-                    @if ($_createOpenInTab)
+                @if ($definition->creatable)
+                    @if ($definition->createOpenInTab && $definition->createTabType)
                         <x-architect::button
                             size="sm"
                             icon="heroicon-m-plus"
-                            @click="$dispatch('architect:open-record', { type: '{{ $_createCfg['tabType'] }}', props: {}, fallback: '{{ $_createCfg['url'] ?? '' }}' })"
+                            @click="$dispatch('architect:open-record', { type: '{{ $definition->createTabType }}', props: {}, fallback: '{{ $definition->createUrl ?? '' }}' })"
                         >
                             New
                         </x-architect::button>
@@ -1294,19 +1290,33 @@
                             @endif
 
                             {{-- Standard Edit Button --}}
-                            @if (! $rowIsArchived && in_array('modify', $definition->operations, true))
-                                <x-architect::button
-                                    size="sm"
-                                    outlined
-                                    icon="heroicon-m-pencil-square"
-                                    color="primary"
-                                    @click="$dispatch('architect:open-edit', { definitionClass: '{{ addslashes($definitionClass) }}', id: {{ (int) ($row['id'] ?? 0) }} })"
-                                    tooltip="Edit"
-                                />
+                            @if (! $rowIsArchived && $definition->modifiable)
+                                @if ($definition->modifyOpenInTab && $definition->modifyTabType)
+                                    @php
+                                        $_modifyFallback = str_replace('{id}', (string) ($row['id'] ?? ''), $definition->modifyUrl ?? '');
+                                    @endphp
+                                    <x-architect::button
+                                        size="sm"
+                                        outlined
+                                        icon="heroicon-m-pencil-square"
+                                        color="primary"
+                                        @click="$dispatch('architect:open-record', { type: '{{ $definition->modifyTabType }}', props: { id: {{ (int) ($row['id'] ?? 0) }} }, fallback: '{{ $_modifyFallback }}' })"
+                                        tooltip="Edit"
+                                    />
+                                @else
+                                    <x-architect::button
+                                        size="sm"
+                                        outlined
+                                        icon="heroicon-m-pencil-square"
+                                        color="primary"
+                                        @click="$dispatch('architect:open-edit', { definitionClass: '{{ addslashes($definitionClass) }}', id: {{ (int) ($row['id'] ?? 0) }} })"
+                                        tooltip="Edit"
+                                    />
+                                @endif
                             @endif
 
                             {{-- Archive / Unarchive Buttons --}}
-                            @if ($definition->archivable && in_array('archive', $definition->operations, true))
+                            @if ($definition->archivable)
                                 @if ($rowIsArchived && $definition->allowUnarchive)
                                     <x-architect::button
                                         size="sm"
@@ -1330,7 +1340,7 @@
                             @endif
 
                             {{-- Delete Button: active records (requires deletable()) --}}
-                            @if (! $rowIsArchived && $definition->deletable && in_array('remove', $definition->operations, true))
+                            @if (! $rowIsArchived && $definition->deletable)
                                 <x-architect::button
                                     size="sm"
                                     outlined
@@ -1355,8 +1365,8 @@
 
                             @if (! $rowIsArchived
                                 && count($definition->rowActions) === 0
-                                && ! in_array('modify', $definition->operations, true)
-                                && ! ($definition->archivable && in_array('archive', $definition->operations, true)))
+                                && ! $definition->modifiable
+                                && ! $definition->archivable)
                                 <span class="text-gray-500 dark:text-gray-400 text-sm">—</span>
                             @endif
                             </span>{{-- /x-show: standard row actions --}}
