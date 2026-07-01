@@ -59,11 +59,11 @@ final readonly class PermissionGate
         $node = $this->nodeForAction($def->permissions, $action);
         $this->require($user, $node);
 
-        if (! $user instanceof Model) {
-            throw new AuthorizationException('Not authorised.');
-        }
-
-        if (! $dataModel->canActOn($user, $recordId)) {
+        // Per-record (Layer 3) check only applies when there is an authenticated
+        // Eloquent user to scope against. When $user is null or not an Eloquent
+        // model (e.g. unauthenticated demos using AllowAllPermissionResolver),
+        // the L2 node check above is sufficient.
+        if ($user instanceof Model && ! $dataModel->canActOn($user, $recordId)) {
             throw new AuthorizationException('Not authorised.');
         }
     }
