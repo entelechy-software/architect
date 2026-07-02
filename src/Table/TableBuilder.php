@@ -368,7 +368,7 @@ final class TableBuilder
     /**
      * Attach a custom Forms Core definition to either create or modify flow.
      *
-     * @param  'create'|'modify'  $for
+        * @param  string  $for
      * @param  class-string  $definitionClass
      */
     public function customForm(
