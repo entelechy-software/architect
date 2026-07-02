@@ -11,6 +11,7 @@ use Entelechy\Architect\Table\Column;
 use Entelechy\Architect\Table\Contracts\ArchitectDataModel;
 use Entelechy\Architect\Table\Contracts\ArchitectFilter;
 use Entelechy\Architect\Table\Contracts\ArchitectRowAction;
+use Entelechy\Architect\Table\ModuleTableFilterPipeline;
 use Entelechy\Architect\Table\QueryContext;
 use Entelechy\Architect\Table\TableBuilder;
 use Entelechy\Architect\Tests\TestCase;
@@ -19,6 +20,7 @@ use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Contracts\Support\Renderable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Pagination\LengthAwarePaginator as ConcreteLengthAwarePaginator;
+use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
 
 class TableBuilderTest extends TestCase
 {
@@ -263,6 +265,68 @@ class TableBuilderTest extends TestCase
             ->customFilter(StubArchitectFilter::make('queue_preset'))
             ->build();
     }
+
+    #[AllowMockObjectsWithoutExpectations]
+    public function test_filter_pipeline_passes_structured_payload_to_custom_filter(): void
+    {
+        $spyFilter = SpyArchitectFilter::make('segment');
+
+        $payload = [
+            'regions' => ['emea', 'apac'],
+            'tiers' => ['enterprise'],
+        ];
+
+        $context = new QueryContext(
+            filters: ['segment' => $payload],
+            filterDefinitions: ['segment' => $spyFilter],
+        );
+
+        $query = $this->createMock(Builder::class);
+
+        ModuleTableFilterPipeline::apply($query, $context);
+
+        $this->assertSame($payload, $spyFilter->lastValue);
+    }
+
+    #[AllowMockObjectsWithoutExpectations]
+    public function test_filter_pipeline_calls_filter_with_null_when_value_missing(): void
+    {
+        $spyFilter = SpyArchitectFilter::make('segment');
+
+        $context = new QueryContext(
+            filters: [],
+            filterDefinitions: ['segment' => $spyFilter],
+        );
+
+        $query = $this->createMock(Builder::class);
+
+        ModuleTableFilterPipeline::apply($query, $context);
+
+        $this->assertNull($spyFilter->lastValue);
+    }
+
+    public function test_query_context_without_filter_removes_definition_and_value(): void
+    {
+        $segment = SpyArchitectFilter::make('segment');
+        $status = SpyArchitectFilter::make('status');
+
+        $context = new QueryContext(
+            filters: [
+                'segment' => ['regions' => ['emea']],
+                'status' => 'active',
+            ],
+            filterDefinitions: [
+                'segment' => $segment,
+                'status' => $status,
+            ],
+        );
+
+        $withoutSegment = $context->withoutFilter('segment');
+
+        $this->assertArrayNotHasKey('segment', $withoutSegment->filters);
+        $this->assertArrayNotHasKey('segment', $withoutSegment->filterDefinitions);
+        $this->assertSame('active', $withoutSegment->filters['status']);
+    }
 }
 
 final class StubArchitectFilter extends ArchitectFilter
@@ -279,6 +343,21 @@ final class StubArchitectFilter extends ArchitectFilter
         }
 
         $query->where($this->name(), '=', $value);
+    }
+}
+
+final class SpyArchitectFilter extends ArchitectFilter
+{
+    public mixed $lastValue = null;
+
+    public function blade(): string
+    {
+        return 'architect::table.filters.select';
+    }
+
+    protected function doApply(Builder $query, mixed $value): void
+    {
+        $this->lastValue = $value;
     }
 }
 

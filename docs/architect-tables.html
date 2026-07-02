@@ -275,6 +275,9 @@ MultiSelectFilter::make('tags')->source('/api/tags'),</code></pre>
 <p>Use <code>customFilter()</code> when built-in controls are too rigid for the UX/value shape you need. It is a semantic alias of <code>filter()</code>, but makes intent explicit in table definitions.</p>
 <pre><code class="language-php">use App\Architect\Filters\SupportPresetFilter;
 use App\Architect\Filters\SlaWindowFilter;
+use App\Architect\Filters\RegionTierFilter;
+use App\Architect\Filters\FinanceTriageFilter;
+use App\Architect\Renderables\FinanceTriageFilterRenderable;
 
 TableBuilder::make()
     ->customFilter(
@@ -286,11 +289,21 @@ TableBuilder::make()
         SlaWindowFilter::make('sla_window')
             ->label('SLA Window')
             ->render('architect-custom.filters.sla-window')
+    )
+    ->customFilter(
+        RegionTierFilter::make('segment')
+            ->label('Region + Tier')
+            ->render('architect-custom.filters.region-tier')
+    )
+    ->customFilter(
+        FinanceTriageFilter::make('finance_triage')
+            ->label('Finance Triage')
+            ->render(new FinanceTriageFilterRenderable('finance_triage'))
     );</code></pre>
 
 <p>Real-world payload examples:</p>
 <ul>
-<li>Support presets: <code>{ preset: 'hot_queue' }</code></li>
+<li>Support presets: <code>{ preset: 'needs_review'|'verified_recent'|'recent_signups' }</code></li>
 <li>SLA windows: <code>{ minsFrom: 0, minsTo: 120, severity: ['critical','warning'] }</code></li>
 <li>Region+tier segmentation: <code>{ regions: ['emea'], tiers: ['enterprise'] }</code></li>
 <li>Reconciliation triage: <code>{ matched: 'no', hasException: true, awaitingApproval: false }</code></li>
