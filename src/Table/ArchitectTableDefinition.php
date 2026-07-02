@@ -53,7 +53,7 @@ final class ArchitectTableDefinition
      * @param  list<RowAction>  $rowActions
      * @param  list<HeaderAction>  $headerActions
      * @param  list<ArchitectRowAction>  $customRowActions
-     * @param  array<int, array{title: string, url?: string|false}>  $breadcrumbs  Breadcrumb items with title and optional url
+     * @param  array<int, array{title: string, url?: string|false, menu?: array<int, array{title: string, url?: string|false}>}>  $breadcrumbs  Breadcrumb items with title and optional url/menu
      * @param  string|null  $createMode  'inline' or 'slide-out'
      * @param  list<string>|null  $createColumns  Column keys editable in create mode (null = all)
      * @param  string|null  $modifyMode  'inline' or 'slide-out'
@@ -63,6 +63,12 @@ final class ArchitectTableDefinition
         public readonly ?string $title,
         public readonly ?string $pageTitle,
         public array $breadcrumbs,
+        /** @var 'manual'|'automatic' */
+        public readonly string $breadcrumbMode,
+        public readonly bool $breadcrumbAutoIncludeHome,
+        public readonly string $breadcrumbAutoHomeTitle,
+        public readonly string $breadcrumbAutoHomeUrl,
+        public readonly bool $breadcrumbAutoIncludeCurrent,
         public readonly string $dataModelClass,
         public readonly PermissionMap $permissions,
         /** Whether the New button / create flow is enabled. */
@@ -184,6 +190,10 @@ final class ArchitectTableDefinition
     ) {
         if (! in_array($formMode, ['slide-over', 'wizard', 'modal'], true)) {
             throw new \InvalidArgumentException("formMode must be 'slide-over', 'wizard', or 'modal', got '{$formMode}'");
+        }
+
+        if (! in_array($breadcrumbMode, ['manual', 'automatic'], true)) {
+            throw new \InvalidArgumentException("breadcrumbMode must be 'manual' or 'automatic', got '{$breadcrumbMode}'");
         }
 
         if (! in_array($scrollMode, ['page', 'container', 'static'], true)) {

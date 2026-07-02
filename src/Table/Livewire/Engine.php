@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Entelechy\Architect\Table\Livewire;
 
+use Entelechy\Architect\Breadcrumbs\AutomaticBreadcrumbsResolver;
 use Entelechy\Architect\Supersearch\Contracts\HasSupersearchHook;
 use Entelechy\Architect\Table\Actions\BulkStatusAction;
 use Entelechy\Architect\Table\ArchitectTableDefinition;
@@ -1471,6 +1472,10 @@ class Engine extends Component
         // Skip when embedded (e.g. inside SPA tabs) so we don't overwrite the
         // parent component's SpaSharedDefinition which owns breadcrumb inheritance.
         if (! $this->embedded) {
+            if ($def->breadcrumbMode === 'automatic') {
+                $def->breadcrumbs = app(AutomaticBreadcrumbsResolver::class)->forTable($def, request());
+            }
+
             view()->share('definition', $def);
         }
 

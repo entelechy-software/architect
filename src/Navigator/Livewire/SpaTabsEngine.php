@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Entelechy\Architect\Navigator\Livewire;
 
+use Entelechy\Architect\Breadcrumbs\AutomaticBreadcrumbsResolver;
 use Entelechy\Architect\Contracts\PermissionResolver;
 use Entelechy\Architect\Navigator\ArchitectNavigatorDefinition;
 use Entelechy\Architect\Navigator\Items\Tab;
@@ -86,7 +87,9 @@ class SpaTabsEngine extends Component
 
                     if (method_exists($tableClass, 'definition')) {
                         $tableDef = $tableClass::definition();
-                        $tabBreadcrumbs[$item->getSlug()] = $tableDef->breadcrumbs ?? [];
+                        $tabBreadcrumbs[$item->getSlug()] = $tableDef->breadcrumbMode === 'automatic'
+                            ? app(AutomaticBreadcrumbsResolver::class)->forTable($tableDef, request())
+                            : ($tableDef->breadcrumbs ?? []);
                     }
                 }
 

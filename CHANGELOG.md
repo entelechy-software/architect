@@ -13,10 +13,13 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 - **Tables** — return-hook support for external custom forms:
 	- callback query refresh (configurable via `callbackQueryKey`),
 	- same-origin `postMessage` refresh (`type: 'architect:table-custom-form-saved'`).
+- **Breadcrumbs (Core)** — introduced normalized breadcrumb primitives (`BreadcrumbItem`, `BreadcrumbTrail`) and dropdown-ready breadcrumb metadata via optional `menu` items.
+- **Tables** — `breadcrumbsAutomatic()` and `breadcrumbsMode()` for request-path-driven breadcrumb generation with configurable home/current behavior.
 
 ### Changed
 
 - **Breaking (Tables)** — `formMode('page')` is removed. Use `formMode('wizard')` and pair it with `customForm(for: 'create'|'modify', ...)` when wizard mode is enabled.
+- **Navigator / Tables** — SPA inherit-mode tab breadcrumbs now resolve automatic table breadcrumbs consistently with standalone table rendering.
 
 ### Migration
 

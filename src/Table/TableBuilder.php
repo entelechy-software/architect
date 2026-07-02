@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Entelechy\Architect\Table;
 
+use Entelechy\Architect\Breadcrumbs\BreadcrumbTrail;
 use Entelechy\Architect\Forms\ArchitectFormDefinition;
 use Entelechy\Architect\Forms\ArchitectWizardDefinition;
 use Entelechy\Architect\Navigator\ArchitectNavigatorDefinition;
@@ -47,8 +48,19 @@ final class TableBuilder
 
     private ?string $pageTitle = null;
 
-    /** @var array<int, array{title: string, url?: string|false}> */
+    /** @var array<int, array{title: string, url?: string|false, menu?: array<int, array{title: string, url?: string|false}>}> */
     private array $breadcrumbs = [];
+
+    /** @var 'manual'|'automatic' */
+    private string $breadcrumbMode = 'manual';
+
+    private bool $breadcrumbAutoIncludeHome = true;
+
+    private string $breadcrumbAutoHomeTitle = 'Home';
+
+    private string $breadcrumbAutoHomeUrl = '/';
+
+    private bool $breadcrumbAutoIncludeCurrent = true;
 
     /** @var class-string<ArchitectDataModel>|null */
     private ?string $dataModelClass = null;
@@ -246,7 +258,8 @@ final class TableBuilder
      * Set breadcrumb navigation items.
      *
      * Matches singleTable pattern. Each breadcrumb is an array
-     * with 'title' (string) and optional 'url' (string|false).
+     * with 'title' (string), optional 'url' (string|false), and optional
+     * 'menu' items for future dropdown rendering.
      *
      * Example:
      *   ->breadcrumbs([
@@ -254,12 +267,58 @@ final class TableBuilder
      *       ['title' => 'Committees'],
      *   ])
      *
-     * @param  array<int, array{title: string, url?: string|false}>  $breadcrumbs
+     * @param  array<int, array{title: string, url?: string|false|null, menu?: array<int, array{title: string, url?: string|false|null}>}>  $breadcrumbs
      */
     public function breadcrumbs(array $breadcrumbs): self
     {
         $clone = clone $this;
-        $clone->breadcrumbs = $breadcrumbs;
+        $clone->breadcrumbs = BreadcrumbTrail::fromArray($breadcrumbs)->toArray();
+        $clone->breadcrumbMode = 'manual';
+
+        return $clone;
+    }
+
+    /**
+     * Set breadcrumb mode to either manual or automatic resolution.
+     *
+     * @param  'manual'|'automatic'  $mode
+     */
+    public function breadcrumbsMode(string $mode): self
+    {
+        if (! in_array($mode, ['manual', 'automatic'], true)) {
+            throw new \InvalidArgumentException("breadcrumbs mode must be 'manual' or 'automatic', got '{$mode}'");
+        }
+
+        $clone = clone $this;
+        $clone->breadcrumbMode = $mode;
+
+        return $clone;
+    }
+
+    /**
+     * Enable automatic breadcrumb generation from request path + table title.
+     */
+    public function breadcrumbsAutomatic(
+        bool $enabled = true,
+        bool $includeHome = true,
+        string $homeTitle = 'Home',
+        string $homeUrl = '/',
+        bool $includeCurrent = true,
+    ): self {
+        if (trim($homeTitle) === '') {
+            throw new \InvalidArgumentException('breadcrumbsAutomatic homeTitle must be a non-empty string.');
+        }
+
+        if ($includeHome && trim($homeUrl) === '') {
+            throw new \InvalidArgumentException('breadcrumbsAutomatic homeUrl must be a non-empty string when includeHome is true.');
+        }
+
+        $clone = clone $this;
+        $clone->breadcrumbMode = $enabled ? 'automatic' : 'manual';
+        $clone->breadcrumbAutoIncludeHome = $includeHome;
+        $clone->breadcrumbAutoHomeTitle = $homeTitle;
+        $clone->breadcrumbAutoHomeUrl = $homeUrl;
+        $clone->breadcrumbAutoIncludeCurrent = $includeCurrent;
 
         return $clone;
     }
@@ -368,7 +427,6 @@ final class TableBuilder
     /**
      * Attach a custom Forms Core definition to either create or modify flow.
      *
-        * @param  string  $for
      * @param  class-string  $definitionClass
      */
     public function customForm(
@@ -1275,6 +1333,11 @@ final class TableBuilder
             title: $this->title,
             pageTitle: $this->pageTitle,
             breadcrumbs: $this->breadcrumbs,
+            breadcrumbMode: $this->breadcrumbMode,
+            breadcrumbAutoIncludeHome: $this->breadcrumbAutoIncludeHome,
+            breadcrumbAutoHomeTitle: $this->breadcrumbAutoHomeTitle,
+            breadcrumbAutoHomeUrl: $this->breadcrumbAutoHomeUrl,
+            breadcrumbAutoIncludeCurrent: $this->breadcrumbAutoIncludeCurrent,
             dataModelClass: $dataModelClass,
             permissions: $permissions,
             creatable: $this->creatable,

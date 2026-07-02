@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Entelechy\Architect\Tests\Builders;
 
+use Entelechy\Architect\Breadcrumbs\AutomaticBreadcrumbsResolver;
 use Entelechy\Architect\Forms\ArchitectFormDefinition;
 use Entelechy\Architect\Forms\ArchitectWizardDefinition;
 use Entelechy\Architect\Table\Actions\BulkDeleteAction;
@@ -22,6 +23,7 @@ use Illuminate\Contracts\Database\Query\Builder;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Contracts\Support\Renderable;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator as ConcreteLengthAwarePaginator;
 use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
 
@@ -294,6 +296,70 @@ class TableBuilderTest extends TestCase
             ->permissions(read: 'widgets.read', create: 'widgets.create', modify: 'widgets.modify', remove: 'widgets.remove')
             ->autoRefresh(seconds: 30, fingerprintOn: '   ')
             ->build();
+    }
+
+    public function test_breadcrumbs_support_menu_metadata(): void
+    {
+        $definition = TableBuilder::make()
+            ->title('Widgets')
+            ->model(StubArchitectDataModel::class)
+            ->permissions(read: 'widgets.read', create: 'widgets.create', modify: 'widgets.modify', remove: 'widgets.remove')
+            ->breadcrumbs([
+                [
+                    'title' => 'Admin',
+                    'url' => '/admin',
+                    'menu' => [
+                        ['title' => 'Dashboard', 'url' => '/admin/dashboard'],
+                    ],
+                ],
+                ['title' => 'Widgets'],
+            ])
+            ->build();
+
+        $this->assertSame('manual', $definition->breadcrumbMode);
+        $this->assertSame('/admin/dashboard', $definition->breadcrumbs[0]['menu'][0]['url'] ?? null);
+    }
+
+    public function test_breadcrumbs_automatic_sets_expected_definition_flags(): void
+    {
+        $definition = TableBuilder::make()
+            ->title('Widgets')
+            ->model(StubArchitectDataModel::class)
+            ->permissions(read: 'widgets.read', create: 'widgets.create', modify: 'widgets.modify', remove: 'widgets.remove')
+            ->breadcrumbsAutomatic(
+                enabled: true,
+                includeHome: true,
+                homeTitle: 'Portal',
+                homeUrl: '/portal',
+                includeCurrent: false,
+            )
+            ->build();
+
+        $this->assertSame('automatic', $definition->breadcrumbMode);
+        $this->assertTrue($definition->breadcrumbAutoIncludeHome);
+        $this->assertSame('Portal', $definition->breadcrumbAutoHomeTitle);
+        $this->assertSame('/portal', $definition->breadcrumbAutoHomeUrl);
+        $this->assertFalse($definition->breadcrumbAutoIncludeCurrent);
+    }
+
+    public function test_automatic_breadcrumbs_resolver_builds_path_based_trail(): void
+    {
+        $definition = TableBuilder::make()
+            ->title('Project Tasks')
+            ->model(StubArchitectDataModel::class)
+            ->permissions(read: 'widgets.read', create: 'widgets.create', modify: 'widgets.modify', remove: 'widgets.remove')
+            ->breadcrumbsAutomatic(homeTitle: 'Admin', homeUrl: '/admin')
+            ->build();
+
+        $resolver = new AutomaticBreadcrumbsResolver;
+        $request = Request::create('/admin/projects/tasks');
+        $trail = $resolver->forTable($definition, $request);
+
+        $this->assertSame('Admin', $trail[0]['title']);
+        $this->assertSame('/admin', $trail[1]['url']);
+        $this->assertSame('/admin/projects', $trail[2]['url']);
+        $this->assertSame('Project Tasks', $trail[array_key_last($trail)]['title']);
+        $this->assertFalse($trail[array_key_last($trail)]['url']);
     }
 
     public function test_form_mode_accepts_wizard(): void
