@@ -18,6 +18,7 @@ use Entelechy\Architect\Table\Contracts\ArchitectBulkAction;
 use Entelechy\Architect\Table\Contracts\ArchitectDataModel;
 use Entelechy\Architect\Table\Contracts\ArchitectField;
 use Entelechy\Architect\Table\Contracts\ArchitectFilter;
+use Entelechy\Architect\Table\Contracts\ArchitectRowAction;
 use Entelechy\Architect\Table\Import\ImportDefinition;
 
 /**
@@ -140,6 +141,9 @@ final class TableBuilder
 
     /** @var list<RowAction> */
     private array $rowActions = [];
+
+    /** @var list<ArchitectRowAction> */
+    private array $customRowActions = [];
 
     /** @var list<HeaderAction> */
     private array $headerActions = [];
@@ -608,6 +612,24 @@ final class TableBuilder
         $this->rowActions[] = $action;
 
         return $this;
+    }
+
+    /**
+     * Register a one-off custom row action.
+     *
+     * Implement ArchitectRowAction for full control over key, label, icon,
+     * colour, permission node, confirmation, visibility, and the actual
+     * handle() logic executed against that single row. Unlike rowAction()
+     * (presentation-only — link, custom panel, or a raw browser event),
+     * a custom row action's handle() runs real PHP and returns a
+     * success/message result surfaced as an inline banner.
+     */
+    public function customRowAction(ArchitectRowAction $action): self
+    {
+        $clone = clone $this;
+        $clone->customRowActions[] = $action;
+
+        return $clone;
     }
 
     public function headerAction(HeaderAction $action): self
@@ -1148,6 +1170,7 @@ final class TableBuilder
             auditable: $this->auditable,
             documentationUrl: $this->documentationUrl,
             rowActions: $rowActions,
+            customRowActions: $this->customRowActions,
             headerActions: $this->headerActions,
             createMode: $this->createMode,
             createColumns: $this->createColumns,

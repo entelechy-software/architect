@@ -1289,6 +1289,60 @@
                                 @endforeach
                             @endif
 
+                            {{-- Custom Row Actions (class-based, server-executed via handle()) --}}
+                            @if (! $rowIsArchived)
+                                @foreach ($definition->customRowActions as $customRowAction)
+                                    @php
+                                        $customRowActionNode = $customRowAction->permissionNode() ?? $definition->permissions->modify;
+                                        $canUseCustomRowAction = app(\Entelechy\Architect\Contracts\PermissionResolver::class)->can(auth()->user(), $customRowActionNode);
+                                        $customRowActionIsVisible = $customRowAction->isVisibleFor($row);
+                                        $customRowActionIcon = $customRowAction->icon();
+                                        $customRowActionUsesLegacyIcon = is_string($customRowActionIcon)
+                                            && (str_contains($customRowActionIcon, ' ') || str_starts_with($customRowActionIcon, 'fa'));
+                                        $customRowActionUsesBladeIcon = is_string($customRowActionIcon)
+                                            && ! $customRowActionUsesLegacyIcon;
+                                    @endphp
+                                    @if ($canUseCustomRowAction && $customRowActionIsVisible)
+                                        @php
+                                            $customRowId = (int) ($row['id'] ?? 0);
+                                            $customWireTarget = "handleCustomRowAction('{$customRowAction->getKey()}', {$customRowId})";
+                                        @endphp
+                                        @if ($customRowAction->confirm())
+                                            <x-architect::button
+                                                size="sm"
+                                                outlined
+                                                :icon="$customRowActionUsesBladeIcon ? $customRowActionIcon : null"
+                                                color="{{ $customRowAction->color() }}"
+                                                wire:click="{{ $customWireTarget }}"
+                                                wire:confirm="{{ $customRowAction->confirm() }}"
+                                                :tooltip="$customRowAction->getLabel()"
+                                            >
+                                                @if ($customRowActionUsesLegacyIcon)
+                                                    <i class="{{ $customRowActionIcon }}"></i>
+                                                @elseif (! $customRowActionUsesBladeIcon)
+                                                    {{ $customRowAction->getLabel() }}
+                                                @endif
+                                            </x-architect::button>
+                                        @else
+                                            <x-architect::button
+                                                size="sm"
+                                                outlined
+                                                :icon="$customRowActionUsesBladeIcon ? $customRowActionIcon : null"
+                                                color="{{ $customRowAction->color() }}"
+                                                wire:click="{{ $customWireTarget }}"
+                                                :tooltip="$customRowAction->getLabel()"
+                                            >
+                                                @if ($customRowActionUsesLegacyIcon)
+                                                    <i class="{{ $customRowActionIcon }}"></i>
+                                                @elseif (! $customRowActionUsesBladeIcon)
+                                                    {{ $customRowAction->getLabel() }}
+                                                @endif
+                                            </x-architect::button>
+                                        @endif
+                                    @endif
+                                @endforeach
+                            @endif
+
                             {{-- Standard Edit Button --}}
                             @if (! $rowIsArchived && $definition->modifiable)
                                 @if ($definition->modifyOpenInTab && $definition->modifyTabType)
@@ -1553,6 +1607,12 @@
 @endif
 @if ($bulkError)
     <div class="arch-alert arch-alert-danger mt-2" role="alert" wire:key="bulk-err">{{ $bulkError }}</div>
+@endif
+@if ($rowActionMessage)
+    <div class="arch-alert arch-alert-success mt-2" role="alert" wire:key="row-action-msg">{{ $rowActionMessage }}</div>
+@endif
+@if ($rowActionError)
+    <div class="arch-alert arch-alert-danger mt-2" role="alert" wire:key="row-action-err">{{ $rowActionError }}</div>
 @endif
 
 {{-- ── Archive confirmation dialog ────────────────────────────────────────── --}}

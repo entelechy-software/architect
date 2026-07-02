@@ -12,6 +12,7 @@ use Entelechy\Architect\Table\Contracts\ArchitectBulkAction;
 use Entelechy\Architect\Table\Contracts\ArchitectDataModel;
 use Entelechy\Architect\Table\Contracts\ArchitectField;
 use Entelechy\Architect\Table\Contracts\ArchitectFilter;
+use Entelechy\Architect\Table\Contracts\ArchitectRowAction;
 use Entelechy\Architect\Table\Import\ImportDefinition;
 
 /**
@@ -51,6 +52,7 @@ final class ArchitectTableDefinition
      * @param  list<string>  $exportFormats  e.g., ['csv', 'excel', 'pdf', 'html']
      * @param  list<RowAction>  $rowActions
      * @param  list<HeaderAction>  $headerActions
+     * @param  list<ArchitectRowAction>  $customRowActions
      * @param  array<int, array{title: string, url?: string|false}>  $breadcrumbs  Breadcrumb items with title and optional url
      * @param  string|null  $createMode  'inline' or 'slide-out'
      * @param  list<string>|null  $createColumns  Column keys editable in create mode (null = all)
@@ -166,6 +168,15 @@ final class ArchitectTableDefinition
         public readonly ?int $visibleRows = null,
         /** Whether paginate() was called. False → all records fetched in one pass; no pagination footer shown. */
         public readonly bool $isPaginated = false,
+        /**
+         * One-off, class-based row actions registered via customRowAction().
+         * Unlike $rowActions (presentation-only), each of these runs real
+         * PHP against the row via handle() and returns a success/message
+         * result surfaced as an inline banner.
+         *
+         * @var list<ArchitectRowAction>
+         */
+        public readonly array $customRowActions = [],
     ) {
         if (! in_array($formMode, ['slide-over', 'page', 'modal'], true)) {
             throw new \InvalidArgumentException("formMode must be 'slide-over', 'page', or 'modal', got '{$formMode}'");

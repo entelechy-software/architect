@@ -185,6 +185,11 @@ class Engine extends Component
 
     public ?string $bulkError = null;
 
+    /** Optional success/error banner from the most recent custom row action. */
+    public ?string $rowActionMessage = null;
+
+    public ?string $rowActionError = null;
+
     /**
      * Standard Engine error/loading contract — see ARCHITECT_PACKAGE_PLAN.md §0.6.
      */
@@ -1204,6 +1209,52 @@ class Engine extends Component
 
         // Default: dispatch browser event for client-side / redirect handling.
         $this->dispatch('row-action:'.$key, id: $id);
+    }
+
+    /**
+     * Invoke a one-off custom row action registered via
+     * TableBuilder::customRowAction(). Unlike handleRowAction(), this
+     * always runs the action's handle() against the row and surfaces the
+     * result as an inline success/error banner — there is no panel/URL/
+     * browser-event branching because ArchitectRowAction is purely a
+     * server-logic contract.
+     */
+    public function handleCustomRowAction(string $key, int $id): void
+    {
+        $def = $this->definition();
+        $action = collect($def->customRowActions)->first(fn ($a) => $a->getKey() === $key);
+
+        if ($action === null) {
+            throw new \LogicException("Unknown custom row action '{$key}'");
+        }
+
+        $user = $this->currentUser();
+        $node = $action->permissionNode() ?? $this->definition()->permissions->modify;
+
+        if (! app(PermissionGate::class)->userCan($user, $node)) {
+            abort(403, 'Insufficient permissions for this action');
+        }
+
+        // Visibility check: fetch the actual row to confirm it exists.
+        $row = $this->dataModel()->forList(new QueryContext(
+            search: '',
+            filters: ['id' => $id],
+            sortColumn: null,
+            sortDirection: 'asc',
+            page: 1,
+            perPage: 1,
+            includeArchived: true,
+            scope: $this->scope,
+        ))->items()[0] ?? null;
+
+        if ($row === null || ! $action->isVisibleFor($this->ensureArray($row))) {
+            abort(404, 'Record not found or action not available');
+        }
+
+        $result = $action->handle($id, $this->dataModel());
+
+        $this->rowActionMessage = $result['success'] ? $result['message'] : null;
+        $this->rowActionError = $result['success'] ? null : $result['message'];
     }
 
     /**

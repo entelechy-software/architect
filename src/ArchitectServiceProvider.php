@@ -102,7 +102,7 @@ class ArchitectServiceProvider extends ServiceProvider
             $v = $this->assetVersion();
             $url = url('vendor/architect/architect.js').'?v='.$v;
 
-            return "<script src=\"{$url}\"><\/script>";
+            return "<script src=\"{$url}\"></script>";
         });
 
         // Blade components (architect.* prefix)
