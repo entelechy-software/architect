@@ -78,7 +78,7 @@ class MembersTableDefinition extends ArchitectTableDefinition
 <tr><td><code>deletable(bool $deletable, bool $reasonRequired, bool $phraseRequired, ?string $confirmationPhrase)</code></td><td>Enable hard delete. Opens an Architect modal on every click. Stack flags freely: reason-only, phrase-only, or both. <code>confirmationPhrase: null</code> uses the record’s name/title.</td></tr>
 <tr><td><code>requiresDeletionReason(bool)</code></td><td><em>Deprecated.</em> Use <code>archivable(reasonRequired: true)</code> instead.</td></tr>
 <tr><td><code>selectableRows(bool)</code></td><td>Show checkboxes for bulk selection.</td></tr>
-<tr><td><code>bulkActions(array)</code></td><td>Register bulk action definitions.</td></tr>
+<tr><td><code>bulkActions(delete: ..., archive: ..., ...)</code></td><td>Register built-in bulk actions using named arguments (legacy array style is still supported).</td></tr>
 <tr><td><code>bulkDelete(bool $reasonRequired, bool $phraseRequired, ?string $confirmationPhrase)</code></td><td>Add a built-in bulk delete action. Supports the same stacking flags as <code>deletable()</code>. For bulk actions, <code>confirmationPhrase: null</code> shows a generic ‘confirm’ prompt.</td></tr>
 <tr><td><code>exportable(array|bool $formats)</code></td><td>Enable CSV/XLSX export. Pass <code>true</code> for all formats or an array of format strings.</td></tr>
 <tr><td><code>rowAction(RowAction)</code></td><td>Add a per-row action button.</td></tr>

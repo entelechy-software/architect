@@ -13,10 +13,13 @@ use Entelechy\Architect\Table\Contracts\ArchitectDataModel;
  * status in a single operation.
  *
  * The available target statuses are declared per-table via the `options`
- * key in the bulkActions() config array and are forwarded in the browser
- * event payload for the host module's Alpine/Livewire handler to consume.
+ * key in bulkActions() config and are forwarded in the browser event
+ * payload for the host module's Alpine/Livewire handler to consume.
  *
- * Example:
+ * Example (named style):
+ *   ->bulkActions(status: ['options' => ['open', 'closed', 'pending']])
+ *
+ * Legacy style remains supported:
  *   ->bulkActions(['status' => ['options' => ['open', 'closed', 'pending']]])
  */
 final class BulkStatusAction implements ArchitectBulkAction

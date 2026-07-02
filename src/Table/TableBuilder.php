@@ -481,27 +481,81 @@ final class TableBuilder
     }
 
     /**
-     * Declare all bulk actions for this table in a single, declarative array.
+     * Declare all bulk actions for this table in a single call.
      *
-     * Built-in keys:
-     *   'delete'  => true | ['reasonRequired' => true]
-     *   'archive' => true | ['reasonRequired' => true]
-     *   'restore' => true
-     *   'export'  => true | ['options' => ['excel' => true, 'csv' => true]]
-     *   'copy'    => true | ['options' => ['clipboard' => true, 'markdown' => true, 'csv' => true]]
-     *   'email'   => true
-     *   'status'  => ['options' => ['open', 'closed', 'pending']]
+     * Modern named-argument style (recommended):
+     *   ->bulkActions(
+     *       delete: true,
+     *       archive: ['reasonRequired' => true],
+     *       restore: true,
+     *       export: ['options' => ['csv' => true, 'excel' => true]],
+     *       copy: ['options' => ['clipboard' => true, 'markdown' => true]],
+     *       email: true,
+     *       status: ['options' => ['open', 'closed', 'pending']],
+     *   )
      *
-     * Implies selectableRows(). Unknown string keys throw InvalidArgumentException.
+     * Legacy array style is still supported:
+     *   ->bulkActions([
+     *       'delete' => true,
+     *       'archive' => ['reasonRequired' => true],
+     *       'export' => ['options' => ['csv' => true, 'excel' => true]],
+     *   ])
      *
-     * @param  array<string, bool|array<string, mixed>>  $config
+     * False/null values are skipped. Implies selectableRows().
+     * Unknown keys throw InvalidArgumentException.
+     *
+     * @param  array<string, bool|array<string, mixed>>|null  $config  Legacy positional array config
+     * @param  bool|array<string, mixed>|null  $delete
+     * @param  bool|array<string, mixed>|null  $archive
+     * @param  bool|array<string, mixed>|null  $restore
+     * @param  bool|array<string, mixed>|null  $export
+     * @param  bool|array<string, mixed>|null  $copy
+     * @param  bool|array<string, mixed>|null  $email
+     * @param  bool|array<string, mixed>|null  $status
      */
-    public function bulkActions(array $config): self
+    public function bulkActions(
+        ?array $config = null,
+        bool|array|null $delete = null,
+        bool|array|null $archive = null,
+        bool|array|null $restore = null,
+        bool|array|null $export = null,
+        bool|array|null $copy = null,
+        bool|array|null $email = null,
+        bool|array|null $status = null,
+    ): self
     {
         $clone = clone $this;
         $clone->selectableRows = true;
 
-        foreach ($config as $key => $options) {
+        $normalized = $config ?? [];
+
+        if ($delete !== null) {
+            $normalized['delete'] = $delete;
+        }
+        if ($archive !== null) {
+            $normalized['archive'] = $archive;
+        }
+        if ($restore !== null) {
+            $normalized['restore'] = $restore;
+        }
+        if ($export !== null) {
+            $normalized['export'] = $export;
+        }
+        if ($copy !== null) {
+            $normalized['copy'] = $copy;
+        }
+        if ($email !== null) {
+            $normalized['email'] = $email;
+        }
+        if ($status !== null) {
+            $normalized['status'] = $status;
+        }
+
+        foreach ($normalized as $key => $options) {
+            if ($options === false) {
+                continue;
+            }
+
             $opts = is_array($options) ? $options : [];
             $reasonRequired = (bool) ($opts['reasonRequired'] ?? false);
 
@@ -581,7 +635,7 @@ final class TableBuilder
 
     /**
      * @deprecated Use ->customBulkAction($action) for custom actions or
-     *             ->bulkActions(['archive' => true, 'export' => true, ...]) for built-ins.
+      *             ->bulkActions(archive: true, export: true, ...) for built-ins.
      */
     public function bulkAction(ArchitectBulkAction $action): self
     {

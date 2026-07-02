@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Entelechy\Architect\Tests\Builders;
 
+use Entelechy\Architect\Table\Actions\BulkDeleteAction;
+use Entelechy\Architect\Table\Actions\BulkStatusAction;
 use Entelechy\Architect\Table\Actions\RowAction;
 use Entelechy\Architect\Table\Column;
 use Entelechy\Architect\Table\Contracts\ArchitectDataModel;
@@ -97,6 +99,61 @@ class TableBuilderTest extends TestCase
             ->build();
 
         $this->assertSame([], $definition->customRowActions);
+    }
+
+    public function test_bulk_actions_named_arguments_are_stored_on_definition(): void
+    {
+        $definition = TableBuilder::make()
+            ->title('Widgets')
+            ->model(StubArchitectDataModel::class)
+            ->permissions(read: 'widgets.read', create: 'widgets.create', modify: 'widgets.modify', remove: 'widgets.remove')
+            ->bulkActions(delete: true, archive: true, restore: true)
+            ->build();
+
+        $this->assertTrue($definition->selectableRows);
+        $this->assertCount(3, $definition->bulkActions);
+        $this->assertSame('delete', $definition->bulkActions[0]->getKey());
+        $this->assertSame('archive', $definition->bulkActions[1]->getKey());
+        $this->assertSame('restore', $definition->bulkActions[2]->getKey());
+    }
+
+    public function test_bulk_actions_legacy_array_style_remains_supported(): void
+    {
+        $definition = TableBuilder::make()
+            ->title('Widgets')
+            ->model(StubArchitectDataModel::class)
+            ->permissions(read: 'widgets.read', create: 'widgets.create', modify: 'widgets.modify', remove: 'widgets.remove')
+            ->bulkActions([
+                'delete' => true,
+                'archive' => true,
+                'restore' => true,
+            ])
+            ->build();
+
+        $this->assertTrue($definition->selectableRows);
+        $this->assertCount(3, $definition->bulkActions);
+        $this->assertSame('delete', $definition->bulkActions[0]->getKey());
+        $this->assertSame('archive', $definition->bulkActions[1]->getKey());
+        $this->assertSame('restore', $definition->bulkActions[2]->getKey());
+    }
+
+    public function test_bulk_actions_named_options_are_applied(): void
+    {
+        $definition = TableBuilder::make()
+            ->title('Widgets')
+            ->model(StubArchitectDataModel::class)
+            ->permissions(read: 'widgets.read', create: 'widgets.create', modify: 'widgets.modify', remove: 'widgets.remove')
+            ->bulkActions(
+                delete: ['reasonRequired' => true],
+                status: ['options' => ['open', 'closed', 'pending']],
+            )
+            ->build();
+
+        $this->assertCount(2, $definition->bulkActions);
+        $this->assertInstanceOf(BulkDeleteAction::class, $definition->bulkActions[0]);
+        $this->assertTrue($definition->bulkActions[0]->requiresReason());
+        $this->assertInstanceOf(BulkStatusAction::class, $definition->bulkActions[1]);
+        $this->assertSame(['open', 'closed', 'pending'], $definition->bulkActions[1]->options());
     }
 }
 
