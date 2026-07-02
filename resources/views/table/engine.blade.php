@@ -52,6 +52,7 @@
         cascadeChildren:         {{ $cascadeChildrenJson }},
         definitionMd5:           '{{ md5($definitionClass) }}',
         autoRefreshSeconds:      {{ (int) $definition->autoRefreshSeconds }},
+        autoRefreshFingerprintOn: @js($definition->autoRefreshFingerprintOn),
         supersearchHookId:       @php
             use Entelechy\Architect\Supersearch\Contracts\HasSupersearchHook;
             echo is_a($definitionClass, HasSupersearchHook::class, true) ? "'" . $this->getId() . "'" : 'null';

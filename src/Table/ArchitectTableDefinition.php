@@ -125,6 +125,8 @@ final class ArchitectTableDefinition
         public readonly ?int $autoRefreshSeconds = null,
         /** Render a live countdown badge next to the refresh button. */
         public readonly bool $autoRefreshCountdown = false,
+        /** Optional column/key used for auto-refresh fingerprint checks. */
+        public readonly ?string $autoRefreshFingerprintOn = null,
         /** Keep the create form open and clear fields after a successful save. */
         public readonly bool $persistOnCreate = false,
         /**

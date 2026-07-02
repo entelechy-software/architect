@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Entelechy\Architect\Table;
 
 use Entelechy\Architect\Table\Contracts\ArchitectDataModel;
+use Entelechy\Architect\Table\Contracts\SupportsAutoRefreshFingerprint;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
@@ -19,7 +20,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * default that can still be overridden where a module needs custom
  * behaviour (e.g. a non-standard archive column).
  */
-abstract class AbstractEloquentDataModel implements ArchitectDataModel
+abstract class AbstractEloquentDataModel implements ArchitectDataModel, SupportsAutoRefreshFingerprint
 {
     /**
      * Return the Eloquent model class this data model operates on.
@@ -54,6 +55,29 @@ abstract class AbstractEloquentDataModel implements ArchitectDataModel
     protected function applyFilters(Builder $query, QueryContext $context): Builder
     {
         return $query;
+    }
+
+    public function refreshFingerprint(QueryContext $context, string $fingerprintOn): string|int|null
+    {
+        $query = $this->applyFilters($this->baseQuery(), $context);
+
+        // Clone and strip ordering to keep aggregate query minimal.
+        $aggregate = (clone $query)->getQuery()->cloneWithout(['orders', 'limit', 'offset']);
+
+        $columns = $aggregate->columns;
+        if ($columns !== null && $columns !== []) {
+            $hasColumn = in_array($fingerprintOn, $columns, true)
+                || in_array($fingerprintOn.' as '.$fingerprintOn, $columns, true);
+
+            if (! $hasColumn) {
+                return null;
+            }
+        }
+
+        $max = (string) ((clone $aggregate)->max($fingerprintOn) ?? '');
+        $count = (string) (clone $aggregate)->count();
+
+        return sha1($max.'|'.$count);
     }
 
     public function forList(QueryContext $context): LengthAwarePaginator

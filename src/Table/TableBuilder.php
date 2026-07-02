@@ -185,6 +185,9 @@ final class TableBuilder
     /** When auto-refresh is enabled, render a live countdown badge next to the refresh button. */
     private bool $autoRefreshCountdown = false;
 
+    /** Optional column/key used for auto-refresh fingerprint checks. */
+    private ?string $autoRefreshFingerprintOn = null;
+
     /** When true, the create form stays open and clears its fields after a successful save. */
     private bool $persistOnCreate = false;
 
@@ -949,8 +952,9 @@ final class TableBuilder
      *
      * @param  int  $seconds  Poll interval; minimum 5s to avoid hammering the server.
      * @param  bool  $countdown  Render a live countdown badge next to the refresh control.
+     * @param  string|null  $fingerprintOn  Optional column/key used to avoid full refresh when unchanged.
      */
-    public function autoRefresh(int $seconds = 30, bool $countdown = false): self
+    public function autoRefresh(int $seconds = 30, bool $countdown = false, ?string $fingerprintOn = null): self
     {
         $clone = clone $this;
         if ($seconds < 5) {
@@ -959,8 +963,13 @@ final class TableBuilder
             );
         }
 
+        if ($fingerprintOn !== null && trim($fingerprintOn) === '') {
+            throw new \InvalidArgumentException('autoRefresh fingerprintOn must be a non-empty string when provided.');
+        }
+
         $clone->autoRefreshSeconds = $seconds;
         $clone->autoRefreshCountdown = $countdown;
+        $clone->autoRefreshFingerprintOn = $fingerprintOn !== null ? trim($fingerprintOn) : null;
 
         return $clone;
     }
@@ -1251,6 +1260,7 @@ final class TableBuilder
             hideSearchBar: $this->hideSearchBar,
             autoRefreshSeconds: $this->autoRefreshSeconds,
             autoRefreshCountdown: $this->autoRefreshCountdown,
+            autoRefreshFingerprintOn: $this->autoRefreshFingerprintOn,
             persistOnCreate: $this->persistOnCreate,
             perPageOptions: $this->perPageOptions,
             defaultPerPage: $this->defaultPerPage,

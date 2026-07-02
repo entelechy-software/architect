@@ -10,6 +10,7 @@ use Entelechy\Architect\Table\ArchitectTableDefinition;
 use Entelechy\Architect\Table\Column;
 use Entelechy\Architect\Table\Contracts\ArchitectDataModel;
 use Entelechy\Architect\Table\Contracts\HasViewAll;
+use Entelechy\Architect\Table\Contracts\SupportsAutoRefreshFingerprint;
 use Entelechy\Architect\Table\Export\CsvStreamExporter;
 use Entelechy\Architect\Table\Export\ExcelExporter;
 use Entelechy\Architect\Table\Export\ExportRowIterator;
@@ -199,6 +200,9 @@ class Engine extends Component
     public string $errorMessage = '';
 
     public bool $isLoading = false;
+
+    /** Last known auto-refresh fingerprint for this table instance. */
+    public ?string $lastRefreshFingerprint = null;
 
     /**
      * Per-request memoisation slots for immutable lookups. Private so
@@ -1352,6 +1356,42 @@ class Engine extends Component
     }
 
     /**
+     * Auto-refresh pre-check. If a fingerprint is configured and unchanged,
+     * skip render to avoid full table rebuild; otherwise allow normal render.
+     */
+    public function checkAutoRefreshFingerprint(string $instanceKey = ''): void
+    {
+        if ($instanceKey !== '' && $instanceKey !== md5($this->definitionClass)) {
+            $this->skipRender();
+
+            return;
+        }
+
+        $def = $this->definition();
+        $fingerprintOn = $def->autoRefreshFingerprintOn;
+
+        if ($fingerprintOn === null || $fingerprintOn === '') {
+            return;
+        }
+
+        $fingerprint = $this->computeAutoRefreshFingerprint($fingerprintOn);
+
+        // Unsupported fingerprint strategy for this model/context: fall
+        // back to normal render behavior (no skip optimization).
+        if ($fingerprint === null) {
+            return;
+        }
+
+        if ($this->lastRefreshFingerprint !== null && hash_equals($this->lastRefreshFingerprint, $fingerprint)) {
+            $this->skipRender();
+
+            return;
+        }
+
+        $this->lastRefreshFingerprint = $fingerprint;
+    }
+
+    /**
      * External fire-and-forget filter setter — lets any component on the
      * page (Alpine button, sibling Livewire component, plain JS) drive
      * a specific Engine instance's filter state without holding a wire
@@ -1550,5 +1590,26 @@ class Engine extends Component
             scope: $this->scope,
             filterDefinitions: $def->filtersByName(),
         );
+    }
+
+    /**
+     * Resolve an auto-refresh fingerprint via model-provided strategy.
+     *
+     * Returns null when unsupported, which signals the caller to fall back
+     * to normal full refresh behavior.
+     */
+    private function computeAutoRefreshFingerprint(string $fingerprintOn): ?string
+    {
+        $model = $this->dataModel();
+        if (! $model instanceof SupportsAutoRefreshFingerprint) {
+            return null;
+        }
+
+        $raw = $model->refreshFingerprint($this->buildQueryContext(), $fingerprintOn);
+        if ($raw === null) {
+            return null;
+        }
+
+        return (string) $raw;
     }
 }

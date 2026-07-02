@@ -89,6 +89,7 @@ export function registerModuleTable(Alpine) {
      * @param {object}  options.cascadeChildren           - Map of parent editKey → array of dependent child editKeys.
      * @param {string}  options.definitionMd5             - md5 hash of the definition class (for Lookup element IDs).
      * @param {number}  [options.autoRefreshSeconds=0]    - Seconds between automatic refreshes (0 = disabled).
+    * @param {string|null} [options.autoRefreshFingerprintOn=null] - Optional fingerprint key for skip-render checks.
      * @param {string|null} [options.supersearchHookId=null] - Livewire component ID to broadcast hook-unmounted on destroy.
      *
      * @returns {object} Alpine data object.
@@ -114,12 +115,16 @@ export function registerModuleTable(Alpine) {
         _arInterval:  options.autoRefreshSeconds || 0,
         /** Seconds remaining until the next automatic refresh. */
         _arRemaining: options.autoRefreshSeconds || 0,
+        /** Optional fingerprint key used by server-side pre-check action. */
+        _arFingerprintOn: options.autoRefreshFingerprintOn || null,
         /** Length of the manual post-refresh lock-out ring in seconds. */
         _arManualDuration: 3,
         /** Seconds remaining on the manual post-refresh lock-out ring. */
         _arManualRemaining: 0,
         /** True for 2 seconds after a refresh fires (manual or automatic). */
         _arLoading:   false,
+        /** True while the lightweight fingerprint check request is in flight. */
+        _arChecking: false,
         /** setInterval handle; null when no countdown is running. */
         _arTick:      null,
         /** setInterval handle for the short manual lock-out ring animation. */
@@ -768,7 +773,18 @@ export function registerModuleTable(Alpine) {
             clearInterval(this._arTick);
             this._arTick = setInterval(() => {
                 this._arRemaining = Math.max(0, this._arRemaining - 1);
-                if (this._arRemaining === 0 && !this._arLoading) {
+                if (this._arRemaining === 0 && !this._arLoading && !this._arChecking) {
+                    if (this._arFingerprintOn) {
+                        this._arChecking = true;
+                        Promise.resolve(this.$wire.call('checkAutoRefreshFingerprint', this._instanceKey))
+                            .finally(() => {
+                                this._arChecking = false;
+                                this._arRemaining = this._arInterval;
+                            });
+
+                        return;
+                    }
+
                     this.arRefresh();
                 }
             }, 1000);

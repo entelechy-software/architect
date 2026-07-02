@@ -266,6 +266,33 @@ class TableBuilderTest extends TestCase
             ->build();
     }
 
+    public function test_auto_refresh_fingerprint_on_is_stored_on_definition(): void
+    {
+        $definition = TableBuilder::make()
+            ->title('Widgets')
+            ->model(StubArchitectDataModel::class)
+            ->permissions(read: 'widgets.read', create: 'widgets.create', modify: 'widgets.modify', remove: 'widgets.remove')
+            ->autoRefresh(seconds: 30, countdown: true, fingerprintOn: 'updated_at')
+            ->build();
+
+        $this->assertSame(30, $definition->autoRefreshSeconds);
+        $this->assertTrue($definition->autoRefreshCountdown);
+        $this->assertSame('updated_at', $definition->autoRefreshFingerprintOn);
+    }
+
+    public function test_auto_refresh_rejects_empty_fingerprint_on(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('autoRefresh fingerprintOn must be a non-empty string when provided');
+
+        TableBuilder::make()
+            ->title('Widgets')
+            ->model(StubArchitectDataModel::class)
+            ->permissions(read: 'widgets.read', create: 'widgets.create', modify: 'widgets.modify', remove: 'widgets.remove')
+            ->autoRefresh(seconds: 30, fingerprintOn: '   ')
+            ->build();
+    }
+
     #[AllowMockObjectsWithoutExpectations]
     public function test_filter_pipeline_passes_structured_payload_to_custom_filter(): void
     {
