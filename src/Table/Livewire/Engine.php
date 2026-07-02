@@ -758,6 +758,13 @@ class Engine extends Component
             return;
         }
 
+        // Column-level visibility/editability permission checks for modify mode.
+        if (! $this->canModifyColumnInline($column)) {
+            $this->dispatch('inline-edit:error', message: 'You do not have permission to edit this column.');
+
+            return;
+        }
+
         // Validate if rules are specified.
         if ($column->getRules() !== null) {
             $validator = Validator::make(
@@ -817,6 +824,9 @@ class Engine extends Component
             if (! $column->isEditable() || $column->getModifyInline() === false) {
                 continue;
             }
+            if (! $this->canModifyColumnInline($column)) {
+                continue;
+            }
             $editKey = $column->getEditKey();
             if (! array_key_exists($editKey, $values)) {
                 continue;
@@ -856,6 +866,24 @@ class Engine extends Component
 
         $this->dispatch('edit-saved');
         $this->dispatch('architect:row-saved', id: $rowId);
+    }
+
+    private function canModifyColumnInline(\Entelechy\Architect\Table\Column $column): bool
+    {
+        $user = $this->currentUser();
+        $gate = app(PermissionGate::class);
+
+        $visibilityNode = $column->visibilityNodeForMode(false);
+        if ($visibilityNode !== null && ! $gate->userCan($user, $visibilityNode)) {
+            return false;
+        }
+
+        $editabilityNode = $column->editabilityNodeForMode(false);
+        if ($editabilityNode !== null && ! $gate->userCan($user, $editabilityNode)) {
+            return false;
+        }
+
+        return true;
     }
 
     /**

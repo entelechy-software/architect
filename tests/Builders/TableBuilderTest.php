@@ -54,6 +54,49 @@ class TableBuilderTest extends TestCase
         $this->assertSame('Full Name', $column->getLabel());
     }
 
+    public function test_column_mode_specific_permission_nodes_resolve_with_fallback(): void
+    {
+        $column = Column::make('salary')
+            ->visibleTo('users.salary.view')
+            ->modifyVisibleTo('users.salary.modify.view')
+            ->createEditableTo('users.salary.create.edit')
+            ->modifyEditableTo('users.salary.modify.edit');
+
+        $this->assertSame('users.salary.view', $column->visibilityNodeForMode(true));
+        $this->assertSame('users.salary.modify.view', $column->visibilityNodeForMode(false));
+        $this->assertSame('users.salary.create.edit', $column->editabilityNodeForMode(true));
+        $this->assertSame('users.salary.modify.edit', $column->editabilityNodeForMode(false));
+    }
+
+    public function test_column_badge_profiles_support_color_icon_and_position(): void
+    {
+        $column = Column::make('verified')->badge([
+            'Verified' => [
+                'colors' => 'success',
+                'icon' => 'fas fa-check',
+                'position' => 'right',
+            ],
+        ]);
+
+        $profile = $column->getBadgeProfileForValue('Verified');
+
+        $this->assertSame('success', $profile['color']);
+        $this->assertSame('fas fa-check', $profile['icon']);
+        $this->assertSame('right', $profile['position']);
+    }
+
+    public function test_column_colors_still_drive_badge_profile_color(): void
+    {
+        $column = Column::make('status')
+            ->colors(['Active' => 'success']);
+
+        $profile = $column->getBadgeProfileForValue('Active');
+
+        $this->assertSame('success', $profile['color']);
+        $this->assertNull($profile['icon']);
+        $this->assertSame('left', $profile['position']);
+    }
+
     public function test_table_builder_make_returns_builder(): void
     {
         $this->assertInstanceOf(TableBuilder::class, TableBuilder::make());

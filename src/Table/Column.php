@@ -35,8 +35,32 @@ final class Column implements HasVisibleWhen
     /** @var array<string, string> */
     private array $colors = [];
 
+    /**
+     * Optional badge profile map keyed by rendered value.
+     *
+     * Each profile supports:
+     *   - color (string)
+     *   - icon (string|null)
+     *   - position ('left'|'right')
+     *
+     * @var array<string, array{color?: string, colors?: string, icon?: string|null, position?: string}>
+     */
+    private array $badgeProfiles = [];
+
     /** @var string|null Permission node required to see this column. */
     private ?string $visibleTo = null;
+
+    /** @var string|null Permission node required to see this column in create form mode. */
+    private ?string $createVisibleTo = null;
+
+    /** @var string|null Permission node required to see this column in modify form mode. */
+    private ?string $modifyVisibleTo = null;
+
+    /** @var string|null Permission node required to edit this column in create form mode. */
+    private ?string $createEditableTo = null;
+
+    /** @var string|null Permission node required to edit this column in modify form mode. */
+    private ?string $modifyEditableTo = null;
 
     private ?ArchitectFilter $filter = null;
 
@@ -251,10 +275,39 @@ final class Column implements HasVisibleWhen
         return $clone;
     }
 
-    public function badge(bool $badge = true): self
+    /**
+     * Enable badge rendering, optionally with per-value profile metadata.
+     *
+     * Example:
+     *   ->badge([
+     *      'Verified' => ['color' => 'success', 'icon' => 'fas fa-check', 'position' => 'left'],
+     *   ])
+     *
+     * Backward compatibility:
+     *   - bool keeps prior enable/disable behavior.
+     *   - profile key 'colors' is accepted as an alias of 'color'.
+     *
+     * @param  bool|array<string, array{color?: string, colors?: string, icon?: string|null, position?: string}>  $badge
+     */
+    public function badge(bool|array $badge = true): self
     {
         $clone = clone $this;
-        $clone->badge = $badge;
+        if (is_bool($badge)) {
+            $clone->badge = $badge;
+
+            return $clone;
+        }
+
+        $clone->badge = true;
+        $clone->badgeProfiles = $this->normalizeBadgeProfiles($badge);
+
+        // Preserve legacy color lookups by hydrating colors[] from profile map.
+        foreach ($clone->badgeProfiles as $value => $profile) {
+            $color = $profile['color'] ?? ($profile['colors'] ?? null);
+            if (is_string($color) && $color !== '') {
+                $clone->colors[$value] = $color;
+            }
+        }
 
         return $clone;
     }
@@ -268,6 +321,11 @@ final class Column implements HasVisibleWhen
         $clone->colors = $colors;
         $clone->badge = true;
 
+        // Keep badge profiles in sync when only colors() is used.
+        foreach ($colors as $value => $color) {
+            $clone->badgeProfiles[(string) $value]['color'] = (string) $color;
+        }
+
         return $clone;
     }
 
@@ -275,6 +333,42 @@ final class Column implements HasVisibleWhen
     {
         $clone = clone $this;
         $clone->visibleTo = $node;
+
+        return $clone;
+    }
+
+    /** Permission node required to see this column in create form mode. */
+    public function createVisibleTo(string $node): self
+    {
+        $clone = clone $this;
+        $clone->createVisibleTo = $node;
+
+        return $clone;
+    }
+
+    /** Permission node required to see this column in modify form mode. */
+    public function modifyVisibleTo(string $node): self
+    {
+        $clone = clone $this;
+        $clone->modifyVisibleTo = $node;
+
+        return $clone;
+    }
+
+    /** Permission node required to edit this column in create form mode. */
+    public function createEditableTo(string $node): self
+    {
+        $clone = clone $this;
+        $clone->createEditableTo = $node;
+
+        return $clone;
+    }
+
+    /** Permission node required to edit this column in modify form mode. */
+    public function modifyEditableTo(string $node): self
+    {
+        $clone = clone $this;
+        $clone->modifyEditableTo = $node;
 
         return $clone;
     }
@@ -594,9 +688,83 @@ final class Column implements HasVisibleWhen
         return $this->colors;
     }
 
+    /**
+     * @return array<string, array{color?: string, colors?: string, icon?: string|null, position?: string}>
+     */
+    public function getBadgeProfiles(): array
+    {
+        return $this->badgeProfiles;
+    }
+
+    /**
+     * Resolve badge metadata for a rendered value.
+     *
+     * @return array{color: string, icon: ?string, position: string}
+     */
+    public function getBadgeProfileForValue(mixed $value): array
+    {
+        $key = is_bool($value) ? ($value ? 'yes' : 'no') : (string) $value;
+        $profile = $this->badgeProfiles[$key] ?? [];
+
+        $color = $profile['color'] ?? ($profile['colors'] ?? ($this->colors[$key] ?? 'gray'));
+        $icon = $profile['icon'] ?? null;
+        if ($icon === '') {
+            $icon = null;
+        }
+        $position = ($profile['position'] ?? 'left') === 'right' ? 'right' : 'left';
+
+        return [
+            'color' => (string) $color,
+            'icon' => $icon,
+            'position' => $position,
+        ];
+    }
+
     public function getVisibleTo(): ?string
     {
         return $this->visibleTo;
+    }
+
+    public function getCreateVisibleTo(): ?string
+    {
+        return $this->createVisibleTo;
+    }
+
+    public function getModifyVisibleTo(): ?string
+    {
+        return $this->modifyVisibleTo;
+    }
+
+    public function getCreateEditableTo(): ?string
+    {
+        return $this->createEditableTo;
+    }
+
+    public function getModifyEditableTo(): ?string
+    {
+        return $this->modifyEditableTo;
+    }
+
+    /**
+     * Resolve the visibility node for a form mode.
+     *
+     * Precedence: mode-specific node -> global visibleTo -> null.
+     */
+    public function visibilityNodeForMode(bool $isCreate): ?string
+    {
+        return $isCreate
+            ? ($this->createVisibleTo ?? $this->visibleTo)
+            : ($this->modifyVisibleTo ?? $this->visibleTo);
+    }
+
+    /**
+     * Resolve the editability node for a form mode.
+     *
+     * Null means "no extra per-column edit node required".
+     */
+    public function editabilityNodeForMode(bool $isCreate): ?string
+    {
+        return $isCreate ? $this->createEditableTo : $this->modifyEditableTo;
     }
 
     public function getFilter(): ?ArchitectFilter
@@ -857,5 +1025,40 @@ final class Column implements HasVisibleWhen
     public function getOptGroupsColumn(): ?string
     {
         return $this->optGroupsColumn;
+    }
+
+    /**
+    * @param  array<string, mixed>  $profiles
+     * @return array<string, array{color?: string, colors?: string, icon?: string|null, position?: string}>
+     */
+    private function normalizeBadgeProfiles(array $profiles): array
+    {
+        $normalized = [];
+
+        foreach ($profiles as $value => $profile) {
+            if (! is_array($profile)) {
+                continue;
+            }
+
+            $entry = [];
+
+            $color = $profile['color'] ?? ($profile['colors'] ?? null);
+            if (is_string($color) && $color !== '') {
+                $entry['color'] = $color;
+            }
+
+            if (array_key_exists('icon', $profile)) {
+                $icon = $profile['icon'];
+                $entry['icon'] = (is_string($icon) && $icon !== '') ? $icon : null;
+            }
+
+            if (isset($profile['position']) && is_string($profile['position'])) {
+                $entry['position'] = $profile['position'] === 'right' ? 'right' : 'left';
+            }
+
+            $normalized[(string) $value] = $entry;
+        }
+
+        return $normalized;
     }
 }

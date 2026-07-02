@@ -9,6 +9,10 @@
     - $hasError: Boolean indicating if this field has validation errors
 --}}
 
+@php
+    $canEdit = $canEdit ?? true;
+@endphp
+
 @if ($type === 'checkbox')
     {{-- Checkbox fields are rendered as switches for parity with table toggles. --}}
     @php
@@ -23,6 +27,7 @@
                 class="arch-switch-input"
                 wire:model="form.{{ $editKey }}"
                 value="1"
+                @disabled(! $canEdit)
             >
             <label class="arch-check-label text-sm font-medium text-gray-700 dark:text-gray-200 mb-0" for="{{ $switchId }}">
                 {{ $column->getLabel() }}
@@ -39,7 +44,21 @@
         {{ $column->getLabel() }}
     </label>
 
-    @if ($type === 'hidden')
+    @if (! $canEdit && $type !== 'hidden')
+        @php
+            $display = $value;
+            if (is_array($value)) {
+                $display = $value['txt'] ?? ($value['val'] ?? json_encode($value));
+            } elseif (is_bool($value)) {
+                $display = $value ? 'Yes' : 'No';
+            }
+        @endphp
+        <div class="arch-input bg-gray-50 dark:bg-gray-900/40 text-gray-600 dark:text-gray-300">
+            {{ $display === null || $display === '' ? '—' : $display }}
+        </div>
+        <div class="mt-1 text-xs text-gray-500 dark:text-gray-400">Read-only for your permission level</div>
+
+    @elseif ($type === 'hidden')
         <input type="hidden" wire:model="form.{{ $editKey }}">
 
     @elseif ($type === 'textarea')

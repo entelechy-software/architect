@@ -61,10 +61,11 @@
                             $type = $column->getType() ?? 'text';
                             $hasError = $errors->has('form.'.$editKey);
                             $_vw = \Entelechy\Architect\Table\VisibleWhenAlpineCompiler::compile($column);
+                            $canEdit = $this->canEditColumn($column, $isCreate);
                         @endphp
                         <div class="mb-3" wire:key="column-{{ $column->key() }}"
                             @if ($_vw) x-show="{{ $_vw }}" style="display:none" @endif>
-                            @include('architect::table.partials.form-input', ['column' => $column, 'editKey' => $editKey, 'value' => $value, 'type' => $type, 'hasError' => $hasError])
+                            @include('architect::table.partials.form-input', ['column' => $column, 'editKey' => $editKey, 'value' => $value, 'type' => $type, 'hasError' => $hasError, 'canEdit' => $canEdit])
                         </div>
                     @endforeach
                 </div>
@@ -163,10 +164,11 @@
                                         $type = $column->getType() ?? 'text';
                                         $hasError = $errors->has('form.'.$editKey);
                                         $_vw = \Entelechy\Architect\Table\VisibleWhenAlpineCompiler::compile($column);
+                                        $canEdit = $this->canEditColumn($column, $isCreate);
                                     @endphp
                                     <div class="mb-3" wire:key="column-{{ $column->key() }}"
                                         @if ($_vw) x-show="{{ $_vw }}" style="display:none" @endif>
-                                        @include('architect::table.partials.form-input', ['column' => $column, 'editKey' => $editKey, 'value' => $value, 'type' => $type, 'hasError' => $hasError])
+                                        @include('architect::table.partials.form-input', ['column' => $column, 'editKey' => $editKey, 'value' => $value, 'type' => $type, 'hasError' => $hasError, 'canEdit' => $canEdit])
                                     </div>
                                 @endforeach
                             @elseif ($panelState === 'view')
@@ -281,10 +283,11 @@
                                 $type = $column->getType() ?? 'text';
                                 $hasError = $errors->has('form.'.$editKey);
                                 $_vw = \Entelechy\Architect\Table\VisibleWhenAlpineCompiler::compile($column);
+                                $canEdit = $this->canEditColumn($column, $isCreate);
                             @endphp
                             <div class="mb-3" wire:key="column-{{ $column->key() }}"
                                 @if ($_vw) x-show="{{ $_vw }}" style="display:none" @endif>
-                                @include('architect::table.partials.form-input', ['column' => $column, 'editKey' => $editKey, 'value' => $value, 'type' => $type, 'hasError' => $hasError])
+                                @include('architect::table.partials.form-input', ['column' => $column, 'editKey' => $editKey, 'value' => $value, 'type' => $type, 'hasError' => $hasError, 'canEdit' => $canEdit])
                             </div>
                         @endforeach
                     @elseif ($panelState === 'view')

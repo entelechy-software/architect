@@ -573,6 +573,15 @@
                                 $rowId = (int) ($row['id'] ?? 0);
                                 $colType = $column->getType();
                                 $editKey = $column->getEditKey();
+                                $columnVisibleNode = $column->visibilityNodeForMode(false);
+                                $columnEditableNode = $column->editabilityNodeForMode(false);
+                                $canInlineByPermission = true;
+                                if ($columnVisibleNode !== null) {
+                                    $canInlineByPermission = app(\Entelechy\Architect\Table\Permissions\PermissionGate::class)->userCan(auth()->user(), $columnVisibleNode);
+                                }
+                                if ($canInlineByPermission && $columnEditableNode !== null) {
+                                    $canInlineByPermission = app(\Entelechy\Architect\Table\Permissions\PermissionGate::class)->userCan(auth()->user(), $columnEditableNode);
+                                }
 
                                 // A column is "inline-eligible" iff:
                                 //   - table is in modifyMode 'inline'
@@ -585,6 +594,7 @@
                                     && ! $column->isToggleable()
                                     && ! in_array($colType, $inlineUnsupportedTypes, true)
                                     && $column->getModifyInline() !== false
+                                    && $canInlineByPermission
                                     && in_array($column->getKey(), array_map(fn($c) => $c->getKey(), $definition->getModifyColumns()), true);
 
                                 // Click resolution: row-mode vs cell-mode.
@@ -657,11 +667,17 @@
                                         </div>
                                     @elseif ($column->isBadge())
                                         @php
-                                            $key = is_bool($value) ? ($value ? 'yes' : 'no') : (string) $value;
-                                            $colour = $column->getColors()[$key] ?? 'gray';
+                                            $badge = $column->getBadgeProfileForValue($value);
+                                            $badgeText = is_bool($value) ? ($value ? 'Yes' : 'No') : $value;
                                         @endphp
-                                        <span class="arch-badge" data-variant="soft" data-color="{{ $colour }}" data-size="sm">
-                                            {{ is_bool($value) ? ($value ? 'Yes' : 'No') : $value }}
+                                        <span class="arch-badge inline-flex items-center gap-1" data-variant="soft" data-color="{{ $badge['color'] }}" data-size="sm">
+                                            @if ($badge['icon'] && $badge['position'] === 'left')
+                                                <i class="{{ $badge['icon'] }}" aria-hidden="true"></i>
+                                            @endif
+                                            {{ $badgeText }}
+                                            @if ($badge['icon'] && $badge['position'] === 'right')
+                                                <i class="{{ $badge['icon'] }}" aria-hidden="true"></i>
+                                            @endif
                                         </span>
                                     @else
                                         {{ $value }}

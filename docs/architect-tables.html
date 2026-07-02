@@ -64,7 +64,7 @@ class MembersTableDefinition extends ArchitectTableDefinition
 <tr><td><code>pageTitle(string)</code></td><td>Browser title / page heading (defaults to <code>title</code>).</td></tr>
 <tr><td><code>breadcrumbs(array)</code></td><td>Array of <code>['label' => ..., 'url' => ...]</code> breadcrumb items.</td></tr>
 <tr><td><code>model(string)</code></td><td>Eloquent model FQCN. Architect infers the table name automatically.</td></tr>
-<tr><td><code>permissions(string $read, string $create, string $modify, string $remove)</code></td><td>Permission nodes checked before rendering.</td></tr>
+<tr><td><code>permissions(string $read, string $create, string $modify, string $remove)</code></td><td>Permission nodes checked before rendering. Action defaults: custom row/bulk actions inherit <code>$modify</code> unless overridden; auto-added <code>clonable()</code> uses <code>$create</code>, <code>auditable()</code> uses <code>$modify</code>, and <code>viewable()</code> uses <code>$read</code>.</td></tr>
 <tr><td><code>readOnly(bool $readOnly = true)</code></td><td>Shortcut for <code>creatable(false)-&gt;modifiable(false)</code>. Hides both the New and Edit buttons. Archive/remove are unaffected — control those via <code>archivable()</code>/<code>deletable()</code>.</td></tr>
 <tr><td><code>creatable(bool $creatable = true)</code></td><td>Enable/disable the New button and create flow. Enabled by default.</td></tr>
 <tr><td><code>modifiable(bool $modifiable = true)</code></td><td>Enable/disable the Edit button and modify flow. Enabled by default.</td></tr>
@@ -106,6 +106,33 @@ class MembersTableDefinition extends ArchitectTableDefinition
 <tr><td><code>build()</code></td><td>Returns the <code>ArchitectTableDefinition</code> value object.</td></tr>
 </tbody>
 </table>
+
+<h3>Permission defaults for actions</h3>
+<p>In addition to gating the table itself, the four <code>permissions()</code> nodes are used as defaults for actions unless the action declares its own permission node.</p>
+<ul>
+<li><strong>Custom row actions</strong> default to the table's <code>modify</code> node.</li>
+<li><strong>Custom bulk actions</strong> default to the table's <code>modify</code> node when <code>permissionNode()</code> returns <code>null</code>.</li>
+<li><strong>Auto-added clone action</strong> from <code>clonable()</code> defaults to <code>create</code>.</li>
+<li><strong>Auto-added audit action</strong> from <code>auditable()</code> defaults to <code>modify</code>.</li>
+<li><strong>Auto-added view action</strong> from <code>viewable()</code> defaults to <code>read</code>.</li>
+</ul>
+
+<h4>Override example (row action)</h4>
+<pre><code class="language-php">TableBuilder::make()
+    ->permissions('users.view', 'users.create', 'users.edit', 'users.delete')
+    ->rowAction(
+        RowAction::make('notify')
+            ->label('Send Notification')
+            ->permission('users.notify') // explicit node; does not inherit modify
+    );</code></pre>
+
+<h4>Override example (custom action interface)</h4>
+<pre><code class="language-php">// ArchitectRowAction or ArchitectBulkAction implementation
+public function permissionNode(): ?string
+{
+    return null; // inherit table modify node
+    // return 'users.verify'; // explicit custom node override
+}</code></pre>
 </section>
 
 <section id="scroll-pagination">
@@ -164,9 +191,13 @@ Column::make('email')
 <tr><td><code>searchable(bool)</code></td><td>Include this column in the search query.</td></tr>
 <tr><td><code>searchColumns(array)</code></td><td>Override which DB columns are searched (for aliased or joined columns).</td></tr>
 <tr><td><code>sortable(string|bool $dir, ?int $priority)</code></td><td>Allow sorting. Optionally set default direction (<code>'asc'</code>/<code>'desc'</code>) and sort priority.</td></tr>
-<tr><td><code>badge(bool)</code></td><td>Render the cell value as a coloured badge.</td></tr>
+<tr><td><code>badge(bool|array)</code></td><td>Render the value as a badge. Pass a profile map for per-value color/icon/position.</td></tr>
 <tr><td><code>colors(array)</code></td><td>Map values to colour names: <code>['active' => 'green']</code>.</td></tr>
 <tr><td><code>visibleTo(string $node)</code></td><td>Hide column from users without the given permission node.</td></tr>
+<tr><td><code>createVisibleTo(string $node)</code></td><td>Override visibility gate for create mode only. Falls back to <code>visibleTo()</code>.</td></tr>
+<tr><td><code>modifyVisibleTo(string $node)</code></td><td>Override visibility gate for modify mode only. Falls back to <code>visibleTo()</code>.</td></tr>
+<tr><td><code>createEditableTo(string $node)</code></td><td>Require a permission node to edit this column in create mode.</td></tr>
+<tr><td><code>modifyEditableTo(string $node)</code></td><td>Require a permission node to edit this column in modify mode (panel + inline).</td></tr>
 <tr><td><code>filter(ArchitectFilter)</code></td><td>Attach an inline filter to this column.</td></tr>
 <tr><td><code>type(string)</code></td><td>Column render type: <code>'text'</code>, <code>'date'</code>, <code>'datetime'</code>, <code>'money'</code>, <code>'boolean'</code>, <code>'image'</code>, <code>'link'</code>, <code>'list'</code>.</td></tr>
 <tr><td><code>editAs(string $key)</code></td><td>Alias: when editing, use this field key instead of the column key.</td></tr>
@@ -179,6 +210,41 @@ Column::make('email')
 <tr><td><code>labelUsing(callable)</code></td><td>Custom callback to format the display label from the raw value.</td></tr>
 </tbody>
 </table>
+
+<h3>Mode-specific column permissions</h3>
+<p>Use <code>visibleTo()</code> for a single gate across table, forms, and exports, then override form modes only when needed:</p>
+<pre><code class="language-php">Column::make('salary')
+    ->visibleTo('users.salary.view')                 // default for all modes
+    ->createVisibleTo('users.salary.create.view')    // create-mode override
+    ->modifyVisibleTo('users.salary.modify.view')    // modify-mode override
+    ->createEditableTo('users.salary.create.edit')   // editable in create panel
+    ->modifyEditableTo('users.salary.modify.edit');  // editable in modify + inline</code></pre>
+<p>When a user can see but cannot edit a column in a form, Architect renders it as read-only and excludes it from persisted writes server-side.</p>
+
+<h3>Badge profiles (color + icon + icon position)</h3>
+<pre><code class="language-php">Column::make('status')
+    ->label('Status')
+    ->badge([
+        'active' => [
+            'color' => 'success',
+            'icon' => 'check',
+            'position' => 'left',
+        ],
+        'pending' => [
+            'color' => 'warning',
+            'icon' => 'clock',
+            'position' => 'right',
+        ],
+    ]);
+
+// Legacy style still works
+Column::make('status')->badge()->colors([
+    'active' => 'success',
+    'pending' => 'warning',
+]);</code></pre>
+
+<h3>Computed columns</h3>
+<p>No dedicated <code>customColumns()</code> API is required. Keep computed/faux values in your model/query layer (attribute, accessor, select alias, or data model), then map them with a normal <code>Column::make('computed_key')</code>.</p>
 </section>
 
 <section id="filters">

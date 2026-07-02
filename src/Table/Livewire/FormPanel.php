@@ -330,15 +330,19 @@ class FormPanel extends Component
         }
 
         $formColumns = $this->getFormColumns($isCreate);
+        $editableColumns = array_values(array_filter(
+            $formColumns,
+            fn (Column $column): bool => $this->canEditColumn($column, $isCreate)
+        ));
 
         // Lookup columns arrive as {val,txt} arrays from forForm()
         // (and from the JS combobox wrapper). Flatten to scalars so
         // the integer rule on the column passes.
-        $this->flattenLookupValues($formColumns);
-        $this->normalizeTemporalValues($formColumns);
+        $this->flattenLookupValues($editableColumns);
+        $this->normalizeTemporalValues($editableColumns);
 
         try {
-            $validated = $this->validateAgainstColumns($formColumns);
+            $validated = $this->validateAgainstColumns($editableColumns);
         } catch (ValidationException $e) {
             // Validation errors render via $errors bag automatically;
             // re-throw so Livewire stops here.
@@ -573,10 +577,10 @@ class FormPanel extends Component
         // Get columns based on mode
         $columns = $isCreate ? $def->getCreateColumns() : $def->getModifyColumns();
 
-        // Filter columns by visibility permission
+        // Filter columns by visibility permission (mode-specific first, then global fallback).
         $visibleColumns = [];
         foreach ($columns as $column) {
-            $permission = $column->getVisibleTo();
+            $permission = $column->visibilityNodeForMode($isCreate);
             if ($permission !== null && ! app(PermissionGate::class)->userCan($user, $permission)) {
                 continue;
             }
@@ -584,5 +588,15 @@ class FormPanel extends Component
         }
 
         return $visibleColumns;
+    }
+
+    public function canEditColumn(Column $column, bool $isCreate): bool
+    {
+        $permission = $column->editabilityNodeForMode($isCreate);
+        if ($permission === null) {
+            return true;
+        }
+
+        return app(PermissionGate::class)->userCan($this->currentUser(), $permission);
     }
 }
