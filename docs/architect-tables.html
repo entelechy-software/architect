@@ -95,7 +95,7 @@ class MembersTableDefinition extends ArchitectTableDefinition
 <tr><td><code>importable(array $config)</code></td><td>Enable CSV import with column mapping.</td></tr>
 <tr><td><code>alert(string $type, string $message)</code></td><td>Show a persistent alert banner above the table (<code>'info'|'warning'|'danger'</code>).</td></tr>
 <tr><td><code>hideSearchBar(bool)</code></td><td>Remove the search input.</td></tr>
-<tr><td><code>autoRefresh(int $seconds, bool $countdown)</code></td><td>Auto-refresh the table every N seconds.</td></tr>
+<tr><td><code>autoRefresh(int $seconds, bool $countdown, ?string $fingerprintOn)</code></td><td>Auto-refresh cadence. When <code>fingerprintOn</code> is set, Architect performs a lightweight fingerprint check and only runs a full table refresh when data changed.</td></tr>
 <tr><td><code>persistOnCreate(bool)</code></td><td>Keep the create modal open after saving (for rapid data entry).</td></tr>
 <tr><td><code>perPage(int $default, array $options)</code></td><td><em>Deprecated.</em> Use <code>paginate()</code> instead.</td></tr>
 <tr><td><code>paginate(int $perPage, ?int $visibleRows, array $perPageOptions)</code></td><td>Configure pagination with a fixed page size. <code>$visibleRows</code> caps the container height for <code>container</code> scroll mode. <code>$perPageOptions</code> shows a per-page selector (empty array hides it). Omitting <code>paginate()</code> loads all records without a footer — small datasets only.</td></tr>
@@ -107,6 +107,16 @@ class MembersTableDefinition extends ArchitectTableDefinition
 <tr><td><code>build()</code></td><td>Returns the <code>ArchitectTableDefinition</code> value object.</td></tr>
 </tbody>
 </table>
+
+<h4>Auto-refresh with change fingerprinting</h4>
+<p>Use <code>fingerprintOn</code> to avoid unnecessary full component refreshes. Architect computes a server-side fingerprint from the filtered dataset and refreshes only when that fingerprint changes.</p>
+<pre><code class="language-php">TableBuilder::make()
+    ->autoRefresh(
+        seconds: 30,
+        countdown: true,
+        fingerprintOn: 'updated_at',
+    );</code></pre>
+<p><strong>Notes:</strong> minimum interval is 5 seconds. If <code>fingerprintOn</code> is omitted, Architect uses classic interval refresh behavior.</p>
 
 <h3>Permission defaults for actions</h3>
 <p>In addition to gating the table itself, the four <code>permissions()</code> nodes are used as defaults for actions unless the action declares its own permission node.</p>
