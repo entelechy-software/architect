@@ -68,7 +68,7 @@ class MembersTableDefinition extends ArchitectTableDefinition
 <tr><td><code>readOnly(bool $readOnly = true)</code></td><td>Shortcut for <code>creatable(false)-&gt;modifiable(false)</code>. Hides both the New and Edit buttons. Archive/remove are unaffected — control those via <code>archivable()</code>/<code>deletable()</code>.</td></tr>
 <tr><td><code>creatable(bool $creatable = true)</code></td><td>Enable/disable the New button and create flow. Enabled by default.</td></tr>
 <tr><td><code>modifiable(bool $modifiable = true)</code></td><td>Enable/disable the Edit button and modify flow. Enabled by default.</td></tr>
-<tr><td><code>formMode(string $mode)</code></td><td><code>'modal'</code> (default) or <code>'page'</code> for full-page create/edit forms.</td></tr>
+<tr><td><code>formMode(string $mode)</code></td><td>Panel mode: <code>'slide-over'</code> (default), <code>'modal'</code>, or <code>'wizard'</code>. Modify also supports <code>'inline'</code>.</td></tr>
 <tr><td><code>filterPanel(bool $persistence, bool $bookmarkFilters)</code></td><td>Show collapsible filter panel. Optionally persist filter state in URL.</td></tr>
 <tr><td><code>column(Column)</code></td><td>Add a single column definition.</td></tr>
 <tr><td><code>field(ArchitectField)</code></td><td>Add a single form field for create/edit modals.</td></tr>
@@ -92,6 +92,7 @@ class MembersTableDefinition extends ArchitectTableDefinition
 <tr><td><code>hideId()</code></td><td>Remove the ID column from the table.</td></tr>
 <tr><td><code>create(string $mode, ?array $columns, bool $openInTab, ?string $tabType, ?string $url)</code></td><td>Configure the create form mode/columns. Calling this always enables creation. <code>$openInTab</code>+<code>$tabType</code> dispatch <code>architect:open-record</code> instead of the default create panel; <code>$url</code> is the fallback when no ModuleTabsManager is present.</td></tr>
 <tr><td><code>modify(string $mode, ?array $columns, bool $openInTab, ?string $tabType, ?string $url)</code></td><td>Configure the modify form mode/columns. Calling this always enables modification. Same <code>$openInTab</code>/<code>$tabType</code>/<code>$url</code> behaviour as <code>create()</code>, applied to the Edit button.</td></tr>
+<tr><td><code>customForm(string $for, string $definitionClass, string $mode, ?string $url, ?string $tabType, ?string $callbackQueryKey, bool $postMessageRefresh)</code></td><td>Attach a Forms Core definition class to <code>'create'</code> or <code>'modify'</code>. Launch modes: <code>modal</code>, <code>slide-over</code>, <code>same-window-page</code>, <code>new-window</code>, <code>tabs-manager</code>. Supports callback-query and postMessage return refresh hooks.</td></tr>
 <tr><td><code>importable(array $config)</code></td><td>Enable CSV import with column mapping.</td></tr>
 <tr><td><code>alert(string $type, string $message)</code></td><td>Show a persistent alert banner above the table (<code>'info'|'warning'|'danger'</code>).</td></tr>
 <tr><td><code>hideSearchBar(bool)</code></td><td>Remove the search input.</td></tr>
@@ -117,6 +118,27 @@ class MembersTableDefinition extends ArchitectTableDefinition
         fingerprintOn: 'updated_at',
     );</code></pre>
 <p><strong>Notes:</strong> minimum interval is 5 seconds. If <code>fingerprintOn</code> is omitted, Architect uses classic interval refresh behavior.</p>
+
+<h4>Custom form orchestration</h4>
+<p>Use <code>customForm()</code> when create/modify should open a standalone Forms Core definition instead of the table's built-in column form.</p>
+<pre><code class="language-php">TableBuilder::make()
+    ->formMode(create: 'wizard', modify: 'wizard')
+    ->customForm(
+        for: 'create',
+        definitionClass: \App\Forms\ProjectCreateWizard::class,
+        mode: 'new-window',
+        url: '/admin/projects/create',
+        callbackQueryKey: 'architect_refresh',
+        postMessageRefresh: true,
+    )
+    ->customForm(
+        for: 'modify',
+        definitionClass: \App\Forms\ProjectEditWizard::class,
+        mode: 'tabs-manager',
+        url: '/admin/projects/{id}/edit',
+        tabType: 'project-edit',
+    );</code></pre>
+<p><strong>Return hooks:</strong> Architect supports both <code>postMessage</code> and callback query refresh. For query callbacks, redirect back with <code>?architect_refresh=1</code> (or the configured key). For postMessage, send <code>{ type: 'architect:table-custom-form-saved', instanceKey?: '...' }</code> to <code>window.opener</code> on the same origin.</p>
 
 <h3>Permission defaults for actions</h3>
 <p>In addition to gating the table itself, the four <code>permissions()</code> nodes are used as defaults for actions unless the action declares its own permission node.</p>

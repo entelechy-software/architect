@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Entelechy\Architect\Table\Livewire;
 
 use Carbon\CarbonImmutable;
+use Entelechy\Architect\Forms\ArchitectFormDefinition;
+use Entelechy\Architect\Forms\ArchitectWizardDefinition;
 use Entelechy\Architect\Table\ArchitectTableDefinition;
 use Entelechy\Architect\Table\Column;
 use Entelechy\Architect\Table\Contracts\ArchitectDataModel;
@@ -51,14 +53,14 @@ class FormPanel extends Component
 
     /**
      * Render mode. 'slide-over' (default) renders the Tabler offcanvas
-     * triggered by Engine events. 'page' mounts directly under a route
+     * triggered by Engine events. 'wizard' mounts directly under a route
      * and renders as a full-card form on its own page; the panel
      * auto-opens at mount time.
      */
     public string $mode = 'slide-over';
 
     /**
-     * URL the Cancel / back button returns to in page mode. Ignored in
+     * URL the Cancel / back button returns to in wizard mode. Ignored in
      * slide-over mode.
      */
     public ?string $cancelUrl = null;
@@ -121,25 +123,25 @@ class FormPanel extends Component
         $this->definitionClass = $definitionClass;
 
         if ($mode !== null) {
-            if (! in_array($mode, ['slide-over', 'page', 'modal'], true)) {
-                throw new \InvalidArgumentException("FormPanel mode must be 'slide-over', 'page', or 'modal', got '{$mode}'.");
+            if (! in_array($mode, ['slide-over', 'wizard', 'modal'], true)) {
+                throw new \InvalidArgumentException("FormPanel mode must be 'slide-over', 'wizard', or 'modal', got '{$mode}'.");
             }
             $this->mode = $mode;
         } else {
             // Derive render mode from definition when embedded in the Engine
-            // (no explicit mode passed). 'page' must always be set explicitly
+            // (no explicit mode passed). 'wizard' must always be set explicitly
             // via a route mount — never inferred from the definition here.
             $formMode = $this->definition()->formMode;
-            if ($formMode !== 'page') {
+            if ($formMode !== 'wizard') {
                 $this->mode = $formMode;
             }
         }
 
         $this->cancelUrl = $cancelUrl;
 
-        // Page mode auto-opens at mount: either a fresh create form or
+        // Wizard mode auto-opens at mount: either a fresh create form or
         // the edit form for the supplied record id.
-        if ($this->mode === 'page') {
+        if ($this->mode === 'wizard') {
             if ($id === null) {
                 $this->openCreate($definitionClass);
             } else {
@@ -262,6 +264,39 @@ class FormPanel extends Component
         $this->open = true;
     }
 
+    #[On('architect:open-custom-form')]
+    public function openCustomForm(
+        string $definitionClass,
+        string $title,
+        string $customDefinitionClass,
+        string $customMode = 'modal',
+        ?int $recordId = null,
+    ): void {
+        if ($definitionClass !== $this->definitionClass) {
+            return;
+        }
+
+        if (in_array($customMode, ['modal', 'slide-over'], true)) {
+            $this->mode = $customMode;
+        }
+
+        $this->customBlade = 'architect::table.custom-form-host';
+        $this->customData = [
+            'customDefinitionClass' => $customDefinitionClass,
+            'engineComponent' => $this->resolveCustomFormEngineComponent($customDefinitionClass),
+            'recordId' => $recordId,
+            'instanceKey' => md5($this->definitionClass),
+        ];
+        $this->panelState = 'custom';
+        $this->panelTitle = $title;
+        $this->recordId = $recordId;
+        $this->form = [];
+        $this->viewRecord = [];
+        $this->errorMessage = null;
+        $this->hasError = false;
+        $this->open = true;
+    }
+
     /**
      * Close the panel from any state.
      *
@@ -281,10 +316,10 @@ class FormPanel extends Component
 
     public function close(): void
     {
-        // In page mode the panel cannot be 'closed' inline — the user
+        // In wizard mode the panel cannot be 'closed' inline — the user
         // navigates back to the index. Surface that as a redirect so a
         // single Cancel button works for both modes.
-        if ($this->mode === 'page') {
+        if ($this->mode === 'wizard') {
             $url = $this->cancelUrl ?? url()->previous();
             $this->redirect($url, navigate: true);
 
@@ -370,8 +405,8 @@ class FormPanel extends Component
         // re-queries. Empty key would broadcast to every Engine.
         $this->dispatch('architect:refresh', instanceKey: md5($this->definitionClass));
 
-        if ($this->mode === 'page') {
-            // After a page-mode submit, redirect back to the index.
+        if ($this->mode === 'wizard') {
+            // After a wizard-mode submit, redirect back to the index.
             $url = $this->cancelUrl ?? url()->previous();
             $this->redirect($url, navigate: true);
 
@@ -427,6 +462,29 @@ class FormPanel extends Component
         $def = $class::definition();
 
         return $def;
+    }
+
+    private function resolveCustomFormEngineComponent(string $definitionClass): string
+    {
+        if (! class_exists($definitionClass) || ! method_exists($definitionClass, 'definition')) {
+            throw new \LogicException(
+                "Custom form definition class [{$definitionClass}] must expose static definition()."
+            );
+        }
+
+        $definition = $definitionClass::definition();
+
+        if ($definition instanceof ArchitectWizardDefinition) {
+            return 'architect-wizard-engine';
+        }
+
+        if ($definition instanceof ArchitectFormDefinition) {
+            return 'architect-form-engine';
+        }
+
+        throw new \LogicException(
+            "Custom form definition class [{$definitionClass}] must return ArchitectFormDefinition or ArchitectWizardDefinition."
+        );
     }
 
     private function dataModel(): ArchitectDataModel

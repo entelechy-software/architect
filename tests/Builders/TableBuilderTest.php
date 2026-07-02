@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Entelechy\Architect\Tests\Builders;
 
+use Entelechy\Architect\Forms\ArchitectFormDefinition;
+use Entelechy\Architect\Forms\ArchitectWizardDefinition;
 use Entelechy\Architect\Table\Actions\BulkDeleteAction;
 use Entelechy\Architect\Table\Actions\BulkStatusAction;
 use Entelechy\Architect\Table\Actions\RowAction;
@@ -11,6 +13,7 @@ use Entelechy\Architect\Table\Column;
 use Entelechy\Architect\Table\Contracts\ArchitectDataModel;
 use Entelechy\Architect\Table\Contracts\ArchitectFilter;
 use Entelechy\Architect\Table\Contracts\ArchitectRowAction;
+use Entelechy\Architect\Table\CustomForm;
 use Entelechy\Architect\Table\ModuleTableFilterPipeline;
 use Entelechy\Architect\Table\QueryContext;
 use Entelechy\Architect\Table\TableBuilder;
@@ -293,6 +296,85 @@ class TableBuilderTest extends TestCase
             ->build();
     }
 
+    public function test_form_mode_accepts_wizard(): void
+    {
+        $definition = TableBuilder::make()
+            ->title('Widgets')
+            ->model(StubArchitectDataModel::class)
+            ->permissions(read: 'widgets.read', create: 'widgets.create', modify: 'widgets.modify', remove: 'widgets.remove')
+            ->customForm(for: 'create', definitionClass: StubWizardFormDefinition::class)
+            ->customForm(for: 'modify', definitionClass: StubWizardFormDefinition::class)
+            ->formMode(create: 'wizard', modify: 'wizard')
+            ->build();
+
+        $this->assertSame('wizard', $definition->formMode);
+    }
+
+    public function test_form_mode_rejects_page(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('create form mode must be one of: slide-over, modal, wizard');
+
+        TableBuilder::make()
+            ->title('Widgets')
+            ->model(StubArchitectDataModel::class)
+            ->permissions(read: 'widgets.read', create: 'widgets.create', modify: 'widgets.modify', remove: 'widgets.remove')
+            ->formMode(create: 'page', modify: 'modal')
+            ->build();
+    }
+
+    public function test_custom_form_is_stored_for_create(): void
+    {
+        $definition = TableBuilder::make()
+            ->title('Widgets')
+            ->model(StubArchitectDataModel::class)
+            ->permissions(read: 'widgets.read', create: 'widgets.create', modify: 'widgets.modify', remove: 'widgets.remove')
+            ->customForm(
+                for: 'create',
+                definitionClass: StubStandardFormDefinition::class,
+                mode: 'new-window',
+                url: '/admin/widgets/create',
+                callbackQueryKey: 'refresh',
+            )
+            ->build();
+
+        $this->assertInstanceOf(CustomForm::class, $definition->customCreateForm);
+        $this->assertSame('new-window', $definition->customCreateForm?->mode);
+        $this->assertSame('/admin/widgets/create', $definition->customCreateForm?->url);
+        $this->assertSame('refresh', $definition->customCreateForm?->callbackQueryKey);
+    }
+
+    public function test_custom_form_tabs_manager_requires_tab_type(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('customForm mode tabs-manager requires a non-empty tabType.');
+
+        TableBuilder::make()
+            ->title('Widgets')
+            ->model(StubArchitectDataModel::class)
+            ->permissions(read: 'widgets.read', create: 'widgets.create', modify: 'widgets.modify', remove: 'widgets.remove')
+            ->customForm(
+                for: 'modify',
+                definitionClass: StubStandardFormDefinition::class,
+                mode: 'tabs-manager',
+                url: '/admin/widgets/{id}/edit',
+            )
+            ->build();
+    }
+
+    public function test_wizard_form_mode_requires_custom_forms_for_enabled_flows(): void
+    {
+        $this->expectException(\LogicException::class);
+        $this->expectExceptionMessage("formMode('wizard') requires customForm(for: 'create', ...)");
+
+        TableBuilder::make()
+            ->title('Widgets')
+            ->model(StubArchitectDataModel::class)
+            ->permissions(read: 'widgets.read', create: 'widgets.create', modify: 'widgets.modify', remove: 'widgets.remove')
+            ->formMode(create: 'wizard', modify: 'wizard')
+            ->build();
+    }
+
     #[AllowMockObjectsWithoutExpectations]
     public function test_filter_pipeline_passes_structured_payload_to_custom_filter(): void
     {
@@ -481,5 +563,34 @@ final class StubArchitectDataModel implements ArchitectDataModel
     public function modelClass(): string
     {
         return Model::class;
+    }
+}
+
+final class StubStandardFormDefinition
+{
+    public static function definition(): ArchitectFormDefinition
+    {
+        return new ArchitectFormDefinition(
+            key: 'stub-standard-form',
+            structure: [],
+            saveUsing: null,
+            fillData: null,
+        );
+    }
+}
+
+final class StubWizardFormDefinition
+{
+    public static function definition(): ArchitectWizardDefinition
+    {
+        return new ArchitectWizardDefinition(
+            key: 'stub-wizard-form',
+            steps: [
+                ['label' => 'Step 1', 'structure' => []],
+            ],
+            saveUsing: null,
+            cancelRoute: null,
+            completedRoute: null,
+        );
     }
 }

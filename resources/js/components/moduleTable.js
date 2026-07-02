@@ -90,6 +90,8 @@ export function registerModuleTable(Alpine) {
      * @param {string}  options.definitionMd5             - md5 hash of the definition class (for Lookup element IDs).
      * @param {number}  [options.autoRefreshSeconds=0]    - Seconds between automatic refreshes (0 = disabled).
     * @param {string|null} [options.autoRefreshFingerprintOn=null] - Optional fingerprint key for skip-render checks.
+    * @param {string[]} [options.customFormReturnQueryKeys=[]] - Query keys that trigger one-time refresh when present.
+    * @param {boolean} [options.customFormPostMessageEnabled=false] - Enables postMessage-based refresh hook.
      * @param {string|null} [options.supersearchHookId=null] - Livewire component ID to broadcast hook-unmounted on destroy.
      *
      * @returns {object} Alpine data object.
@@ -117,6 +119,14 @@ export function registerModuleTable(Alpine) {
         _arRemaining: options.autoRefreshSeconds || 0,
         /** Optional fingerprint key used by server-side pre-check action. */
         _arFingerprintOn: options.autoRefreshFingerprintOn || null,
+        /** Query keys consumed once from URL to trigger refresh after external form return. */
+        _customFormReturnQueryKeys: Array.isArray(options.customFormReturnQueryKeys)
+            ? options.customFormReturnQueryKeys
+            : [],
+        /** Whether to listen for cross-window save notifications. */
+        _customFormPostMessageEnabled: Boolean(options.customFormPostMessageEnabled),
+        /** Canonical postMessage event type used by custom form windows. */
+        _customFormPostMessageType: 'architect:table-custom-form-saved',
         /** Length of the manual post-refresh lock-out ring in seconds. */
         _arManualDuration: 3,
         /** Seconds remaining on the manual post-refresh lock-out ring. */
@@ -790,6 +800,98 @@ export function registerModuleTable(Alpine) {
             }, 1000);
         },
 
+        /**
+         * Consume callback query params used by external custom-form flows.
+         *
+         * If any configured key is present, a single refresh is triggered and
+         * the key is removed from the URL via history.replaceState so reloads
+         * do not repeatedly refresh.
+         *
+         * Expected values:
+         *   - "1" / "true" to refresh all matching tables
+         *   - this instance key to target one table
+         *   - definition md5 hash to target one table definition
+         *
+         * @returns {void}
+         */
+        _consumeCustomFormReturnQuery() {
+            if (!this._customFormReturnQueryKeys.length) {
+                return;
+            }
+
+            const url = new URL(window.location.href);
+            let consumed = false;
+
+            this._customFormReturnQueryKeys.forEach((key) => {
+                if (consumed || !key || !url.searchParams.has(key)) {
+                    return;
+                }
+
+                const value = url.searchParams.get(key) || '1';
+                const isForThisInstance =
+                    value === '1'
+                    || value === 'true'
+                    || value === this._instanceKey
+                    || value === (options.definitionMd5 || '');
+
+                if (!isForThisInstance) {
+                    return;
+                }
+
+                url.searchParams.delete(key);
+                consumed = true;
+            });
+
+            if (!consumed) {
+                return;
+            }
+
+            window.history.replaceState({}, '', url.toString());
+            this.arRefresh();
+        },
+
+        /**
+         * Register window message listener for new-window custom form saves.
+         *
+         * Child window contract:
+         *   window.opener?.postMessage({
+         *     type: 'architect:table-custom-form-saved',
+         *     instanceKey: '...', // optional
+         *   }, window.location.origin)
+         *
+         * @returns {void}
+         */
+        _registerCustomFormPostMessageListener() {
+            if (!this._customFormPostMessageEnabled) {
+                return;
+            }
+
+            const onMessage = (event) => {
+                if (event.origin !== window.location.origin) {
+                    return;
+                }
+
+                const payload = event.data || {};
+                if (payload.type !== this._customFormPostMessageType) {
+                    return;
+                }
+
+                if (payload.instanceKey && payload.instanceKey !== this._instanceKey) {
+                    return;
+                }
+
+                this.arRefresh();
+            };
+
+            window.addEventListener('message', onMessage);
+
+            const el = this.$el;
+            if (!el._x_cleanups) el._x_cleanups = [];
+            el._x_cleanups.push(() => {
+                window.removeEventListener('message', onMessage);
+            });
+        },
+
         /* ── Lifecycle ───────────────────────────────────────────────── */
 
         /**
@@ -834,6 +936,10 @@ export function registerModuleTable(Alpine) {
             }
 
             store[this._instanceKey] = { _registered: true };
+
+            // Handle custom-form return hooks immediately after registration.
+            this._consumeCustomFormReturnQuery();
+            this._registerCustomFormPostMessageListener();
 
             // ── Cleanup on unmount ───────────────────────────────────── //
             // When Livewire removes this component (e.g. @if toggle in parent),

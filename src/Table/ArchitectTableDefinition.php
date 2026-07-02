@@ -95,6 +95,8 @@ final class ArchitectTableDefinition
         public readonly ?array $createColumns = null,
         public readonly ?string $modifyMode = null,
         public readonly ?array $modifyColumns = null,
+        public readonly ?CustomForm $customCreateForm = null,
+        public readonly ?CustomForm $customModifyForm = null,
         /** Dispatch architect:open-record instead of the default create panel. */
         public readonly bool $createOpenInTab = false,
         /** DynamicTabType key for the create flow (used when $createOpenInTab is true). */
@@ -180,8 +182,8 @@ final class ArchitectTableDefinition
          */
         public readonly array $customRowActions = [],
     ) {
-        if (! in_array($formMode, ['slide-over', 'page', 'modal'], true)) {
-            throw new \InvalidArgumentException("formMode must be 'slide-over', 'page', or 'modal', got '{$formMode}'");
+        if (! in_array($formMode, ['slide-over', 'wizard', 'modal'], true)) {
+            throw new \InvalidArgumentException("formMode must be 'slide-over', 'wizard', or 'modal', got '{$formMode}'");
         }
 
         if (! in_array($scrollMode, ['page', 'container', 'static'], true)) {

@@ -5,7 +5,7 @@
         explicit mount() param):
             - 'slide-over' (default): Architect slide-over panel.
             - 'modal':  Architect centered modal panel.
-      - 'page':   Full-card form rendered as the route's main content.
+    - 'wizard': Full-card form rendered as the route's main content.
 
     Panel states ($panelState):
       - 'idle':   Panel is closed; no content rendered in body.
@@ -27,8 +27,8 @@
       $dispatch('architect:refresh')
 --}}
 <div data-loading="{{ $isLoading ? 'true' : 'false' }}">
-@if ($mode === 'page')
-    {{-- ── Page mode: full-card form ────────────────────────────────── --}}
+@if ($mode === 'wizard')
+    {{-- ── Wizard mode: full-card form ──────────────────────────────── --}}
     <div class="container-xl py-4">
         <div class="arch-card">
             <form wire:submit.prevent="submit">

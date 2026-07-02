@@ -32,6 +32,14 @@
 
     $inlineUnsupportedTypes = ['hidden', 'wysiwyg', 'upload', 'multiselect', 'color', 'icon', 'duallistbox'];
     $cascadeChildrenJson = json_encode($cascadeChildren, JSON_HEX_APOS | JSON_HEX_QUOT);
+    $customFormReturnQueryKeys = array_values(array_filter(array_unique([
+        $definition->customCreateForm?->callbackQueryKey,
+        $definition->customModifyForm?->callbackQueryKey,
+    ])));
+    $customFormPostMessageEnabled = (bool) (
+        ($definition->customCreateForm?->postMessageRefresh ?? false)
+        || ($definition->customModifyForm?->postMessageRefresh ?? false)
+    );
 @endphp
 @if ($definition->headerSection)
     @include('architect::stats.render-section', [
@@ -53,6 +61,8 @@
         definitionMd5:           '{{ md5($definitionClass) }}',
         autoRefreshSeconds:      {{ (int) $definition->autoRefreshSeconds }},
         autoRefreshFingerprintOn: @js($definition->autoRefreshFingerprintOn),
+        customFormReturnQueryKeys: @js($customFormReturnQueryKeys),
+        customFormPostMessageEnabled: {{ $customFormPostMessageEnabled ? 'true' : 'false' }},
         supersearchHookId:       @php
             use Entelechy\Architect\Supersearch\Contracts\HasSupersearchHook;
             echo is_a($definitionClass, HasSupersearchHook::class, true) ? "'" . $this->getId() . "'" : 'null';
@@ -147,7 +157,59 @@
 
                 {{-- Create button (Layer 2 gate is enforced by FormPanel) --}}
                 @if ($definition->creatable)
-                    @if ($definition->createOpenInTab && $definition->createTabType)
+                    @if ($definition->customCreateForm)
+                        @php
+                            $customCreate = $definition->customCreateForm;
+                            $createUrl = $customCreate->url ?? '';
+                        @endphp
+
+                        @if ($customCreate->mode === 'tabs-manager')
+                            <x-architect::button
+                                size="sm"
+                                icon="heroicon-m-plus"
+                                @click="$dispatch('architect:open-record', { type: '{{ $customCreate->tabType }}', props: {}, fallback: '{{ $createUrl }}' })"
+                            >
+                                New
+                            </x-architect::button>
+                        @elseif ($customCreate->mode === 'same-window-page')
+                            <x-architect::button
+                                size="sm"
+                                icon="heroicon-m-plus"
+                                @click="window.location.href='{{ $createUrl }}'"
+                            >
+                                New
+                            </x-architect::button>
+                        @elseif ($customCreate->mode === 'new-window')
+                            <x-architect::button
+                                size="sm"
+                                icon="heroicon-m-plus"
+                                @click="(() => {
+                                    const _u = new URL('{{ $createUrl }}', window.location.origin);
+                                    const _return = new URL(window.location.href);
+                                    _return.searchParams.set('{{ $customCreate->callbackQueryKey ?? 'architect_refresh' }}', '{{ $instanceKey }}');
+                                    _u.searchParams.set('architect_table_instance', '{{ $instanceKey }}');
+                                    _u.searchParams.set('architect_table_refresh_key', '{{ $customCreate->callbackQueryKey ?? 'architect_refresh' }}');
+                                    _u.searchParams.set('architect_table_return_url', _return.toString());
+                                    window.open(_u.toString(), '_blank', 'noopener');
+                                })()"
+                            >
+                                New
+                            </x-architect::button>
+                        @else
+                            <x-architect::button
+                                size="sm"
+                                icon="heroicon-m-plus"
+                                @click="$dispatch('architect:open-custom-form', {
+                                    definitionClass: '{{ addslashes($definitionClass) }}',
+                                    title: 'New {{ addslashes($definition->title ?? 'Record') }}',
+                                    customDefinitionClass: '{{ addslashes($customCreate->definitionClass) }}',
+                                    customMode: '{{ $customCreate->mode }}'
+                                })"
+                            >
+                                New
+                            </x-architect::button>
+                        @endif
+                    @elseif ($definition->createOpenInTab && $definition->createTabType)
                         <x-architect::button
                             size="sm"
                             icon="heroicon-m-plus"
@@ -1362,7 +1424,65 @@
 
                             {{-- Standard Edit Button --}}
                             @if (! $rowIsArchived && $definition->modifiable)
-                                @if ($definition->modifyOpenInTab && $definition->modifyTabType)
+                                @if ($definition->customModifyForm)
+                                    @php
+                                        $customModify = $definition->customModifyForm;
+                                        $rowId = (int) ($row['id'] ?? 0);
+                                        $customModifyUrl = str_replace('{id}', (string) $rowId, $customModify->url ?? '');
+                                    @endphp
+
+                                    @if ($customModify->mode === 'tabs-manager')
+                                        <x-architect::button
+                                            size="sm"
+                                            outlined
+                                            icon="heroicon-m-pencil-square"
+                                            color="primary"
+                                            @click="$dispatch('architect:open-record', { type: '{{ $customModify->tabType }}', props: { id: {{ $rowId }} }, fallback: '{{ $customModifyUrl }}' })"
+                                            tooltip="Edit"
+                                        />
+                                    @elseif ($customModify->mode === 'same-window-page')
+                                        <x-architect::button
+                                            size="sm"
+                                            outlined
+                                            icon="heroicon-m-pencil-square"
+                                            color="primary"
+                                            @click="window.location.href='{{ $customModifyUrl }}'"
+                                            tooltip="Edit"
+                                        />
+                                    @elseif ($customModify->mode === 'new-window')
+                                        <x-architect::button
+                                            size="sm"
+                                            outlined
+                                            icon="heroicon-m-pencil-square"
+                                            color="primary"
+                                            @click="(() => {
+                                                const _u = new URL('{{ $customModifyUrl }}', window.location.origin);
+                                                const _return = new URL(window.location.href);
+                                                _return.searchParams.set('{{ $customModify->callbackQueryKey ?? 'architect_refresh' }}', '{{ $instanceKey }}');
+                                                _u.searchParams.set('architect_table_instance', '{{ $instanceKey }}');
+                                                _u.searchParams.set('architect_table_refresh_key', '{{ $customModify->callbackQueryKey ?? 'architect_refresh' }}');
+                                                _u.searchParams.set('architect_table_return_url', _return.toString());
+                                                window.open(_u.toString(), '_blank', 'noopener');
+                                            })()"
+                                            tooltip="Edit"
+                                        />
+                                    @else
+                                        <x-architect::button
+                                            size="sm"
+                                            outlined
+                                            icon="heroicon-m-pencil-square"
+                                            color="primary"
+                                            @click="$dispatch('architect:open-custom-form', {
+                                                definitionClass: '{{ addslashes($definitionClass) }}',
+                                                title: 'Edit {{ addslashes($definition->title ?? 'Record') }}',
+                                                customDefinitionClass: '{{ addslashes($customModify->definitionClass) }}',
+                                                customMode: '{{ $customModify->mode }}',
+                                                recordId: {{ $rowId }}
+                                            })"
+                                            tooltip="Edit"
+                                        />
+                                    @endif
+                                @elseif ($definition->modifyOpenInTab && $definition->modifyTabType)
                                     @php
                                         $_modifyFallback = str_replace('{id}', (string) ($row['id'] ?? ''), $definition->modifyUrl ?? '');
                                     @endphp

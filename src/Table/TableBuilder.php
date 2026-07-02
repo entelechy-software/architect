@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Entelechy\Architect\Table;
 
+use Entelechy\Architect\Forms\ArchitectFormDefinition;
+use Entelechy\Architect\Forms\ArchitectWizardDefinition;
 use Entelechy\Architect\Navigator\ArchitectNavigatorDefinition;
 use Entelechy\Architect\Table\Actions\BulkArchiveAction;
 use Entelechy\Architect\Table\Actions\BulkCopyAction;
@@ -132,6 +134,10 @@ final class TableBuilder
 
     /** @var list<string>|null Column names editable in modify mode (null = all) */
     private ?array $modifyColumns = null;
+
+    private ?CustomForm $customCreateForm = null;
+
+    private ?CustomForm $customModifyForm = null;
 
     /** @var list<ArchitectBulkAction> */
     private array $bulkActions = [];
@@ -318,8 +324,8 @@ final class TableBuilder
     /**
      * Configure the form-rendering mode for create and modify actions.
      *
-     * Valid create modes: 'slide-over' | 'modal' | 'page'
-     * Valid modify modes: 'slide-over' | 'modal' | 'page' | 'inline'
+     * Valid create modes: 'slide-over' | 'modal' | 'wizard'
+     * Valid modify modes: 'slide-over' | 'modal' | 'wizard' | 'inline'
      *
      * 'inline' modify uses the new smart inline-edit engine — clicking a
      * cell with dependencies opens the whole row; clicking a cell with
@@ -334,7 +340,7 @@ final class TableBuilder
         string $modify = 'slide-over',
     ): self {
         $clone = clone $this;
-        $panelModes = ['slide-over', 'modal', 'page'];
+        $panelModes = ['slide-over', 'modal', 'wizard'];
 
         if (! in_array($create, $panelModes, true)) {
             throw new \InvalidArgumentException(
@@ -355,6 +361,46 @@ final class TableBuilder
         // Auto-enable create + modify (legacy ->create()/->modify() flags).
         $clone->createMode = 'slide-out';
         $clone->modifyMode = $modify === 'inline' ? 'inline' : 'slide-out';
+
+        return $clone;
+    }
+
+    /**
+     * Attach a custom Forms Core definition to either create or modify flow.
+     *
+     * @param  'create'|'modify'  $for
+     * @param  class-string  $definitionClass
+     */
+    public function customForm(
+        string $for,
+        string $definitionClass,
+        string $mode = 'modal',
+        ?string $url = null,
+        ?string $tabType = null,
+        ?string $callbackQueryKey = 'architect_refresh',
+        bool $postMessageRefresh = true,
+    ): self {
+        if (! in_array($for, ['create', 'modify'], true)) {
+            throw new \InvalidArgumentException("customForm for must be 'create' or 'modify', got '{$for}'");
+        }
+
+        $clone = clone $this;
+        $config = new CustomForm(
+            definitionClass: $definitionClass,
+            mode: $mode,
+            url: $url,
+            tabType: $tabType,
+            callbackQueryKey: $callbackQueryKey,
+            postMessageRefresh: $postMessageRefresh,
+        );
+
+        if ($for === 'create') {
+            $clone->customCreateForm = $config;
+            $clone->creatable = true;
+        } else {
+            $clone->customModifyForm = $config;
+            $clone->modifiable = true;
+        }
 
         return $clone;
     }
@@ -1135,7 +1181,27 @@ final class TableBuilder
             throw new \LogicException('TableBuilder: permissions() is required');
         }
 
+        if ($this->formMode === 'wizard') {
+            if ($this->creatable && $this->customCreateForm === null) {
+                throw new \LogicException("TableBuilder: formMode('wizard') requires customForm(for: 'create', ...) when create flow is enabled.");
+            }
+
+            if ($this->modifiable && $this->customModifyForm === null) {
+                throw new \LogicException("TableBuilder: formMode('wizard') requires customForm(for: 'modify', ...) when modify flow is enabled.");
+            }
+        }
+
+        if ($this->customCreateForm !== null) {
+            $this->assertCustomFormDefinitionCompatibility($this->customCreateForm, 'create');
+        }
+
+        if ($this->customModifyForm !== null) {
+            $this->assertCustomFormDefinitionCompatibility($this->customModifyForm, 'modify');
+        }
+
+        /** @var class-string<ArchitectDataModel> $dataModelClass */
         $dataModelClass = $this->dataModelClass;
+        /** @var PermissionMap $permissions */
         $permissions = $this->permissions;
 
         // Collect filters from columns (inline) and merge with standalone filters
@@ -1254,6 +1320,8 @@ final class TableBuilder
             createColumns: $this->createColumns,
             modifyMode: $this->modifyMode,
             modifyColumns: $this->modifyColumns,
+            customCreateForm: $this->customCreateForm,
+            customModifyForm: $this->customModifyForm,
             importDefinition: $this->importDefinition,
             alerts: $this->alerts,
             suppressAutoAlerts: $this->suppressAutoAlerts,
@@ -1270,6 +1338,24 @@ final class TableBuilder
             visibleRows: $this->visibleRows,
             isPaginated: $this->isPaginated,
         );
+    }
+
+    private function assertCustomFormDefinitionCompatibility(CustomForm $customForm, string $for): void
+    {
+        $definitionClass = $customForm->definitionClass;
+        $definition = $definitionClass::definition();
+
+        if (! ($definition instanceof ArchitectFormDefinition || $definition instanceof ArchitectWizardDefinition)) {
+            throw new \LogicException(
+                "TableBuilder: customForm(for: '{$for}') definition [{$definitionClass}] must return ArchitectFormDefinition or ArchitectWizardDefinition from static definition()."
+            );
+        }
+
+        if ($this->formMode === 'wizard' && ! ($definition instanceof ArchitectWizardDefinition)) {
+            throw new \LogicException(
+                "TableBuilder: formMode('wizard') requires customForm(for: '{$for}') definition [{$definitionClass}] to return ArchitectWizardDefinition."
+            );
+        }
     }
 
     /**
