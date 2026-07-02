@@ -25,7 +25,6 @@ final readonly class QueryContext
 {
     /**
      * @param  array<string, mixed>  $filters
-     * @param  'asc'|'desc'  $sortDirection
      * @param  array<string, int|string>  $scope  URL-derived parent IDs (e.g. ['activity_id' => 42])
      * @param  array<string, ArchitectFilter>  $filterDefinitions  Filter objects keyed by name,
      *                                                             for use with ModuleTableFilterPipeline

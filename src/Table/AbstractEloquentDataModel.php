@@ -8,6 +8,7 @@ use Entelechy\Architect\Table\Contracts\ArchitectDataModel;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
  * Optional convenience base class for ArchitectDataModel implementations
@@ -60,7 +61,8 @@ abstract class AbstractEloquentDataModel implements ArchitectDataModel
         $query = $this->applyFilters($this->baseQuery(), $context);
 
         if ($context->sortColumn !== null) {
-            $query->orderBy($context->sortColumn, $context->sortDirection);
+            $direction = $context->sortDirection === 'desc' ? 'desc' : 'asc';
+            $query->orderBy($context->sortColumn, $direction);
         }
 
         $paginator = $query->paginate($context->perPage, ['*'], 'page', $context->page);
@@ -107,7 +109,7 @@ abstract class AbstractEloquentDataModel implements ArchitectDataModel
     {
         $modelClass = $this->modelClass();
 
-        if (in_array(\Illuminate\Database\Eloquent\SoftDeletes::class, class_uses_recursive($modelClass))) {
+        if (in_array(SoftDeletes::class, class_uses_recursive($modelClass))) {
             // @phpstan-ignore staticMethod.notFound
             $modelClass::withTrashed()->findOrFail($id)->forceDelete();
         } else {

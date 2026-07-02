@@ -1028,7 +1028,7 @@ final class Column implements HasVisibleWhen
     }
 
     /**
-    * @param  array<string, mixed>  $profiles
+     * @param  array<string, mixed>  $profiles
      * @return array<string, array{color?: string, colors?: string, icon?: string|null, position?: string}>
      */
     private function normalizeBadgeProfiles(array $profiles): array

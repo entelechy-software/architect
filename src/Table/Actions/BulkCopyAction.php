@@ -87,6 +87,7 @@ final class BulkCopyAction implements ArchitectBulkAction
     {
         return null;
     }
+
     public function permissionNode(): ?string
     {
         // Copy is a read-level operation — inherits the table's `read` node.
