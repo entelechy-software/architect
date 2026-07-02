@@ -375,6 +375,87 @@ class TableBuilderTest extends TestCase
             ->build();
     }
 
+    public function test_wizard_form_mode_rejects_non_wizard_definition(): void
+    {
+        $this->expectException(\LogicException::class);
+        $this->expectExceptionMessage("formMode('wizard') requires customForm(for: 'create') definition");
+
+        TableBuilder::make()
+            ->title('Widgets')
+            ->model(StubArchitectDataModel::class)
+            ->permissions(read: 'widgets.read', create: 'widgets.create', modify: 'widgets.modify', remove: 'widgets.remove')
+            ->customForm(for: 'create', definitionClass: StubStandardFormDefinition::class)
+            ->customForm(for: 'modify', definitionClass: StubWizardFormDefinition::class)
+            ->formMode(create: 'wizard', modify: 'wizard')
+            ->build();
+    }
+
+    public function test_custom_form_rejects_unknown_mode(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('customForm mode must be one of');
+
+        TableBuilder::make()
+            ->title('Widgets')
+            ->model(StubArchitectDataModel::class)
+            ->permissions(read: 'widgets.read', create: 'widgets.create', modify: 'widgets.modify', remove: 'widgets.remove')
+            ->customForm(
+                for: 'create',
+                definitionClass: StubWizardFormDefinition::class,
+                mode: 'popup',
+            )
+            ->build();
+    }
+
+    public function test_custom_form_requires_url_for_new_window_and_same_window_modes(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage("customForm mode 'new-window' requires a non-empty url.");
+
+        TableBuilder::make()
+            ->title('Widgets')
+            ->model(StubArchitectDataModel::class)
+            ->permissions(read: 'widgets.read', create: 'widgets.create', modify: 'widgets.modify', remove: 'widgets.remove')
+            ->customForm(
+                for: 'create',
+                definitionClass: StubWizardFormDefinition::class,
+                mode: 'new-window',
+            )
+            ->build();
+    }
+
+    public function test_custom_form_requires_existing_definition_class(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('customForm definition class [App\\Forms\\MissingDefinition] does not exist.');
+
+        TableBuilder::make()
+            ->title('Widgets')
+            ->model(StubArchitectDataModel::class)
+            ->permissions(read: 'widgets.read', create: 'widgets.create', modify: 'widgets.modify', remove: 'widgets.remove')
+            ->customForm(
+                for: 'create',
+                definitionClass: 'App\\Forms\\MissingDefinition',
+            )
+            ->build();
+    }
+
+    public function test_custom_form_requires_definition_method(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('must expose static definition()');
+
+        TableBuilder::make()
+            ->title('Widgets')
+            ->model(StubArchitectDataModel::class)
+            ->permissions(read: 'widgets.read', create: 'widgets.create', modify: 'widgets.modify', remove: 'widgets.remove')
+            ->customForm(
+                for: 'create',
+                definitionClass: StubNoDefinitionMethod::class,
+            )
+            ->build();
+    }
+
     #[AllowMockObjectsWithoutExpectations]
     public function test_filter_pipeline_passes_structured_payload_to_custom_filter(): void
     {
@@ -594,3 +675,5 @@ final class StubWizardFormDefinition
         );
     }
 }
+
+final class StubNoDefinitionMethod {}

@@ -9,7 +9,24 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Added
 
-- Nothing yet.
+- **Tables** — new `customForm(for: ..., definitionClass: ..., mode: ...)` orchestration API for create/modify flows. Supports launch modes: `modal`, `slide-over`, `same-window-page`, `new-window`, and `tabs-manager`.
+- **Tables** — return-hook support for external custom forms:
+	- callback query refresh (configurable via `callbackQueryKey`),
+	- same-origin `postMessage` refresh (`type: 'architect:table-custom-form-saved'`).
+
+### Changed
+
+- **Breaking (Tables)** — `formMode('page')` is removed. Use `formMode('wizard')` and pair it with `customForm(for: 'create'|'modify', ...)` when wizard mode is enabled.
+
+### Migration
+
+- Replace:
+	- `->formMode(create: 'page')` with `->formMode(create: 'wizard')`
+	- `->formMode(modify: 'page')` with `->formMode(modify: 'wizard')`
+- Add `customForm()` for each enabled wizard flow.
+- For `new-window` or `same-window-page` custom forms, either:
+	- return with callback query (for example `?architect_refresh=1`), or
+	- post `architect:table-custom-form-saved` to `window.opener` on same origin.
 
 ## [0.1.20] — 2026-07-02
 
