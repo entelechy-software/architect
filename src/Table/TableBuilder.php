@@ -533,8 +533,7 @@ final class TableBuilder
         bool|array|null $copy = null,
         bool|array|null $email = null,
         bool|array|null $status = null,
-    ): self
-    {
+    ): self {
         $clone = clone $this;
         $clone->selectableRows = true;
 
@@ -646,7 +645,7 @@ final class TableBuilder
 
     /**
      * @deprecated Use ->customBulkAction($action) for custom actions or
-      *             ->bulkActions(archive: true, export: true, ...) for built-ins.
+     *             ->bulkActions(archive: true, export: true, ...) for built-ins.
      */
     public function bulkAction(ArchitectBulkAction $action): self
     {
@@ -1033,11 +1032,11 @@ final class TableBuilder
      * When not called the table loads all records without a pagination footer
      * (equivalent to scroll mode 'static'). Only use for small datasets.
      *
-     * @param  int       $perPage      Records fetched and shown per page.
+     * @param  int  $perPage  Records fetched and shown per page.
      * @param  int|null  $visibleRows  For 'container' scroll: number of body rows
-     *                                visible before the container scrolls. Null = no cap.
+     *                                 visible before the container scrolls. Null = no cap.
      * @param  list<int>  $perPageOptions  Per-page selector options shown in the footer.
-     *                                    Empty array (default) hides the selector.
+     *                                     Empty array (default) hides the selector.
      */
     public function paginate(int $perPage, ?int $visibleRows = null, array $perPageOptions = []): self
     {

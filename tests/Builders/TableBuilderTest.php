@@ -14,9 +14,10 @@ use Entelechy\Architect\Table\Contracts\ArchitectRowAction;
 use Entelechy\Architect\Table\QueryContext;
 use Entelechy\Architect\Table\TableBuilder;
 use Entelechy\Architect\Tests\TestCase;
-use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Contracts\Database\Query\Builder;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Contracts\Support\Renderable;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Pagination\LengthAwarePaginator as ConcreteLengthAwarePaginator;
 
 class TableBuilderTest extends TestCase
@@ -366,13 +367,13 @@ final class StubArchitectDataModel implements ArchitectDataModel
         //
     }
 
-    public function canActOn(\Illuminate\Database\Eloquent\Model $user, int $id): bool
+    public function canActOn(Model $user, int $id): bool
     {
         return true;
     }
 
     public function modelClass(): string
     {
-        return \Illuminate\Database\Eloquent\Model::class;
+        return Model::class;
     }
 }

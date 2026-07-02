@@ -19,7 +19,6 @@ abstract class ArchitectFilter
 {
     protected string $label;
 
-    /** @var string|Renderable|null */
     protected string|Renderable|null $renderOverride = null;
 
     /** @var (\Closure(Builder, mixed): void)|null */
@@ -85,7 +84,6 @@ abstract class ArchitectFilter
         return $this->label;
     }
 
-    /** @return string|Renderable */
     public function renderer(): string|Renderable
     {
         return $this->renderOverride ?? $this->blade();

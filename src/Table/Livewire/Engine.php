@@ -869,7 +869,7 @@ class Engine extends Component
         $this->dispatch('architect:row-saved', id: $rowId);
     }
 
-    private function canModifyColumnInline(\Entelechy\Architect\Table\Column $column): bool
+    private function canModifyColumnInline(Column $column): bool
     {
         $user = $this->currentUser();
         $gate = app(PermissionGate::class);
