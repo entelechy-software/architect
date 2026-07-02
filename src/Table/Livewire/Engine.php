@@ -7,6 +7,7 @@ namespace Entelechy\Architect\Table\Livewire;
 use Entelechy\Architect\Supersearch\Contracts\HasSupersearchHook;
 use Entelechy\Architect\Table\Actions\BulkStatusAction;
 use Entelechy\Architect\Table\ArchitectTableDefinition;
+use Entelechy\Architect\Table\Column;
 use Entelechy\Architect\Table\Contracts\ArchitectDataModel;
 use Entelechy\Architect\Table\Contracts\HasViewAll;
 use Entelechy\Architect\Table\Export\CsvStreamExporter;
@@ -313,7 +314,7 @@ class Engine extends Component
 
     public function setFilter(string $name, mixed $value): void
     {
-        if ($value === null || $value === '') {
+        if ($value === null || $value === '' || $value === []) {
             unset($this->filters[$name]);
         } else {
             $this->filters[$name] = $value;

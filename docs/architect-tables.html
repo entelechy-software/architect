@@ -73,6 +73,7 @@ class MembersTableDefinition extends ArchitectTableDefinition
 <tr><td><code>column(Column)</code></td><td>Add a single column definition.</td></tr>
 <tr><td><code>field(ArchitectField)</code></td><td>Add a single form field for create/edit modals.</td></tr>
 <tr><td><code>filter(ArchitectFilter)</code></td><td>Add a table filter.</td></tr>
+<tr><td><code>customFilter(ArchitectFilter)</code></td><td>Add a bespoke filter control (custom UI/value payload) using the same filter pipeline.</td></tr>
 <tr><td><code>defaultFilters(array)</code></td><td>Pre-applied filter values on first load.</td></tr>
 <tr><td><code>archivable(bool $archivable, bool $reasonRequired, bool $allowUnarchive, bool $allowDelete, bool $phraseRequired, ?string $confirmationPhrase)</code></td><td>Soft-delete support with archive/restore UI. Stack <code>reasonRequired</code> and <code>phraseRequired</code> to require both. <code>confirmationPhrase: null</code> uses the record’s name/title field.</td></tr>
 <tr><td><code>deletable(bool $deletable, bool $reasonRequired, bool $phraseRequired, ?string $confirmationPhrase)</code></td><td>Enable hard delete. Opens an Architect modal on every click. Stack flags freely: reason-only, phrase-only, or both. <code>confirmationPhrase: null</code> uses the record’s name/title.</td></tr>
@@ -269,6 +270,31 @@ MultiSelectFilter::make('tags')->source('/api/tags'),</code></pre>
 <tr><td><code>LookupFilter</code></td><td>Async lookup filter with remote source.</td></tr>
 </tbody>
 </table>
+
+<h3>customFilter()</h3>
+<p>Use <code>customFilter()</code> when built-in controls are too rigid for the UX/value shape you need. It is a semantic alias of <code>filter()</code>, but makes intent explicit in table definitions.</p>
+<pre><code class="language-php">use App\Architect\Filters\SupportPresetFilter;
+use App\Architect\Filters\SlaWindowFilter;
+
+TableBuilder::make()
+    ->customFilter(
+        SupportPresetFilter::make('support_preset')
+            ->label('Queue Preset')
+            ->render('architect-custom.filters.support-preset')
+    )
+    ->customFilter(
+        SlaWindowFilter::make('sla_window')
+            ->label('SLA Window')
+            ->render('architect-custom.filters.sla-window')
+    );</code></pre>
+
+<p>Real-world payload examples:</p>
+<ul>
+<li>Support presets: <code>{ preset: 'hot_queue' }</code></li>
+<li>SLA windows: <code>{ minsFrom: 0, minsTo: 120, severity: ['critical','warning'] }</code></li>
+<li>Region+tier segmentation: <code>{ regions: ['emea'], tiers: ['enterprise'] }</code></li>
+<li>Reconciliation triage: <code>{ matched: 'no', hasException: true, awaitingApproval: false }</code></li>
+</ul>
 </section>
 
 <section id="datamodel">

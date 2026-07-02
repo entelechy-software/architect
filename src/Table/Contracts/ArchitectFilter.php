@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Entelechy\Architect\Table\Contracts;
 
 use Illuminate\Contracts\Database\Query\Builder;
+use Illuminate\Contracts\Support\Renderable;
 
 /**
  * Abstract base for the filter controls rendered above the table.
@@ -17,6 +18,9 @@ use Illuminate\Contracts\Database\Query\Builder;
 abstract class ArchitectFilter
 {
     protected string $label;
+
+    /** @var string|Renderable|null */
+    protected string|Renderable|null $renderOverride = null;
 
     /** @var (\Closure(Builder, mixed): void)|null */
     protected ?\Closure $customApply = null;
@@ -35,6 +39,21 @@ abstract class ArchitectFilter
     {
         $clone = clone $this;
         $clone->label = $label;
+
+        return $clone;
+    }
+
+    /**
+     * Override how this filter UI is rendered in the filter panel.
+     *
+     * Accepts either:
+     *   - a Blade view name (string), or
+     *   - any Renderable object that returns HTML from render().
+     */
+    public function render(string|Renderable $renderer): static
+    {
+        $clone = clone $this;
+        $clone->renderOverride = $renderer;
 
         return $clone;
     }
@@ -64,6 +83,12 @@ abstract class ArchitectFilter
     public function getLabel(): string
     {
         return $this->label;
+    }
+
+    /** @return string|Renderable */
+    public function renderer(): string|Renderable
+    {
+        return $this->renderOverride ?? $this->blade();
     }
 
     abstract public function blade(): string;

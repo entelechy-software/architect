@@ -1919,7 +1919,12 @@
                                         aria-label="Clear {{ $filter->getLabel() }} filter"
                                     ><i class="fas fa-times"></i></button>
                                 </div>
-                                @include($filter->blade(), ['filter' => $filter])
+                                @php($renderer = $filter->renderer())
+                                @if (is_string($renderer))
+                                    @include($renderer, ['filter' => $filter])
+                                @else
+                                    {!! $renderer->render() !!}
+                                @endif
                             </div>
                         @endforeach
                     </div>

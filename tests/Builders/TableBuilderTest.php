@@ -9,11 +9,14 @@ use Entelechy\Architect\Table\Actions\BulkStatusAction;
 use Entelechy\Architect\Table\Actions\RowAction;
 use Entelechy\Architect\Table\Column;
 use Entelechy\Architect\Table\Contracts\ArchitectDataModel;
+use Entelechy\Architect\Table\Contracts\ArchitectFilter;
 use Entelechy\Architect\Table\Contracts\ArchitectRowAction;
 use Entelechy\Architect\Table\QueryContext;
 use Entelechy\Architect\Table\TableBuilder;
 use Entelechy\Architect\Tests\TestCase;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Contracts\Database\Query\Builder;
+use Illuminate\Contracts\Support\Renderable;
 use Illuminate\Pagination\LengthAwarePaginator as ConcreteLengthAwarePaginator;
 
 class TableBuilderTest extends TestCase
@@ -197,6 +200,84 @@ class TableBuilderTest extends TestCase
         $this->assertTrue($definition->bulkActions[0]->requiresReason());
         $this->assertInstanceOf(BulkStatusAction::class, $definition->bulkActions[1]);
         $this->assertSame(['open', 'closed', 'pending'], $definition->bulkActions[1]->options());
+    }
+
+    public function test_custom_filter_registers_like_filter(): void
+    {
+        $filter = StubArchitectFilter::make('queue_preset');
+
+        $definition = TableBuilder::make()
+            ->title('Widgets')
+            ->model(StubArchitectDataModel::class)
+            ->permissions(read: 'widgets.read', create: 'widgets.create', modify: 'widgets.modify', remove: 'widgets.remove')
+            ->customFilter($filter)
+            ->build();
+
+        $this->assertCount(1, $definition->filters);
+        $this->assertSame('queue_preset', $definition->filters[0]->name());
+    }
+
+    public function test_filter_renderer_defaults_to_blade(): void
+    {
+        $filter = StubArchitectFilter::make('queue_preset');
+
+        $this->assertSame('architect::table.filters.select', $filter->renderer());
+    }
+
+    public function test_filter_renderer_accepts_blade_override(): void
+    {
+        $filter = StubArchitectFilter::make('queue_preset')
+            ->render('architect::table.filters.text');
+
+        $this->assertSame('architect::table.filters.text', $filter->renderer());
+        $this->assertSame('architect::table.filters.select', StubArchitectFilter::make('queue_preset')->renderer());
+    }
+
+    public function test_filter_renderer_accepts_renderable_override(): void
+    {
+        $renderable = new class implements Renderable
+        {
+            public function render(): string
+            {
+                return '<div>Custom filter control</div>';
+            }
+        };
+
+        $filter = StubArchitectFilter::make('queue_preset')
+            ->render($renderable);
+
+        $this->assertSame($renderable, $filter->renderer());
+    }
+
+    public function test_duplicate_filter_names_throw_during_build(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('duplicate filter names detected: queue_preset');
+
+        TableBuilder::make()
+            ->title('Widgets')
+            ->model(StubArchitectDataModel::class)
+            ->permissions(read: 'widgets.read', create: 'widgets.create', modify: 'widgets.modify', remove: 'widgets.remove')
+            ->filter(StubArchitectFilter::make('queue_preset'))
+            ->customFilter(StubArchitectFilter::make('queue_preset'))
+            ->build();
+    }
+}
+
+final class StubArchitectFilter extends ArchitectFilter
+{
+    public function blade(): string
+    {
+        return 'architect::table.filters.select';
+    }
+
+    protected function doApply(Builder $query, mixed $value): void
+    {
+        if ($value === null || $value === '' || $value === []) {
+            return;
+        }
+
+        $query->where($this->name(), '=', $value);
     }
 }
 

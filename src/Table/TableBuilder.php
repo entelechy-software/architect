@@ -397,6 +397,17 @@ final class TableBuilder
     }
 
     /**
+     * Register a custom filter control.
+     *
+     * This is a semantic alias of filter() that improves readability when
+     * the filter uses a bespoke UI and/or custom apply logic.
+     */
+    public function customFilter(ArchitectFilter $filter): self
+    {
+        return $this->filter($filter);
+    }
+
+    /**
      * @param  array<string, mixed>  $values
      */
     public function defaultFilters(array $values): self
@@ -1116,6 +1127,9 @@ final class TableBuilder
             throw new \LogicException('TableBuilder: permissions() is required');
         }
 
+        $dataModelClass = $this->dataModelClass;
+        $permissions = $this->permissions;
+
         // Collect filters from columns (inline) and merge with standalone filters
         $allFilters = $this->filters;
         foreach ($this->columns as $column) {
@@ -1125,6 +1139,8 @@ final class TableBuilder
             }
         }
 
+        $this->assertUniqueFilterNames($allFilters);
+
         // Auto-add row actions for clonable and auditable features
         $rowActions = $this->rowActions;
 
@@ -1133,7 +1149,7 @@ final class TableBuilder
             $rowActions[] = RowAction::make('clone')
                 ->label('Clone Record')
                 ->icon('fas fa-copy')
-                ->permission($this->permissions->create)
+                ->permission($permissions->create)
                 ->color('info');
         }
 
@@ -1142,7 +1158,7 @@ final class TableBuilder
             $rowActions[] = RowAction::make('audit')
                 ->label('View Audit Trail')
                 ->icon('fas fa-history')
-                ->permission($this->permissions->modify)
+                ->permission($permissions->modify)
                 ->newWindow();
         }
 
@@ -1151,7 +1167,7 @@ final class TableBuilder
             $viewAction = RowAction::make('view')
                 ->label('View Details')
                 ->icon('fas fa-external-link')
-                ->permission($this->permissions->read)
+                ->permission($permissions->read)
                 ->color('info');
 
             if ($this->viewUrl !== null) {
@@ -1185,8 +1201,8 @@ final class TableBuilder
             title: $this->title,
             pageTitle: $this->pageTitle,
             breadcrumbs: $this->breadcrumbs,
-            dataModelClass: $this->dataModelClass,
-            permissions: $this->permissions,
+            dataModelClass: $dataModelClass,
+            permissions: $permissions,
             creatable: $this->creatable,
             modifiable: $this->modifiable,
             createOpenInTab: $this->createOpenInTab,
@@ -1244,6 +1260,35 @@ final class TableBuilder
             scrollMode: $this->scrollMode ?? 'static',
             visibleRows: $this->visibleRows,
             isPaginated: $this->isPaginated,
+        );
+    }
+
+    /**
+     * @param  list<ArchitectFilter>  $filters
+     */
+    private function assertUniqueFilterNames(array $filters): void
+    {
+        $seen = [];
+        $duplicates = [];
+
+        foreach ($filters as $filter) {
+            $name = $filter->name();
+
+            if (isset($seen[$name])) {
+                $duplicates[$name] = true;
+
+                continue;
+            }
+
+            $seen[$name] = true;
+        }
+
+        if ($duplicates === []) {
+            return;
+        }
+
+        throw new \InvalidArgumentException(
+            'TableBuilder: duplicate filter names detected: '.implode(', ', array_keys($duplicates)).'. Filter names must be unique.'
         );
     }
 }
