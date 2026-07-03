@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Entelechy\Architect\Stats\Livewire;
 
 use Carbon\CarbonImmutable;
+use Entelechy\Architect\Breadcrumbs\BreadcrumbTrail;
 use Entelechy\Architect\Contracts\PermissionResolver;
 use Entelechy\Architect\Navigator\Livewire\SpaSharedDefinition;
 use Entelechy\Architect\Stats\ArchitectStatDefinition;
@@ -124,7 +125,7 @@ class DashboardEngine extends Component
         // Share breadcrumbs with the layout topbar
         if ($definition->breadcrumbs !== []) {
             view()->share('definition', new SpaSharedDefinition(
-                breadcrumbs: $definition->breadcrumbs,
+                breadcrumbs: BreadcrumbTrail::fromArray($definition->breadcrumbs)->toArray(),
             ));
         }
 

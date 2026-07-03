@@ -19,7 +19,7 @@ namespace Entelechy\Architect\Navigator\Livewire;
 final class SpaSharedDefinition
 {
     /**
-     * @param  array<int, array{title: string, url?: string}>  $breadcrumbs  Initial/static crumb trail.
+     * @param  array<int, array{title: string, url?: string|false, menu?: array<int, array{title: string, url?: string|false}>}>  $breadcrumbs  Initial/static crumb trail.
      */
     public function __construct(
         public readonly array $breadcrumbs = [],
