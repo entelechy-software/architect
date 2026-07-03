@@ -1491,6 +1491,7 @@ class Engine extends Component
             // Pre-computed total so the blade's Alpine state mirror
             // can publish it without re-reading the paginator.
             'total' => $paginator->total(),
+            'embedded' => $this->embedded,
         ]);
     }
 

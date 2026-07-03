@@ -50,6 +50,7 @@
 @endif
 
 <div
+    class="relative"
     data-loading="{{ $isLoading ? 'true' : 'false' }}"
     @if (config('architect.animations', true) && $definition->animateButtons) data-arch-anim-buttons @endif
     x-data="moduleTable({
@@ -1960,7 +1961,7 @@
 
 {{-- Form panel (slide-over offcanvas) lives outside the card so the
      backdrop can occlude the whole page. --}}
-@livewire('architect-form-panel', ['definitionClass' => $definitionClass], key('form-panel-' . md5($definitionClass)))
+@livewire('architect-form-panel', ['definitionClass' => $definitionClass, 'embedded' => $embedded], key('form-panel-' . md5($definitionClass)))
 
 {{-- CSV Import wizard (modal) — mounted once per importable table.
      The wizard listens for `architect:open-import` and reads the
@@ -1974,6 +1975,9 @@
 {{-- wire:ignore prevents Livewire morphdom from patching the <template> on every
      round-trip. Alpine's x-teleport + filtersOpen state drives show/hide.      --}}
 @if (count($definition->filters) > 0 || $definition->archivable)
+    @if ($embedded)
+        <div id="arch-filter-portal-{{ $instanceKey }}" wire:ignore class="absolute inset-0 pointer-events-none"></div>
+    @endif
     <div wire:ignore style="display:none">
         {{--
             x-teleport MUST have a single root element — some Alpine versions
@@ -1981,12 +1985,18 @@
             We wrap backdrop + panel in one <div> (no styles) so both live
             under a single Alpine-managed root. Fixed positioning inside
             means the wrapper div has zero visual effect.
+
+            When embedded (e.g. rendered inside a live preview surface),
+            teleport to a local portal div instead of <body> so the panel
+            stays confined to the embedding container. The --embedded CSS
+            modifier classes then switch the panel from fixed to absolute
+            positioning relative to that portal's positioned ancestor.
         --}}
-        <template x-teleport="body">
+        <template x-teleport="{{ $embedded ? ('#arch-filter-portal-'.$instanceKey) : 'body' }}">
           <div>
             {{-- Backdrop: simple Alpine fade (opacity 0→1) --}}
             <div
-                class="arch-slide-over-backdrop"
+                @class(['arch-slide-over-backdrop', 'arch-slide-over-backdrop--embedded' => $embedded, 'pointer-events-auto' => $embedded])
                 x-show="filtersOpen"
                 x-transition
                 @click="closeFilters()"
@@ -1995,7 +2005,7 @@
 
             {{-- Panel: appear/disappear; CSS animation on .arch-slide-over handles the slide --}}
             <div
-                class="arch-slide-over"
+                @class(['arch-slide-over', 'arch-slide-over--embedded' => $embedded, 'pointer-events-auto' => $embedded])
                 id="arch-filter-panel-{{ $instanceKey }}"
                 x-show="filtersOpen"
                 x-transition

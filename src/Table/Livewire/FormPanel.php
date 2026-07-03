@@ -51,6 +51,8 @@ class FormPanel extends Component
 
     public bool $open = false;
 
+    public bool $embedded = false;
+
     /**
      * Render mode. 'slide-over' (default) renders the Tabler offcanvas
      * triggered by Engine events. 'wizard' mounts directly under a route
@@ -118,9 +120,10 @@ class FormPanel extends Component
      */
     public array $viewRecord = [];
 
-    public function mount(string $definitionClass, ?int $id = null, ?string $mode = null, ?string $cancelUrl = null): void
+    public function mount(string $definitionClass, ?int $id = null, ?string $mode = null, ?string $cancelUrl = null, bool $embedded = false): void
     {
         $this->definitionClass = $definitionClass;
+        $this->embedded = $embedded;
 
         if ($mode !== null) {
             if (! in_array($mode, ['slide-over', 'wizard', 'modal'], true)) {
@@ -443,6 +446,7 @@ class FormPanel extends Component
             'viewRecord' => $this->viewRecord,
             'customBlade' => $this->customBlade,
             'customData' => $this->customData,
+            'embedded' => $this->embedded,
         ]);
     }
 

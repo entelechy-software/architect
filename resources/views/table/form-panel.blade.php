@@ -27,6 +27,9 @@
       $dispatch('architect:refresh')
 --}}
 <div data-loading="{{ $isLoading ? 'true' : 'false' }}">
+@php
+    $embedded = $embedded ?? ($this->embedded ?? false);
+@endphp
 @if ($mode === 'wizard')
     {{-- ── Wizard mode: full-card form ──────────────────────────────── --}}
     <div class="container-xl py-4">
@@ -92,16 +95,18 @@
     <div
         x-data="{ open: @entangle('open').live }"
         x-effect="
-            if (open) {
-                document.body.classList.add('modal-open');
-            } else {
-                document.body.classList.remove('modal-open');
+            if (!{{ $embedded ? 'true' : 'false' }}) {
+                if (open) {
+                    document.body.classList.add('modal-open');
+                } else {
+                    document.body.classList.remove('modal-open');
+                }
             }
         "
     >
         {{-- Backdrop --}}
         <div
-            class="arch-panel-backdrop"
+            @class(['arch-panel-backdrop', 'arch-panel-backdrop--embedded' => $embedded])
             x-show="open"
             x-transition.opacity
             style="display:none"
@@ -109,14 +114,14 @@
 
         {{-- Modal --}}
         <div
-            class="arch-panel arch-panel--modal"
+            @class(['arch-panel', 'arch-panel--modal', 'arch-panel--modal--embedded' => $embedded])
             x-show="open"
             x-transition.opacity
             style="display:none"
             aria-hidden="false"
         >
             <div
-                class="arch-panel__window arch-panel__window--modal"
+                @class(['arch-panel__window', 'arch-panel__window--modal', 'arch-panel__window--modal--embedded' => $embedded])
                 role="dialog"
                 aria-modal="true"
                 aria-labelledby="module-table-panel-title"
@@ -206,16 +211,18 @@
     <div
         x-data="{ open: @entangle('open').live }"
         x-effect="
-            if (open) {
-                document.body.classList.add('modal-open');
-            } else {
-                document.body.classList.remove('modal-open');
+            if (!{{ $embedded ? 'true' : 'false' }}) {
+                if (open) {
+                    document.body.classList.add('modal-open');
+                } else {
+                    document.body.classList.remove('modal-open');
+                }
             }
         "
     >
         {{-- Backdrop --}}
         <div
-            class="arch-panel-backdrop"
+            @class(['arch-panel-backdrop', 'arch-panel-backdrop--embedded' => $embedded])
             x-show="open"
             x-transition.opacity
             @click="$wire.close()"
@@ -224,13 +231,13 @@
 
         {{-- Slide-over panel --}}
         <div
-            class="arch-panel arch-panel--slide-over"
+            @class(['arch-panel', 'arch-panel--slide-over', 'arch-panel--slide-over--embedded' => $embedded])
             x-show="open"
             style="display:none"
             aria-hidden="false"
         >
             <div
-                class="arch-panel__window arch-panel__window--slide-over"
+                @class(['arch-panel__window', 'arch-panel__window--slide-over', 'arch-panel__window--slide-over--embedded' => $embedded])
                 role="dialog"
                 aria-modal="true"
                 aria-labelledby="module-table-panel-title"
