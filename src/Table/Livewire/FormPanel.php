@@ -16,11 +16,13 @@ use Entelechy\Architect\Table\Permissions\PermissionGate;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\On;
 use Livewire\Component;
+use Livewire\WithFileUploads;
 
 /**
  * TableBuilder form panel — Tabler offcanvas (slide-over) edition.
@@ -45,6 +47,8 @@ use Livewire\Component;
 #[Layout('layouts.app')]
 class FormPanel extends Component
 {
+    use WithFileUploads;
+
     public string $definitionClass = '';
 
     public ?int $recordId = null;
@@ -387,6 +391,8 @@ class FormPanel extends Component
             throw $e;
         }
 
+        $this->storeUploadedFiles($editableColumns, $validated);
+
         try {
             if ($isCreate) {
                 $newId = $dataModel->create($validated);
@@ -520,6 +526,34 @@ class FormPanel extends Component
     }
 
     /**
+     * Persist any freshly-selected file uploads for type('upload') /
+     * type('awsUpload') columns and replace the in-memory value with the
+     * stored path. Columns whose value isn't a fresh upload (e.g. an
+     * edit where the user left the existing path untouched) are left
+     * alone.
+     *
+     * @param  list<Column>  $columns
+     * @param  array<string, mixed>  $validated
+     */
+    private function storeUploadedFiles(array $columns, array &$validated): void
+    {
+        foreach ($columns as $column) {
+            if (! in_array($column->getType(), ['upload', 'awsUpload'], true)) {
+                continue;
+            }
+
+            $editKey = $column->getEditKey();
+            $value = $validated[$editKey] ?? null;
+
+            if (! ($value instanceof UploadedFile)) {
+                continue;
+            }
+
+            $validated[$editKey] = $value->store($column->getDirectory(), $column->getDisk());
+        }
+    }
+
+    /**
      * Build the rule set from each column with validation rules.
      *
      * @param  list<Column>  $columns
@@ -533,6 +567,17 @@ class FormPanel extends Component
         foreach ($columns as $column) {
             $editKey = $column->getEditKey();
             $applicable[] = $editKey;
+
+            // Upload columns: only validate/persist when a fresh file was
+            // selected. Leaving the field untouched on edit means the
+            // current value is the already-stored path string, not an
+            // UploadedFile — skip so update() doesn't try to run file
+            // rules against a plain string, and so the existing path is
+            // left alone (update() only touches supplied keys).
+            if (in_array($column->getType(), ['upload', 'awsUpload'], true)
+                && ! ($this->form[$editKey] ?? null) instanceof UploadedFile) {
+                continue;
+            }
 
             $columnRules = $column->getRules();
             if ($columnRules !== null && $columnRules !== '') {
