@@ -340,7 +340,7 @@
 .arch-toast { z-index: var(--arch-z-toast); }
 
 /* Slide-over panels */
-.arch-slide-over { position: fixed; top: 0; right: 0; height: 100%; z-index: var(--arch-z-slide-over); background: var(--arch-color-surface); box-shadow: var(--arch-shadow-lg); display: flex; flex-direction: column; }
+.arch-slide-over { position: fixed; top: 0; right: 0; height: 100%; z-index: var(--arch-z-slide-over); background: var(--arch-color-surface); box-shadow: var(--arch-shadow-lg); display: flex; flex-direction: column; overflow: hidden; }
 .arch-slide-over[data-position="left"] { left: 0; right: auto; }
 .arch-slide-over[data-width="sm"] { width: 24rem; }
 .arch-slide-over[data-width="md"] { width: 36rem; }
@@ -942,7 +942,7 @@
 .arch-slide-over-backdrop--embedded { position: absolute; }
 .arch-slide-over-header { border-bottom: 1px solid var(--arch-color-border); @apply flex items-center justify-between px-6 py-4; }
 .arch-slide-over-title  { font-weight: var(--arch-font-weight-semibold); color: var(--arch-color-text); }
-.arch-slide-over-body   { overflow-y: auto; flex: 1; @apply px-6 py-4; }
+.arch-slide-over-body   { overflow-y: auto; flex: 1; min-height: 0; @apply px-6 py-4; }
 .arch-slide-over-footer { border-top: 1px solid var(--arch-color-border); @apply flex items-center justify-end gap-3 px-6 py-4; }
 
 /* Table modifiers (compose with .arch-table/.arch-th/.arch-td/.arch-tr above) */
@@ -964,12 +964,18 @@
 /* Form panel (Table create/edit — slide-over | modal | page modes) */
 .arch-panel { }
 .arch-panel-backdrop { position: fixed; inset: 0; z-index: calc(var(--arch-z-slide-over) - 1); background: rgb(0 0 0 / 0.4); }
-.arch-panel--slide-over { position: fixed; top: 0; right: 0; height: 100%; z-index: var(--arch-z-slide-over); background: var(--arch-color-surface); box-shadow: var(--arch-shadow-lg); display: flex; flex-direction: column; }
-.arch-panel--modal { position: fixed; inset: 0; z-index: var(--arch-z-slide-over); display: flex; align-items: center; justify-content: center; }
+.arch-panel--slide-over { position: fixed; top: 0; right: 0; height: 100%; z-index: var(--arch-z-slide-over); background: var(--arch-color-surface); box-shadow: var(--arch-shadow-lg); display: flex; flex-direction: column; overflow: hidden; }
+.arch-panel--modal { position: fixed; inset: 0; z-index: var(--arch-z-slide-over); display: flex; align-items: center; justify-content: center; overflow: hidden; }
 .arch-panel-backdrop--embedded { position: absolute; }
 .arch-panel--slide-over--embedded { position: absolute; }
 .arch-panel--modal--embedded { position: absolute; }
-.arch-panel__window { display: flex; flex-direction: column; height: 100%; }
+.arch-panel__window { display: flex; flex-direction: column; height: 100%; overflow: hidden; }
+/* create/edit states wrap header+body+footer in a <form>; make it
+   transparent to the flex layout above so .arch-panel__body's flex:1 +
+   min-height:0 actually constrains it (otherwise the form is a plain
+   block box that grows to fit all content, overflowing un-clipped and
+   making the page behind scroll instead of the panel). */
+.arch-panel__window > form { display: contents; }
 .arch-panel__window--slide-over { width: 36rem; }
 .arch-panel__window--modal { width: 32rem; background: var(--arch-color-surface); border-radius: var(--arch-radius-lg); box-shadow: var(--arch-shadow-lg); display: flex; flex-direction: column; max-height: 90vh; height: auto; }
 .arch-panel__window--xl { width: 56rem; }
@@ -979,7 +985,8 @@
 .arch-panel__header-copy { @apply flex flex-col; }
 .arch-panel__title { font-weight: var(--arch-font-weight-semibold); color: var(--arch-color-text); }
 .arch-panel__close { color: var(--arch-color-text-muted); cursor: pointer; }
-.arch-panel__body { overflow-y: auto; flex: 1; @apply px-6 py-4; }
+.arch-panel__body { overflow-y: auto; flex: 1; min-height: 0; @apply px-6 py-4; }
+body.modal-open { overflow: hidden; }
 .arch-panel__footer { border-top: 1px solid var(--arch-color-border); @apply flex items-center justify-end gap-3 px-6 py-4; }
 .arch-panel__footer--split { @apply justify-between; }
 
