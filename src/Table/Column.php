@@ -94,6 +94,12 @@ final class Column implements HasVisibleWhen
     /** @var string|null API endpoint for dynamic options (lookup) */
     private ?string $source = null;
 
+    /** @var string Storage disk used by type('upload') columns. */
+    private string $disk = 'public';
+
+    /** @var string Storage directory (within $disk) used by type('upload') columns. */
+    private string $directory = 'uploads';
+
     /** @var string|null Model class for direct model binding */
     private ?string $model = null;
 
@@ -458,6 +464,30 @@ final class Column implements HasVisibleWhen
     {
         $clone = clone $this;
         $clone->source = $url;
+
+        return $clone;
+    }
+
+    /**
+     * Storage disk used to persist an uploaded file for type('upload') columns.
+     * Defaults to 'public'.
+     */
+    public function disk(string $disk): self
+    {
+        $clone = clone $this;
+        $clone->disk = $disk;
+
+        return $clone;
+    }
+
+    /**
+     * Storage directory (within the configured disk) used to persist an
+     * uploaded file for type('upload') columns. Defaults to 'uploads'.
+     */
+    public function directory(string $directory): self
+    {
+        $clone = clone $this;
+        $clone->directory = trim($directory, '/');
 
         return $clone;
     }
@@ -837,6 +867,18 @@ final class Column implements HasVisibleWhen
     public function getSource(): ?string
     {
         return $this->source;
+    }
+
+    /** Storage disk used to persist an uploaded file for type('upload') columns. */
+    public function getDisk(): string
+    {
+        return $this->disk;
+    }
+
+    /** Storage directory used to persist an uploaded file for type('upload') columns. */
+    public function getDirectory(): string
+    {
+        return $this->directory;
     }
 
     /** @return (callable(object): string)|null */
