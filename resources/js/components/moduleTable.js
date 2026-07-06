@@ -86,6 +86,7 @@ export function registerModuleTable(Alpine) {
      * @param {string}  options.tablePrefix             - localStorage key namespace (table + user id).
      * @param {boolean} options.persistenceEnabled      - Whether filter persistence is active for this table.
      * @param {boolean} options.bookmarkFiltersEnabled    - Whether filter bookmarking is active for this table.
+     * @param {string}  [options.persistenceDriver='localStorage'] - 'localStorage' or 'database' (locked via `architect:init`).
      * @param {object}  options.cascadeChildren           - Map of parent editKey → array of dependent child editKeys.
      * @param {string}  options.definitionMd5             - md5 hash of the definition class (for Lookup element IDs).
      * @param {number}  [options.autoRefreshSeconds=0]    - Seconds between automatic refreshes (0 = disabled).
@@ -111,6 +112,7 @@ export function registerModuleTable(Alpine) {
         _tablePrefix:           options.tablePrefix,
         _persistenceEnabled:    options.persistenceEnabled,
         _bookmarkFiltersEnabled: options.bookmarkFiltersEnabled,
+        _persistenceDriver:     options.persistenceDriver || 'localStorage',
 
         /* ── Auto-refresh ────────────────────────────────────────────── */
         /** Configured interval in seconds; 0 means the feature is disabled. */
@@ -178,9 +180,11 @@ export function registerModuleTable(Alpine) {
          *
          * @type {string[]}
          */
-        hiddenCols: JSON.parse(
-            localStorage.getItem('moduleTable_' + options.definitionMd5 + '_hiddenColumns') || '[]'
-        ),
+        hiddenCols: options.persistenceDriver === 'database'
+            ? []
+            : JSON.parse(
+                localStorage.getItem('moduleTable_' + options.definitionMd5 + '_hiddenColumns') || '[]'
+            ),
 
         /* ── Cell-mode inline edit ───────────────────────────────────── */
         /**
@@ -448,7 +452,7 @@ export function registerModuleTable(Alpine) {
 
         /**
          * Toggles the visibility of a column and persists the updated list
-         * to localStorage.
+         * via the active driver (localStorage or the server-side StateStore).
          *
          * @param {string} key - Column identifier.
          * @returns {void}
@@ -460,22 +464,84 @@ export function registerModuleTable(Alpine) {
             } else {
                 this.hiddenCols.splice(idx, 1);
             }
-            localStorage.setItem(
-                'moduleTable_' + options.definitionMd5 + '_hiddenColumns',
-                JSON.stringify(this.hiddenCols)
-            );
+            if (this._persistenceDriver === 'database') {
+                this._saveState('hidden_columns', this.hiddenCols);
+            } else {
+                localStorage.setItem(
+                    'moduleTable_' + options.definitionMd5 + '_hiddenColumns',
+                    JSON.stringify(this.hiddenCols)
+                );
+            }
+        },
+
+        /* ── Persisted-state driver helpers ───────────────────────────── */
+
+        /**
+         * Loads a named UI-state payload from the server-side StateStore.
+         * A no-op (resolves to null) unless persistenceDriver is 'database'.
+         *
+         * @param {string} name - State name (e.g. 'persisted_filters').
+         * @returns {Promise<*>} Resolves with the stored value, or null.
+         */
+        _loadState(name) {
+            if (this._persistenceDriver !== 'database') {
+                return Promise.resolve(null);
+            }
+            return this.$wire.call('loadTableState', name).then((res) => (
+                res && res.value !== undefined ? res.value : null
+            ));
+        },
+
+        /**
+         * Saves a named UI-state payload to the server-side StateStore.
+         * A no-op unless persistenceDriver is 'database'.
+         *
+         * @param {string} name  - State name (e.g. 'persisted_filters').
+         * @param {*}      value - JSON-serialisable value to store.
+         * @returns {void}
+         */
+        _saveState(name, value) {
+            if (this._persistenceDriver !== 'database') {
+                return;
+            }
+            this.$wire.call('saveTableState', name, value);
+        },
+
+        /**
+         * Deletes a named UI-state payload from the server-side StateStore.
+         * A no-op unless persistenceDriver is 'database'.
+         *
+         * @param {string} name - State name (e.g. 'persisted_filters').
+         * @returns {void}
+         */
+        _forgetState(name) {
+            if (this._persistenceDriver !== 'database') {
+                return;
+            }
+            this.$wire.call('forgetTableState', name);
         },
 
         /* ── Filter persistence ──────────────────────────────────────── */
 
         /**
-         * Toggles filter persistence on/off and saves the preference to
-         * localStorage. When enabling, immediately saves the current filters.
+         * Toggles filter persistence on/off and saves the preference via
+         * the active driver. When enabling, immediately saves the current
+         * filters.
          *
          * @returns {void}
          */
         togglePersist() {
             this.persistEnabled = !this.persistEnabled;
+            if (this._persistenceDriver === 'database') {
+                if (this.persistEnabled) {
+                    this._saveState('remember_enabled', true);
+                    this.persistFilters(this.$wire.filters);
+                } else {
+                    this._forgetState('remember_enabled');
+                    this._forgetState('persisted_filters');
+                }
+                return;
+            }
             if (this.persistEnabled) {
                 localStorage.setItem(this._tablePrefix + 'persistEnabled', '1');
                 this.persistFilters(this.$wire.filters);
@@ -486,14 +552,19 @@ export function registerModuleTable(Alpine) {
         },
 
         /**
-         * Saves the current filter state to localStorage if persistence is
-         * currently enabled.
+         * Saves the current filter state via the active driver if
+         * persistence is currently enabled.
          *
          * @param {object} filters - The current Livewire filters object.
          * @returns {void}
          */
         persistFilters(filters) {
-            if (this.persistEnabled) {
+            if (!this.persistEnabled) {
+                return;
+            }
+            if (this._persistenceDriver === 'database') {
+                this._saveState('persisted_filters', filters);
+            } else {
                 localStorage.setItem(
                     this._tablePrefix + 'persistedFilters',
                     JSON.stringify(filters)
@@ -602,10 +673,14 @@ export function registerModuleTable(Alpine) {
                     name:    name,
                     filters: Object.assign({}, this.$wire.filters),
                 });
-                localStorage.setItem(
-                    this._tablePrefix + 'bookmarkedFilters',
-                    JSON.stringify(this.bookmarkedFilters)
-                );
+                if (this._persistenceDriver === 'database') {
+                    this._saveState('bookmarked_filters', this.bookmarkedFilters);
+                } else {
+                    localStorage.setItem(
+                        this._tablePrefix + 'bookmarkedFilters',
+                        JSON.stringify(this.bookmarkedFilters)
+                    );
+                }
             };
 
             if (window.Swal) {
@@ -651,10 +726,14 @@ export function registerModuleTable(Alpine) {
          */
         deleteBookmarkedFilter(idx) {
             this.bookmarkedFilters.splice(idx, 1);
-            localStorage.setItem(
-                this._tablePrefix + 'bookmarkedFilters',
-                JSON.stringify(this.bookmarkedFilters)
-            );
+            if (this._persistenceDriver === 'database') {
+                this._saveState('bookmarked_filters', this.bookmarkedFilters);
+            } else {
+                localStorage.setItem(
+                    this._tablePrefix + 'bookmarkedFilters',
+                    JSON.stringify(this.bookmarkedFilters)
+                );
+            }
         },
 
         /**
@@ -966,21 +1045,43 @@ export function registerModuleTable(Alpine) {
             // ── 4 & 5. Filter persistence ────────────────────────────── //
 
             if (this._persistenceEnabled) {
-                this.persistEnabled = localStorage.getItem(this._tablePrefix + 'persistEnabled') === '1';
+                if (this._persistenceDriver === 'database') {
+                    Promise.all([
+                        this._loadState('remember_enabled'),
+                        this._loadState('persisted_filters'),
+                    ]).then(([enabled, storedFilters]) => {
+                        this.persistEnabled = Boolean(enabled);
 
-                // Restore saved filters only when the URL carries no filter
-                // parameters — URL state always wins over localStorage.
-                if (this.persistEnabled && Object.keys(this.$wire.filters).length === 0) {
-                    const stored = localStorage.getItem(this._tablePrefix + 'persistedFilters');
-                    if (stored) {
-                        try {
-                            const parsed = JSON.parse(stored);
-                            if (parsed && typeof parsed === 'object' && Object.keys(parsed).length > 0) {
-                                this.$wire.set('filters', parsed);
-                                this.$wire.set('page', 1);
+                        // Restore saved filters only when the URL carries no
+                        // filter parameters — URL state always wins.
+                        if (
+                            this.persistEnabled
+                            && Object.keys(this.$wire.filters).length === 0
+                            && storedFilters
+                            && typeof storedFilters === 'object'
+                            && Object.keys(storedFilters).length > 0
+                        ) {
+                            this.$wire.set('filters', storedFilters);
+                            this.$wire.set('page', 1);
+                        }
+                    });
+                } else {
+                    this.persistEnabled = localStorage.getItem(this._tablePrefix + 'persistEnabled') === '1';
+
+                    // Restore saved filters only when the URL carries no filter
+                    // parameters — URL state always wins over localStorage.
+                    if (this.persistEnabled && Object.keys(this.$wire.filters).length === 0) {
+                        const stored = localStorage.getItem(this._tablePrefix + 'persistedFilters');
+                        if (stored) {
+                            try {
+                                const parsed = JSON.parse(stored);
+                                if (parsed && typeof parsed === 'object' && Object.keys(parsed).length > 0) {
+                                    this.$wire.set('filters', parsed);
+                                    this.$wire.set('page', 1);
+                                }
+                            } catch (_e) {
+                                // Corrupt localStorage entry — silently discard.
                             }
-                        } catch (_e) {
-                            // Corrupt localStorage entry — silently discard.
                         }
                     }
                 }
@@ -989,26 +1090,48 @@ export function registerModuleTable(Alpine) {
                 this.$wire.$watch('filters', (val) => { this.persistFilters(val); });
             }
 
+            // ── 4b. Hidden columns (database driver only; localStorage is
+            // already hydrated synchronously at property-definition time) ── //
+
+            if (this._persistenceDriver === 'database') {
+                this._loadState('hidden_columns').then((val) => {
+                    if (Array.isArray(val)) {
+                        this.hiddenCols = val;
+                    }
+                });
+            }
+
             // ── 6. Bookmark migration + loading ─────────────────────── //
 
             if (this._bookmarkFiltersEnabled) {
-                const oldKey = this._tablePrefix + 'savedFilters';
-                const newKey = this._tablePrefix + 'bookmarkedFilters';
+                if (this._persistenceDriver === 'database') {
+                    this._loadState('bookmarked_filters').then((val) => {
+                        this.bookmarkedFilters = Array.isArray(val) ? val : [];
+                        this._rebuildBookmarkLookup();
+                    });
+                } else {
+                    const oldKey = this._tablePrefix + 'savedFilters';
+                    const newKey = this._tablePrefix + 'bookmarkedFilters';
 
-                // One-time migration from the legacy key name.
-                const oldRaw = localStorage.getItem(oldKey);
-                if (oldRaw && !localStorage.getItem(newKey)) {
-                    localStorage.setItem(newKey, oldRaw);
-                    localStorage.removeItem(oldKey);
-                }
-
-                const raw = localStorage.getItem(newKey);
-                if (raw) {
-                    try {
-                        this.bookmarkedFilters = JSON.parse(raw) || [];
-                    } catch (_e) {
-                        this.bookmarkedFilters = [];
+                    // One-time migration from the legacy key name.
+                    const oldRaw = localStorage.getItem(oldKey);
+                    if (oldRaw && !localStorage.getItem(newKey)) {
+                        localStorage.setItem(newKey, oldRaw);
+                        localStorage.removeItem(oldKey);
                     }
+
+                    const raw = localStorage.getItem(newKey);
+                    if (raw) {
+                        try {
+                            this.bookmarkedFilters = JSON.parse(raw) || [];
+                        } catch (_e) {
+                            this.bookmarkedFilters = [];
+                        }
+                    }
+
+                    // Initial population of the lookup map after bookmarks are
+                    // hydrated from localStorage above.
+                    this._rebuildBookmarkLookup();
                 }
 
                 // Re-initialise the Lookup bookmark picker each time the
@@ -1033,10 +1156,6 @@ export function registerModuleTable(Alpine) {
                         this.$nextTick(() => { this.initBookmarkedFiltersPicker(); });
                     }
                 });
-
-                // Initial population of the lookup map after bookmarks are
-                // hydrated from localStorage above.
-                this._rebuildBookmarkLookup();
             }
 
             // ── 7. Filters-cleared event ─────────────────────────────── //

@@ -31,6 +31,33 @@ Run the migrations:
 php artisan migrate
 ```
 
+Initialize the project's foundational setup (required, one-time):
+
+```bash
+php artisan architect:init
+```
+
+This interactive command asks five questions and permanently locks the answers into `config/architect.php`:
+
+| # | Option | Lock class |
+|---|--------|------------|
+| 1 | Persistence backend mode (`localStorage` or `database`) | Hard |
+| 2 | Tenancy mode (`single` or `multi`) | Hard |
+| 3 | State table name | Hard |
+| 4 | State storage DB connection | Soft |
+| 5 | Architect auth guard | Soft |
+
+- **Hard-locked** options cannot be changed on a re-run unless you pass `--break-glass` (which also requires a second explicit confirmation, since it can orphan existing persisted state).
+- **Soft-locked** options can be changed with `--force-reconfigure`. Use `--only=state_connection,auth_guard` to restrict a reconfigure run to specific soft-locked keys, guarding against accidentally drifting others.
+- Choosing `database` persistence mode generates a migration for the state table (skip with `--no-migration` if you want to hand-write it).
+- Inspect the current locked state at any time with:
+
+```bash
+php artisan architect:setup:status
+```
+
+`database` persistence mode is what backs server-side storage of remembered/bookmarked table filters and hidden columns (see Tables below) instead of the browser's `localStorage`.
+
 ## Quick start
 
 ### A table

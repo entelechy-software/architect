@@ -58,6 +58,7 @@
         tablePrefix:             'moduleTable_{{ md5($definitionClass) }}_u{{ (int) (auth()->id() ?? 0) }}_',
         persistenceEnabled:      {{ $definition->filterPersistence ? 'true' : 'false' }},
         bookmarkFiltersEnabled:  {{ $definition->filterBookmarkFilters ? 'true' : 'false' }},
+        persistenceDriver:       '{{ config('architect.state.mode', 'localStorage') }}',
         cascadeChildren:         {{ $cascadeChildrenJson }},
         definitionMd5:           '{{ md5($definitionClass) }}',
         autoRefreshSeconds:      {{ (int) $definition->autoRefreshSeconds }},

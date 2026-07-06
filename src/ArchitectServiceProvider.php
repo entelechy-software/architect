@@ -6,8 +6,11 @@ namespace Entelechy\Architect;
 
 use Composer\InstalledVersions;
 use Entelechy\Architect\Actions\Livewire\ActionEngine;
+use Entelechy\Architect\Console\Commands\ArchitectInitCommand;
+use Entelechy\Architect\Console\Commands\ArchitectSetupStatusCommand;
 use Entelechy\Architect\Content\Livewire\ContentEngine;
 use Entelechy\Architect\Contracts\PermissionResolver;
+use Entelechy\Architect\Contracts\StateStore;
 use Entelechy\Architect\Contracts\TenantResolver;
 use Entelechy\Architect\Forms\Livewire\FormEngine;
 use Entelechy\Architect\Forms\Livewire\WizardEngine;
@@ -21,6 +24,8 @@ use Entelechy\Architect\Notifications\NotificationRuleEngine;
 use Entelechy\Architect\Notifications\TriggerRegistry;
 use Entelechy\Architect\Panels\Livewire\PanelEngine;
 use Entelechy\Architect\Permissions\AllowAllPermissionResolver;
+use Entelechy\Architect\Persistence\DatabaseStateStore;
+use Entelechy\Architect\Persistence\LocalStateStore;
 use Entelechy\Architect\Stats\Livewire\DashboardEngine;
 use Entelechy\Architect\Supersearch\Livewire\SupersearchEngine;
 use Entelechy\Architect\Table\Http\LookupController;
@@ -59,6 +64,16 @@ class ArchitectServiceProvider extends ServiceProvider
             fn () => $this->app->make(
                 config('architect.tenant.resolver', NullTenantResolver::class)
             )
+        );
+
+        // Bind the state store — selects backend strictly from the locked
+        // `architect.state.mode` setup key (localStorage is a client-only,
+        // fully inert no-op on the server; database persists via Eloquent).
+        $this->app->singleton(
+            StateStore::class,
+            fn () => config('architect.state.mode') === 'database'
+                ? $this->app->make(DatabaseStateStore::class)
+                : $this->app->make(LocalStateStore::class)
         );
 
         // Notification subsystem singletons.
@@ -113,6 +128,13 @@ class ArchitectServiceProvider extends ServiceProvider
 
         // Package routes (lookup endpoint, optional playground)
         $this->registerRoutes();
+
+        if ($this->app->runningInConsole()) {
+            $this->commands([
+                ArchitectInitCommand::class,
+                ArchitectSetupStatusCommand::class,
+            ]);
+        }
     }
 
     private function assetVersion(): string

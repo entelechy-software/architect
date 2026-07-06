@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Entelechy\Architect\Table\Livewire;
 
 use Entelechy\Architect\Breadcrumbs\AutomaticBreadcrumbsResolver;
+use Entelechy\Architect\Contracts\StateStore;
+use Entelechy\Architect\Contracts\TenantResolver;
 use Entelechy\Architect\Supersearch\Contracts\HasSupersearchHook;
 use Entelechy\Architect\Table\Actions\BulkStatusAction;
 use Entelechy\Architect\Table\ArchitectTableDefinition;
@@ -1537,6 +1539,93 @@ class Engine extends Component
         $this->cachedUserResolved = true;
 
         return $this->cachedUser;
+    }
+
+    /**
+     * Loads a previously persisted UI-state payload (remembered filters,
+     * bookmarked filters, hidden columns) for the current user/tenant.
+     *
+     * A no-op — returning null — when `architect.state.mode` is not
+     * `database` (localStorage mode is fully client-owned) or when there
+     * is no authenticated user.
+     *
+     * @return array<string, mixed>|null
+     */
+    public function loadTableState(string $name): ?array
+    {
+        if (config('architect.state.mode') !== 'database') {
+            return null;
+        }
+
+        $user = $this->currentUser();
+        if (! $user) {
+            return null;
+        }
+
+        return app(StateStore::class)->get(
+            (int) $user->getAuthIdentifier(),
+            app(TenantResolver::class)->currentIdentifier(),
+            'table',
+            $this->stateKey($name)
+        );
+    }
+
+    /**
+     * Persists a UI-state payload for the current user/tenant. A no-op
+     * when `architect.state.mode` is not `database` or there is no
+     * authenticated user.
+     */
+    public function saveTableState(string $name, mixed $value): void
+    {
+        if (config('architect.state.mode') !== 'database') {
+            return;
+        }
+
+        $user = $this->currentUser();
+        if (! $user) {
+            return;
+        }
+
+        app(StateStore::class)->put(
+            (int) $user->getAuthIdentifier(),
+            app(TenantResolver::class)->currentIdentifier(),
+            'table',
+            $this->stateKey($name),
+            ['value' => $value]
+        );
+    }
+
+    /**
+     * Deletes a persisted UI-state payload for the current user/tenant.
+     * A no-op when `architect.state.mode` is not `database` or there is
+     * no authenticated user.
+     */
+    public function forgetTableState(string $name): void
+    {
+        if (config('architect.state.mode') !== 'database') {
+            return;
+        }
+
+        $user = $this->currentUser();
+        if (! $user) {
+            return;
+        }
+
+        app(StateStore::class)->forget(
+            (int) $user->getAuthIdentifier(),
+            app(TenantResolver::class)->currentIdentifier(),
+            'table',
+            $this->stateKey($name)
+        );
+    }
+
+    /**
+     * Namespaces a UI-state name to this table definition so multiple
+     * tables sharing the same state table/scope never collide.
+     */
+    private function stateKey(string $name): string
+    {
+        return md5($this->definitionClass).':'.$name;
     }
 
     /**
