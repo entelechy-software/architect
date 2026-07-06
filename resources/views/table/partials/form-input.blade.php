@@ -325,6 +325,17 @@
 
 @elseif ($type === 'upload' || $type === 'awsUpload')
     {{-- File upload --}}
+    @php
+        $_currentUpload = is_string($value) && $value !== '' ? $value : null;
+    @endphp
+    @if ($_currentUpload)
+        <div class="mb-2 flex items-center gap-3">
+            @if (str_starts_with(\Illuminate\Support\Facades\Storage::disk($column->getDisk())->mimeType($_currentUpload) ?? '', 'image/'))
+                <img src="{{ \Illuminate\Support\Facades\Storage::disk($column->getDisk())->url($_currentUpload) }}" alt="" class="h-12 w-12 rounded object-cover border border-gray-200 dark:border-gray-700">
+            @endif
+            <a href="{{ \Illuminate\Support\Facades\Storage::disk($column->getDisk())->url($_currentUpload) }}" target="_blank" class="text-xs text-blue-600 hover:underline dark:text-blue-400">View current file</a>
+        </div>
+    @endif
     <x-architect::input-wrapper :valid="! $errors->has('form.' . $editKey)">
         <input
             type="file"
