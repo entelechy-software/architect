@@ -21,6 +21,7 @@ use Illuminate\Support\Facades\Facade;
  * @method static \Entelechy\Architect\Stats\StatBuilder stats()
  * @method static \Entelechy\Architect\Toolbar\ToolbarBuilder navToolbar()
  * @method static \Entelechy\Architect\Supersearch\SupersearchBuilder supersearch()
+ * @method static \Entelechy\Architect\Persistence\Models\ArchitectUploads trackUpload(string $path, string $disk = 'public', ?string $contract = null)
  *
  * @see \Entelechy\Architect\Architect
  */

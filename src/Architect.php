@@ -11,6 +11,7 @@ use Entelechy\Architect\Forms\WizardBuilder;
 use Entelechy\Architect\Navigator\NavigatorBuilder;
 use Entelechy\Architect\Notifications\NotificationBuilder;
 use Entelechy\Architect\Panels\DashboardBuilder;
+use Entelechy\Architect\Persistence\Models\ArchitectUploads;
 use Entelechy\Architect\Stats\StatBuilder;
 use Entelechy\Architect\Supersearch\SupersearchBuilder;
 use Entelechy\Architect\Table\TableBuilder;
@@ -260,5 +261,25 @@ final class Architect
     public static function announce(): NotificationBuilder
     {
         return (new NotificationBuilder)->as('announcement');
+    }
+
+    /**
+     * Register a standalone/orphan uploaded file with the File Retention
+     * ledger (architect_uploads) — for files not attached to any Eloquent
+     * model column. Falls back to config('architect.file_retention.default_contract')
+     * when no contract is given.
+     *
+     * Usage:
+     *   Architect::trackUpload($path, disk: 'uploads', contract: 'sensitive-files');
+     */
+    public static function trackUpload(string $path, string $disk = 'public', ?string $contract = null): ArchitectUploads
+    {
+        return ArchitectUploads::query()->create([
+            'path' => $path,
+            'disk' => $disk,
+            'contract_key' => $contract ?? (string) config('architect.file_retention.default_contract'),
+            'stage' => ArchitectUploads::STAGE_ACTIVE,
+            'last_accessed_at' => now(),
+        ]);
     }
 }

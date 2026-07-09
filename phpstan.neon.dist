@@ -15,6 +15,12 @@ parameters:
             message: '#Trait Entelechy\\Architect\\Table\\Concerns\\EnforcesRecordScope is used zero times and is not analysed#'
             path: src/Table/Concerns/EnforcesRecordScope.php
         -
+            # Public convenience trait for host-app Eloquent models (see
+            # STORAGE_CONTRACTS_PLAN.md) — never used inside the package
+            # itself, so PHPStan can't analyse it in this scope.
+            message: '#Trait Entelechy\\Architect\\Concerns\\HasStorageContract is used zero times and is not analysed#'
+            path: src/Concerns/HasStorageContract.php
+        -
             # Larastan's view-string literal check requires the analysed app
             # to have the package's views actually registered via a booted
             # ServiceProvider (loadViewsFrom('architect')). When analysing
@@ -34,3 +40,13 @@ parameters:
             # user input, so this can't express as a literal-string.
             message: '#Parameter \#1 \$value of static method Illuminate\\Database\\Connection::raw\(\) expects float\|int\|literal-string, non-falsy-string given#'
             path: src/Table/Livewire/Engine.php
+        -
+            # ArchitectTableDefinition::$dataModelClass is PHPDoc-typed
+            # class-string<ArchitectDataModel>, but that's never enforced by
+            # the PHP runtime — a host app's TableBuilder::model($class) call
+            # can pass any string. This is a genuine runtime safety check on
+            # a class discovered dynamically (architect:storage:discover
+            # scans arbitrary host-app definition classes), not a redundant
+            # one; Larastan just trusts the unenforced PHPDoc generic.
+            message: '#Call to function is_a\(\) with arguments class-string\<Entelechy\\Architect\\Table\\Contracts\\ArchitectDataModel\>, ''Entelechy\\\\Architect\\\\Table\\\\Contracts\\\\ArchitectDataModel'' and true will always evaluate to true#'
+            path: src/Console/Commands/ArchitectStorageDiscoverCommand.php

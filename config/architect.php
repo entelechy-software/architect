@@ -114,4 +114,64 @@ return [
     'tenant' => [
         'resolver' => NullTenantResolver::class,
     ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Storage Contracts
+    |--------------------------------------------------------------------------
+    | Named retention contracts for the DB-record lifecycle: Archived (existing
+    | SoftDeletes, unchanged) -> Retired -> Cold Storage -> Purged. Disabled by
+    | default — Cold Storage and Purge are destructive/irreversible, so this
+    | must be an explicit, deliberate opt-in. Configure via
+    | `php artisan architect:storage:init`; do not hand-edit `contracts` below.
+    |
+    | Each contract entry: ['archived' => '2 years', 'retired' => '1 year',
+    | 'cold_storage' => '1 year']. A 'cold_storage' duration of null/absent
+    | means "never auto-purge" for that contract. Exactly one contract must be
+    | named by 'default_contract'.
+    */
+    'storage_contracts' => [
+        'enabled' => false,
+        'cold_disk' => null,
+        'default_contract' => null,
+        'contracts' => [],
+        'ledger' => [
+            'connection' => null, // null = config('database.default')
+            'table' => 'architect_storage_ledger',
+        ],
+        'reference_doc' => [
+            'enabled' => false, // generates docs/storage-contracts.html when true
+        ],
+        'discovery' => [
+            // Required, no implicit default: FQCNs or PSR-4 directories that
+            // `architect:storage:discover` scans for *Definition classes
+            // (a static definition(): ArchitectTableDefinition method), used
+            // to auto-infer FileUpload columns per model. Must be set
+            // explicitly by the host app.
+            'paths' => [],
+        ],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | File Retention
+    |--------------------------------------------------------------------------
+    | Named retention contracts for uploaded/attached files, tracked by
+    | last-accessed time rather than record age: Inactive -> Soft-deleted ->
+    | Permanently removed (no Cold Storage stage for files). Disabled by
+    | default. Configure via `php artisan architect:storage:init`.
+    |
+    | Each contract entry: ['inactive' => '1 year', 'purge' => '6 months'].
+    | A 'purge' duration of null/absent means soft-deleted files persist
+    | indefinitely (never auto-purged).
+    */
+    'file_retention' => [
+        'enabled' => false,
+        'default_contract' => null,
+        'contracts' => [],
+        'ledger' => [
+            'connection' => null, // null = config('database.default')
+            'table' => 'architect_uploads',
+        ],
+    ],
 ];

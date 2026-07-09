@@ -8,6 +8,9 @@ use Composer\InstalledVersions;
 use Entelechy\Architect\Actions\Livewire\ActionEngine;
 use Entelechy\Architect\Console\Commands\ArchitectInitCommand;
 use Entelechy\Architect\Console\Commands\ArchitectSetupStatusCommand;
+use Entelechy\Architect\Console\Commands\ArchitectStorageDiscoverCommand;
+use Entelechy\Architect\Console\Commands\ArchitectStorageInitCommand;
+use Entelechy\Architect\Console\Commands\ArchitectStorageSweepCommand;
 use Entelechy\Architect\Content\Livewire\ContentEngine;
 use Entelechy\Architect\Contracts\PermissionResolver;
 use Entelechy\Architect\Contracts\StateStore;
@@ -34,6 +37,7 @@ use Entelechy\Architect\Table\Livewire\FormPanel;
 use Entelechy\Architect\Table\Livewire\ImportWizard;
 use Entelechy\Architect\Tenancy\NullTenantResolver;
 use Entelechy\Architect\Toolbar\Livewire\ToolbarEngine;
+use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
@@ -133,8 +137,36 @@ class ArchitectServiceProvider extends ServiceProvider
             $this->commands([
                 ArchitectInitCommand::class,
                 ArchitectSetupStatusCommand::class,
+                ArchitectStorageInitCommand::class,
+                ArchitectStorageDiscoverCommand::class,
+                ArchitectStorageSweepCommand::class,
             ]);
         }
+
+        $this->registerStorageContractsScheduler();
+    }
+
+    /**
+     * Auto-registers the daily architect:storage:sweep job on Laravel's
+     * scheduler — host apps only need their normal `schedule:run` cron, no
+     * manual Console\Kernel wiring. Runs whenever either Storage Contracts or
+     * File Retention is enabled, since the command itself independently gates
+     * each of its 5 phases on the two `enabled` flags.
+     */
+    private function registerStorageContractsScheduler(): void
+    {
+        if (! (bool) config('architect.storage_contracts.enabled', false)
+            && ! (bool) config('architect.file_retention.enabled', false)) {
+            return;
+        }
+
+        $this->app->booted(function (): void {
+            $schedule = $this->app->make(Schedule::class);
+
+            $schedule->command(ArchitectStorageSweepCommand::class)
+                ->daily()
+                ->withoutOverlapping();
+        });
     }
 
     private function assetVersion(): string
