@@ -97,7 +97,7 @@ final class Column implements HasVisibleWhen
     /** @var string Storage disk used by type('upload') columns. */
     private string $disk = 'public';
 
-    /** @var string Storage directory (within $disk) used by type('upload') columns. */
+    /** @var string Storage directory (within) used by type('upload') columns. */
     private string $directory = 'uploads';
 
     /** @var string|null Model class for direct model binding */

@@ -19,7 +19,13 @@ final class DatabaseStateStore implements StateStore
     {
         $row = $this->query($userId, $tenantIdentifier, $scope, $key)->first();
 
-        return $row?->payload;
+        if (! $row instanceof ArchitectUserState) {
+            return null;
+        }
+
+        $payload = $row->getAttribute('payload');
+
+        return is_array($payload) ? $payload : null;
     }
 
     public function put(int $userId, string $tenantIdentifier, string $scope, string $key, array $payload): void
@@ -40,6 +46,9 @@ final class DatabaseStateStore implements StateStore
         $this->query($userId, $tenantIdentifier, $scope, $key)->delete();
     }
 
+    /**
+     * @return Builder<ArchitectUserState>
+     */
     private function query(int $userId, string $tenantIdentifier, string $scope, string $key): Builder
     {
         return ArchitectUserState::query()

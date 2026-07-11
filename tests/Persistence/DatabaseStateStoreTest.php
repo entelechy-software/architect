@@ -7,6 +7,7 @@ namespace Entelechy\Architect\Tests\Persistence;
 use Entelechy\Architect\Persistence\DatabaseStateStore;
 use Entelechy\Architect\Tests\TestCase;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 class DatabaseStateStoreTest extends TestCase
@@ -39,7 +40,7 @@ class DatabaseStateStoreTest extends TestCase
 
     public function test_put_then_get_round_trips_payload(): void
     {
-        $store = new DatabaseStateStore();
+        $store = new DatabaseStateStore;
 
         $store->put(1, '', 'table', 'abc:persisted_filters', ['value' => ['status' => 'active']]);
 
@@ -51,25 +52,25 @@ class DatabaseStateStoreTest extends TestCase
 
     public function test_get_returns_null_when_nothing_stored(): void
     {
-        $store = new DatabaseStateStore();
+        $store = new DatabaseStateStore;
 
         $this->assertNull($store->get(1, '', 'table', 'missing'));
     }
 
     public function test_put_overwrites_existing_payload_for_same_identity(): void
     {
-        $store = new DatabaseStateStore();
+        $store = new DatabaseStateStore;
 
         $store->put(1, '', 'table', 'abc:hidden_columns', ['value' => ['a']]);
         $store->put(1, '', 'table', 'abc:hidden_columns', ['value' => ['a', 'b']]);
 
         $this->assertSame(['value' => ['a', 'b']], $store->get(1, '', 'table', 'abc:hidden_columns'));
-        $this->assertSame(1, \Illuminate\Support\Facades\DB::table('architect_user_states')->count());
+        $this->assertSame(1, DB::table('architect_user_states')->count());
     }
 
     public function test_forget_removes_payload(): void
     {
-        $store = new DatabaseStateStore();
+        $store = new DatabaseStateStore;
 
         $store->put(1, '', 'table', 'abc:bookmarked_filters', ['value' => []]);
         $store->forget(1, '', 'table', 'abc:bookmarked_filters');
@@ -79,7 +80,7 @@ class DatabaseStateStoreTest extends TestCase
 
     public function test_scoping_isolates_by_user_tenant_scope_and_key(): void
     {
-        $store = new DatabaseStateStore();
+        $store = new DatabaseStateStore;
 
         $store->put(1, 'tenant-a', 'table', 'k', ['value' => 'one']);
         $store->put(2, 'tenant-a', 'table', 'k', ['value' => 'two']);

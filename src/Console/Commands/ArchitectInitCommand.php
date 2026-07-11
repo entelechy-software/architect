@@ -73,7 +73,8 @@ class ArchitectInitCommand extends Command
             // reconfiguration to an explicit allow-list, so a broad
             // --force-reconfigure run cannot silently drift keys the caller
             // did not intend to touch.
-            $onlyOption = (string) ($this->option('only') ?? '');
+            $onlyOptionRaw = $this->option('only');
+            $onlyOption = is_string($onlyOptionRaw) ? $onlyOptionRaw : '';
             if ($softChanges !== [] && $onlyOption !== '') {
                 $allowed = array_filter(array_map('trim', explode(',', $onlyOption)));
                 $disallowed = array_values(array_diff($softChanges, $allowed));
@@ -139,7 +140,7 @@ class ArchitectInitCommand extends Command
         if ($newChosen['persistence_mode'] === 'database' && ! (bool) $this->option('no-migration')) {
             $migrationPath = $this->generateStateMigration(
                 $files,
-                (string) $newChosen['state_table'],
+                $newChosen['state_table'],
                 $newChosen['state_connection'] ?? null
             );
             $this->info('Generated migration: '.$migrationPath);
@@ -150,44 +151,73 @@ class ArchitectInitCommand extends Command
 
     /**
      * @param  array<string, mixed>  $existing
-     * @return array<string, mixed>
+     * @return array{
+     *     persistence_mode: 'localStorage'|'database',
+     *     tenancy_mode: 'single'|'multi',
+     *     state_table: string,
+     *     state_connection: string|null,
+     *     auth_guard: string
+     * }
      */
     private function promptForChoices(array $existing): array
     {
         $setupChosen = (array) (($existing['setup']['chosen'] ?? []) ?: []);
         $state = (array) (($existing['state'] ?? []) ?: []);
 
-        $persistenceMode = (string) $this->choice(
+        $defaultPersistenceMode = $this->stringFromMixed(
+            $setupChosen['persistence_mode'] ?? $state['mode'] ?? 'localStorage',
+            'localStorage'
+        );
+        $defaultTenancyMode = $this->stringFromMixed($setupChosen['tenancy_mode'] ?? 'single', 'single');
+        $defaultStateTable = $this->stringFromMixed(
+            $setupChosen['state_table'] ?? $state['table'] ?? 'architect_user_states',
+            'architect_user_states'
+        );
+
+        $persistenceModeAnswer = $this->choice(
             'Select persistence mode',
             ['localStorage', 'database'],
-            (string) ($setupChosen['persistence_mode'] ?? $state['mode'] ?? 'localStorage')
+            $defaultPersistenceMode
         );
+        $persistenceMode = is_string($persistenceModeAnswer) ? $persistenceModeAnswer : $defaultPersistenceMode;
 
-        $tenancyMode = (string) $this->choice(
+        $tenancyModeAnswer = $this->choice(
             'Select tenancy mode',
             ['single', 'multi'],
-            (string) ($setupChosen['tenancy_mode'] ?? 'single')
+            $defaultTenancyMode
         );
+        $tenancyMode = is_string($tenancyModeAnswer) ? $tenancyModeAnswer : $defaultTenancyMode;
 
-        $stateTable = (string) $this->ask(
+        $stateTableAnswer = $this->ask(
             'State table name (database mode)',
-            (string) ($setupChosen['state_table'] ?? $state['table'] ?? 'architect_user_states')
+            $defaultStateTable
         );
+        $stateTable = is_string($stateTableAnswer) && $stateTableAnswer !== ''
+            ? $stateTableAnswer
+            : $defaultStateTable;
 
         $dbConnections = array_keys((array) config('database.connections', []));
         $dbConnectionChoices = array_merge(['default'], $dbConnections);
-        $currentConnection = (string) ($setupChosen['state_connection'] ?? $state['connection'] ?? 'default');
+        $currentConnection = $this->stringFromMixed(
+            $setupChosen['state_connection'] ?? $state['connection'] ?? 'default',
+            'default'
+        );
         if ($currentConnection === '' || ! in_array($currentConnection, $dbConnectionChoices, true)) {
             $currentConnection = 'default';
         }
-        $chosenConnection = (string) $this->choice(
+        $chosenConnectionAnswer = $this->choice(
             'State storage DB connection',
             $dbConnectionChoices,
             $currentConnection
         );
+        $chosenConnection = is_string($chosenConnectionAnswer) ? $chosenConnectionAnswer : $currentConnection;
 
-        $currentGuard = (string) ($setupChosen['auth_guard'] ?? $existing['auth_guard'] ?? 'web');
-        $guard = (string) $this->ask('Architect auth guard', $currentGuard);
+        $currentGuard = $this->stringFromMixed($setupChosen['auth_guard'] ?? $existing['auth_guard'] ?? 'web', 'web');
+        $guardAnswer = $this->ask('Architect auth guard', $currentGuard);
+        $guard = is_string($guardAnswer) && $guardAnswer !== '' ? $guardAnswer : $currentGuard;
+
+        $persistenceMode = $this->normalizePersistenceMode($persistenceMode);
+        $tenancyMode = $this->normalizeTenancyMode($tenancyMode);
 
         return [
             'persistence_mode' => $persistenceMode,
@@ -196,6 +226,35 @@ class ArchitectInitCommand extends Command
             'state_connection' => $chosenConnection === 'default' ? null : $chosenConnection,
             'auth_guard' => $guard,
         ];
+    }
+
+    private function stringFromMixed(mixed $value, string $fallback = ''): string
+    {
+        if (is_string($value)) {
+            return $value;
+        }
+
+        if (is_int($value) || is_float($value)) {
+            return (string) $value;
+        }
+
+        return $fallback;
+    }
+
+    /**
+     * @return 'localStorage'|'database'
+     */
+    private function normalizePersistenceMode(string $mode): string
+    {
+        return in_array($mode, ['localStorage', 'database'], true) ? $mode : 'localStorage';
+    }
+
+    /**
+     * @return 'single'|'multi'
+     */
+    private function normalizeTenancyMode(string $mode): string
+    {
+        return in_array($mode, ['single', 'multi'], true) ? $mode : 'single';
     }
 
     private function generateStateMigration(Filesystem $files, string $tableName, ?string $connection): string

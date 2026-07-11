@@ -14,6 +14,8 @@ use Illuminate\Database\Eloquent\Model;
  * The table name and connection are resolved from config('architect.state')
  * at call time rather than hardcoded, since both are project-specific
  * decisions locked in during initialization.
+ *
+ * @property array<string, mixed>|null $payload
  */
 class ArchitectUserState extends Model
 {
