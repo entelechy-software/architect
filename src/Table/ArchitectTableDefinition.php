@@ -192,10 +192,6 @@ final class ArchitectTableDefinition
             throw new \InvalidArgumentException("formMode must be 'slide-over', 'wizard', or 'modal', got '{$formMode}'");
         }
 
-        if (! in_array($breadcrumbMode, ['manual', 'automatic'], true)) {
-            throw new \InvalidArgumentException("breadcrumbMode must be 'manual' or 'automatic', got '{$breadcrumbMode}'");
-        }
-
         if (! in_array($scrollMode, ['page', 'container', 'static'], true)) {
             throw new \InvalidArgumentException(
                 "scrollMode must be 'page', 'container', or 'static', got '{$scrollMode}'"

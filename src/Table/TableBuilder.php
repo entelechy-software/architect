@@ -285,10 +285,6 @@ final class TableBuilder
      */
     public function breadcrumbsMode(string $mode): self
     {
-        if (! in_array($mode, ['manual', 'automatic'], true)) {
-            throw new \InvalidArgumentException("breadcrumbs mode must be 'manual' or 'automatic', got '{$mode}'");
-        }
-
         $clone = clone $this;
         $clone->breadcrumbMode = $mode;
 
