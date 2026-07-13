@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Entelechy\Architect\Forms\Contracts;
 
+use Closure;
+
 /**
  * Contract for every standalone Forms field (Entelechy\Architect\Forms\Fields\*).
  *
@@ -26,10 +28,20 @@ interface ArchitectField extends StructureItem
 
     public function getDefault(): mixed;
 
-    /** @return array<int, string> */
+    /** @return array<int, string|\Illuminate\Contracts\Validation\ValidationRule> */
     public function getRules(): array;
 
     public function getType(): string;
+
+    /**
+     * @param  Closure(string): mixed  $get  Resolver that returns the current form value for a given field name.
+     */
+    public function isHidden(Closure $get): bool;
+
+    /**
+     * @param  Closure(string): mixed  $get  Resolver that returns the current form value for a given field name.
+     */
+    public function isDisabled(Closure $get): bool;
 
     /** The Blade view (architect:: namespaced) that renders this field. */
     public function getViewName(): string;
