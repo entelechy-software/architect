@@ -30,6 +30,15 @@ class QuickFormPanel implements Panel
 
     protected string $successMessage = 'Saved successfully.';
 
+    protected ?string $onSavedDispatchEvent = null;
+
+    /** @var array<string, mixed> */
+    protected array $onSavedDispatchPayload = [];
+
+    protected ?Closure $onSaveSuccess = null;
+
+    protected ?Closure $onSaveFailure = null;
+
     final public function __construct() {}
 
     public static function make(): static
@@ -70,6 +79,37 @@ class QuickFormPanel implements Panel
         return $clone;
     }
 
+    /**
+     * Dispatch a browser event (versioned via Forms\Events\EventPayload,
+     * same as FormBuilder/WizardBuilder) after a successful save — the
+     * standard way another Livewire component (e.g. an embedded table on
+     * the same dashboard) refreshes itself in response.
+     *
+     * @param  array<string, mixed>  $payload
+     */
+    public function onSavedDispatch(string $event, array $payload = []): static
+    {
+        $clone = clone $this;
+        $clone->onSavedDispatchEvent = $event;
+        $clone->onSavedDispatchPayload = $payload;
+
+        return $clone;
+    }
+
+    /**
+     * Thin convenience hooks — call Architect::toast()/Architect::alert()
+     * (or anything else) from here. PanelEngine never renders a
+     * notification itself; it only invokes whichever closure applies.
+     */
+    public function notifyOnSave(?Closure $success = null, ?Closure $failure = null): static
+    {
+        $clone = clone $this;
+        $clone->onSaveSuccess = $success;
+        $clone->onSaveFailure = $failure;
+
+        return $clone;
+    }
+
     public function getType(): string
     {
         return 'quick-form';
@@ -94,6 +134,27 @@ class QuickFormPanel implements Panel
     public function getSuccessMessage(): string
     {
         return $this->successMessage;
+    }
+
+    public function getOnSavedDispatchEvent(): ?string
+    {
+        return $this->onSavedDispatchEvent;
+    }
+
+    /** @return array<string, mixed> */
+    public function getOnSavedDispatchPayload(): array
+    {
+        return $this->onSavedDispatchPayload;
+    }
+
+    public function getOnSaveSuccess(): ?Closure
+    {
+        return $this->onSaveSuccess;
+    }
+
+    public function getOnSaveFailure(): ?Closure
+    {
+        return $this->onSaveFailure;
     }
 
     public function build(): ArchitectPanelDefinition

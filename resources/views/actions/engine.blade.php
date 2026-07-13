@@ -27,10 +27,17 @@
             <span class="arch-slide-over-title">{{ $action->getLabel() }}</span>
         </div>
         <div class="arch-slide-over-body">
-            <livewire:architect-form-engine
-                :definition-class="$action->getFormClass()"
-                :key="'action-form-'.$activeActionClass.'-'.($activeRecordId ?? 'new')"
-            />
+            @if ($this->formClassIsWizard($action->getFormClass()))
+                <livewire:architect-wizard-engine
+                    :definition-class="$action->getFormClass()"
+                    :key="'action-wizard-'.$activeActionClass.'-'.($activeRecordId ?? 'new')"
+                />
+            @else
+                <livewire:architect-form-engine
+                    :definition-class="$action->getFormClass()"
+                    :key="'action-form-'.$activeActionClass.'-'.($activeRecordId ?? 'new')"
+                />
+            @endif
         </div>
     </div>
 @endif

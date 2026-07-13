@@ -6,6 +6,7 @@ namespace Entelechy\Architect\Panels\Livewire;
 
 use Entelechy\Architect\Forms\Contracts\ArchitectField;
 use Entelechy\Architect\Forms\Contracts\StructureItem;
+use Entelechy\Architect\Forms\Events\EventPayload;
 use Entelechy\Architect\Panels\ArchitectDashboardDefinition;
 use Entelechy\Architect\Panels\Panels\QuickFormPanel;
 use Illuminate\View\View;
@@ -68,8 +69,30 @@ class PanelEngine extends Component
         $this->validate($rules);
 
         $saveUsing = $panel->getSaveUsing();
-        if ($saveUsing !== null) {
-            $saveUsing($this->formData);
+
+        try {
+            if ($saveUsing !== null) {
+                $saveUsing($this->formData);
+            }
+        } catch (\Throwable $e) {
+            $onSaveFailure = $panel->getOnSaveFailure();
+            if ($onSaveFailure !== null) {
+                $onSaveFailure($e);
+            }
+
+            throw $e;
+        }
+
+        $onSaveSuccess = $panel->getOnSaveSuccess();
+        if ($onSaveSuccess !== null) {
+            $onSaveSuccess($this->formData);
+        }
+
+        if ($panel->getOnSavedDispatchEvent() !== null) {
+            $this->dispatch(
+                $panel->getOnSavedDispatchEvent(),
+                ...EventPayload::make('panel-'.$panelIndex, $panel->getOnSavedDispatchPayload())
+            );
         }
 
         $this->quickFormSuccess[$panelIndex] = true;
@@ -117,8 +140,11 @@ class PanelEngine extends Component
             }
         }
 
+        $get = fn (string $field): mixed => data_get($this->formData, $field);
+
         return view('architect::panels.engine', [
             'definition' => $definition,
+            'get' => $get,
         ]);
     }
 }
