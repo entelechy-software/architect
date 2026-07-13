@@ -217,6 +217,6 @@ final class Rule
 
     public function __toString(): string
     {
-        return is_string($this->compiled) ? $this->compiled : static::class;
+        return is_string($this->compiled) ? $this->compiled : self::class;
     }
 }

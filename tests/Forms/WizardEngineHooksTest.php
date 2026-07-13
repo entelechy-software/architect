@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Entelechy\Architect\Tests\Forms;
 
 use Entelechy\Architect\Forms\ArchitectWizardDefinition;
+use Entelechy\Architect\Forms\Events\FormEvents;
 use Entelechy\Architect\Forms\Fields\TextField;
 use Entelechy\Architect\Forms\Livewire\WizardEngine;
 use Entelechy\Architect\Forms\WizardBuilder;
@@ -29,7 +30,7 @@ class WizardEngineHooksTest extends TestCase
             ->set('formData.name', 'Ada Lovelace')
             ->call('submit')
             ->assertDispatched('architect:wizard:custom:refresh')
-            ->assertDispatched(\Entelechy\Architect\Forms\Events\FormEvents::WIZARD_COMPLETED);
+            ->assertDispatched(FormEvents::WIZARD_COMPLETED);
 
         $this->assertTrue(WizardHooksDefinition::$successCalled);
     }

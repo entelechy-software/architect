@@ -6,6 +6,7 @@ namespace Entelechy\Architect;
 
 use Entelechy\Architect\Actions\ActionBuilder;
 use Entelechy\Architect\Content\ContentBuilder;
+use Entelechy\Architect\Forms\ControlRegistry;
 use Entelechy\Architect\Forms\FormBuilder;
 use Entelechy\Architect\Forms\WizardBuilder;
 use Entelechy\Architect\Navigator\NavigatorBuilder;
@@ -231,9 +232,9 @@ final class Architect
      *   Architect::controls()->get('currency');
      *   Architect::controls()->all();
      */
-    public static function controls(): \Entelechy\Architect\Forms\ControlRegistry
+    public static function controls(): ControlRegistry
     {
-        return app(\Entelechy\Architect\Forms\ControlRegistry::class);
+        return app(ControlRegistry::class);
     }
 
     /**

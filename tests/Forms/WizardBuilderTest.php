@@ -54,7 +54,7 @@ class WizardBuilderTest extends TestCase
     public function test_branch_referencing_missing_field_throws(): void
     {
         $this->expectException(WizardGraphException::class);
-        $this->expectExceptionMessage("no field with that name exists");
+        $this->expectExceptionMessage('no field with that name exists');
 
         WizardBuilder::make('application')
             ->step(id: 'type', label: 'Type', structure: [TextField::make('unrelated_field')])

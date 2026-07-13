@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Entelechy\Architect\Forms\Validation;
 
+use Illuminate\Contracts\Validation\ValidationRule;
+
 /**
  * Out-of-box validation presets (FORMS_FEATURE_PLAN.md Phase 4, "Preset
  * pack families"). A preset is a named bundle of Rule instances applied
@@ -90,7 +92,7 @@ final class Preset
 
     // ─── Compilation ────────────────────────────────────────────────────────
 
-    /** @return array<int, string|\Illuminate\Contracts\Validation\ValidationRule> */
+    /** @return array<int, string|ValidationRule> */
     public function compile(): array
     {
         return array_map(

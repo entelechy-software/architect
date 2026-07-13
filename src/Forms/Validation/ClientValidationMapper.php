@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Entelechy\Architect\Forms\Validation;
 
+use Illuminate\Contracts\Validation\ValidationRule;
+
 /**
  * Maps a subset of high-frequency, deterministic Laravel-style validation
  * rules to native HTML5 form-control attributes (FORMS_FEATURE_PLAN.md
@@ -22,7 +24,7 @@ namespace Entelechy\Architect\Forms\Validation;
 final class ClientValidationMapper
 {
     /**
-     * @param  array<int, string|\Illuminate\Contracts\Validation\ValidationRule>  $rules
+     * @param  array<int, string|ValidationRule>  $rules
      * @return array<string, string|int|float|bool>
      */
     public static function toHtmlAttributes(array $rules): array

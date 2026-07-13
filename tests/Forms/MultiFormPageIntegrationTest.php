@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Entelechy\Architect\Tests\Forms;
 
 use Entelechy\Architect\Forms\ArchitectFormDefinition;
+use Entelechy\Architect\Forms\Events\FormEvents;
 use Entelechy\Architect\Forms\Exceptions\DuplicateFormKeyException;
 use Entelechy\Architect\Forms\Fields\TextField;
 use Entelechy\Architect\Forms\FormBuilder;
@@ -43,9 +44,9 @@ class MultiFormPageIntegrationTest extends TestCase
         $contact->assertSet('formData.subject', 'Question about membership');
 
         // Submitting one does not affect the other's fields.
-        $newsletter->call('submit')->assertDispatched(\Entelechy\Architect\Forms\Events\FormEvents::SAVED);
+        $newsletter->call('submit')->assertDispatched(FormEvents::SAVED);
         $contact->assertSet('formData.subject', 'Question about membership')
-            ->assertNotDispatched(\Entelechy\Architect\Forms\Events\FormEvents::SAVED);
+            ->assertNotDispatched(FormEvents::SAVED);
     }
 
     public function test_two_different_definition_classes_reusing_the_same_key_throws_at_mount(): void

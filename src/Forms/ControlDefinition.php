@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Entelechy\Architect\Forms;
 
 use Entelechy\Architect\Forms\Contracts\ControlMetadata;
+use Entelechy\Architect\Forms\Fields\Field;
 
 /**
  * Immutable ControlMetadata value object. Created via ControlRegistry's
@@ -13,7 +14,7 @@ use Entelechy\Architect\Forms\Contracts\ControlMetadata;
 final class ControlDefinition implements ControlMetadata
 {
     /**
-     * @param  class-string<\Entelechy\Architect\Forms\Fields\Field>  $fieldClass
+     * @param  class-string<Field>  $fieldClass
      */
     public function __construct(
         private readonly string $key,

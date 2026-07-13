@@ -10,6 +10,7 @@ use Entelechy\Architect\Forms\Concerns\SanitizesFormData;
 use Entelechy\Architect\Forms\Events\EventPayload;
 use Entelechy\Architect\Forms\Events\FormEvents;
 use Entelechy\Architect\Forms\FormKeyRegistry;
+use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 use Livewire\Component;
@@ -187,7 +188,7 @@ class FormEngine extends Component
     }
 
     /**
-     * @return array<string, array<int, string|\Illuminate\Contracts\Validation\ValidationRule>>
+     * @return array<string, array<int, string|ValidationRule>>
      */
     private function buildValidationRules(ArchitectFormDefinition $definition): array
     {

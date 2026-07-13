@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Entelechy\Architect\Forms\Contracts;
 
 use Closure;
+use Illuminate\Contracts\Validation\ValidationRule;
 
 /**
  * Contract for every standalone Forms field (Entelechy\Architect\Forms\Fields\*).
@@ -28,7 +29,7 @@ interface ArchitectField extends StructureItem
 
     public function getDefault(): mixed;
 
-    /** @return array<int, string|\Illuminate\Contracts\Validation\ValidationRule> */
+    /** @return array<int, string|ValidationRule> */
     public function getRules(): array;
 
     public function getType(): string;

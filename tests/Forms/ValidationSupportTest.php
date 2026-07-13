@@ -7,6 +7,7 @@ namespace Entelechy\Architect\Tests\Forms;
 use Entelechy\Architect\Forms\Validation\ClientValidationMapper;
 use Entelechy\Architect\Forms\Validation\DefaultProfileRegistry;
 use Entelechy\Architect\Tests\TestCase;
+use Illuminate\Contracts\Validation\ValidationRule;
 
 class ValidationSupportTest extends TestCase
 {
@@ -39,7 +40,7 @@ class ValidationSupportTest extends TestCase
 
     public function test_client_validation_mapper_ignores_non_string_rules(): void
     {
-        $attributes = ClientValidationMapper::toHtmlAttributes(['required', new class implements \Illuminate\Contracts\Validation\ValidationRule
+        $attributes = ClientValidationMapper::toHtmlAttributes(['required', new class implements ValidationRule
         {
             public function validate(string $attribute, mixed $value, \Closure $fail): void {}
         }]);

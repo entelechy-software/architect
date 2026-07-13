@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Entelechy\Architect\Tests\Forms;
 
+use Entelechy\Architect\Facades\Architect;
 use Entelechy\Architect\Forms\ControlRegistry;
 use Entelechy\Architect\Forms\Fields\CurrencyField;
 use Entelechy\Architect\Forms\Fields\TextField;
@@ -66,7 +67,7 @@ class ControlRegistryTest extends TestCase
 
     public function test_architect_facade_controls_accessor(): void
     {
-        $registry = \Entelechy\Architect\Facades\Architect::controls();
+        $registry = Architect::controls();
 
         $this->assertInstanceOf(ControlRegistry::class, $registry);
         $this->assertTrue($registry->has('text'));

@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Entelechy\Architect\Forms\Contracts;
 
+use Entelechy\Architect\Forms\Fields\Field;
+
 /**
  * Describes a control (form field type) registered in the Forms control
  * registry (Entelechy\Architect\Forms\ControlRegistry, Phase 3).
@@ -19,7 +21,7 @@ interface ControlMetadata
     /** Unique registry key, e.g. 'text', 'currency', 'map-location'. */
     public function key(): string;
 
-    /** @return class-string<\Entelechy\Architect\Forms\Fields\Field> */
+    /** @return class-string<Field> */
     public function fieldClass(): string;
 
     /** Human-readable category used for docs grouping, e.g. 'Numeric', 'Visual & Spatial'. */

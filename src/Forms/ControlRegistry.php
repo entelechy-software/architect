@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Entelechy\Architect\Forms;
 
 use Entelechy\Architect\Forms\Contracts\ControlMetadata;
-use Entelechy\Architect\Forms\ControlDefinition;
 
 /**
  * Central catalog of every Forms control (field type), keyed by a short
@@ -27,6 +26,7 @@ final class ControlRegistry
 
     /**
      * @template TField of \Entelechy\Architect\Forms\Fields\Field
+     *
      * @param  class-string<TField>  $fieldClass
      */
     public function register(string $key, string $fieldClass, string $category, string $valueType, string $description): static

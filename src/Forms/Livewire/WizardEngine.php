@@ -7,10 +7,12 @@ namespace Entelechy\Architect\Forms\Livewire;
 use Entelechy\Architect\Forms\ArchitectWizardDefinition;
 use Entelechy\Architect\Forms\Concerns\FlattensStructure;
 use Entelechy\Architect\Forms\Concerns\SanitizesFormData;
+use Entelechy\Architect\Forms\Contracts\StructureItem;
 use Entelechy\Architect\Forms\Contracts\WizardDraftStore;
 use Entelechy\Architect\Forms\Events\EventPayload;
 use Entelechy\Architect\Forms\Events\FormEvents;
 use Entelechy\Architect\Forms\FormKeyRegistry;
+use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\View\View;
 use Livewire\Attributes\Url;
 use Livewire\Component;
@@ -241,8 +243,8 @@ class WizardEngine extends Component
     }
 
     /**
-     * @param  array{id: string, label: string, structure: array<int, \Entelechy\Architect\Forms\Contracts\StructureItem>}  $step
-     * @return array<string, array<int, string|\Illuminate\Contracts\Validation\ValidationRule>>
+     * @param  array{id: string, label: string, structure: array<int, StructureItem>}  $step
+     * @return array<string, array<int, string|ValidationRule>>
      */
     private function rulesForStep(array $step): array
     {

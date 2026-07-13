@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Entelechy\Architect\Tests\Forms;
 
 use Entelechy\Architect\Forms\ArchitectFormDefinition;
+use Entelechy\Architect\Forms\Events\FormEvents;
 use Entelechy\Architect\Forms\Fields\TextField;
 use Entelechy\Architect\Forms\FormBuilder;
 use Entelechy\Architect\Forms\Livewire\FormEngine;
@@ -30,7 +31,7 @@ class FormEngineHooksTest extends TestCase
             ->set('formData.title', 'Hello world')
             ->call('submit')
             ->assertDispatched('architect:custom:refresh')
-            ->assertDispatched(\Entelechy\Architect\Forms\Events\FormEvents::SAVED);
+            ->assertDispatched(FormEvents::SAVED);
 
         $this->assertTrue(HooksSuccessFormDefinition::$successCalled);
         $this->assertFalse(HooksSuccessFormDefinition::$failureCalled);
