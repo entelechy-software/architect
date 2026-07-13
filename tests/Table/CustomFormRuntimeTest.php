@@ -6,6 +6,7 @@ namespace Entelechy\Architect\Tests\Table;
 
 use Entelechy\Architect\Forms\ArchitectFormDefinition;
 use Entelechy\Architect\Forms\ArchitectWizardDefinition;
+use Entelechy\Architect\Forms\WizardBuilder;
 use Entelechy\Architect\Table\ArchitectTableDefinition;
 use Entelechy\Architect\Table\Contracts\ArchitectDataModel;
 use Entelechy\Architect\Table\Livewire\Engine;
@@ -175,14 +176,8 @@ final class RuntimeWizardDefinition
 {
     public static function definition(): ArchitectWizardDefinition
     {
-        return new ArchitectWizardDefinition(
-            key: 'runtime-wizard',
-            steps: [
-                ['label' => 'Step 1', 'structure' => []],
-            ],
-            saveUsing: null,
-            cancelRoute: null,
-            completedRoute: null,
-        );
+        return WizardBuilder::make('runtime-wizard')
+            ->step(id: 'step-1', label: 'Step 1', structure: [])
+            ->build();
     }
 }

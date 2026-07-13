@@ -46,9 +46,6 @@ class SelectField extends Field
         return 'architect::forms.fields.select';
     }
 
-    /**
-     * @return array<int, string>
-     */
     public function getRules(): array
     {
         $rules = parent::getRules();

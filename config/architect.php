@@ -94,6 +94,25 @@ return [
         'items_table' => 'architect_import_batch_items',
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Forms
+    |--------------------------------------------------------------------------
+    | 'discovery.paths' is scanned by `php artisan architect:forms:audit-keys`
+    | for classes exposing a static definition(): ArchitectFormDefinition|
+    | ArchitectWizardDefinition method, to detect duplicate form/wizard keys
+    | project-wide. Defaults to app_path() when left empty.
+    |
+    | 'draft_ttl_days' controls how long CacheWizardDraftStore (the default
+    | WizardDraftStore binding) retains an in-progress wizard's draft state.
+    */
+    'forms' => [
+        'discovery' => [
+            'paths' => [],
+        ],
+        'draft_ttl_days' => 7,
+    ],
+
     'state' => [
         // Runtime persistence mode selected by architect:init.
         'mode' => 'localStorage',

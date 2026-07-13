@@ -6,6 +6,10 @@ namespace Entelechy\Architect\Forms\Fields;
 
 use Closure;
 use Entelechy\Architect\Forms\Contracts\ArchitectField;
+use Entelechy\Architect\Forms\Validation\ClientValidationMapper;
+use Entelechy\Architect\Forms\Validation\Preset;
+use Entelechy\Architect\Forms\Validation\Rule;
+use Illuminate\Contracts\Validation\ValidationRule as LaravelValidationRule;
 
 /**
  * Abstract base for every standalone Forms field.
@@ -33,6 +37,13 @@ abstract class Field implements ArchitectField
     protected bool|Closure $hidden = false;
 
     protected bool|Closure $disabled = false;
+
+    protected ?string $permission = null;
+
+    protected ?Preset $preset = null;
+
+    /** @var array<int, Rule|string> */
+    protected array $dslRules = [];
 
     final public function __construct(protected readonly string $name) {}
 
@@ -119,6 +130,59 @@ abstract class Field implements ArchitectField
         return $clone;
     }
 
+    /**
+     * Gate this field behind a permission node — hidden from and, more
+     * importantly, non-writable by any user lacking it. Server-enforced:
+     * see Entelechy\Architect\Forms\Concerns\SanitizesFormData, which
+     * reverts any submitted value for a field whose permission() the
+     * current user lacks, regardless of what the client submitted.
+     */
+    public function permission(string $node): static
+    {
+        $clone = clone $this;
+        $clone->permission = $node;
+
+        return $clone;
+    }
+
+    public function getPermission(): ?string
+    {
+        return $this->permission;
+    }
+
+    /**
+     * Zero-config validation entrypoint (FORMS_FEATURE_PLAN.md Phase 4).
+     * With no argument, this is a no-op marker — every shipped field type
+     * already computes its own sensible default rules unconditionally via
+     * getRules(), so "applying the shipped defaults" requires nothing
+     * further. Pass a Preset to layer additional, named rule bundles on
+     * top of those defaults (e.g. ->validate(Preset::workEmail())).
+     */
+    public function validate(?Preset $preset = null): static
+    {
+        $clone = clone $this;
+        $clone->preset = $preset;
+
+        return $clone;
+    }
+
+    /**
+     * Additively layers Architect DSL Rule objects (or raw rule strings)
+     * on top of whatever ->rules()/defaults/preset already produced.
+     * Unlike ->rules(), which replaces the field's rule set outright,
+     * ->ruleset() never clobbers anything already configured — this is
+     * what lets ->validate() and ->ruleset() compose in the same chain.
+     *
+     * @param  array<int, Rule|string>  $rules
+     */
+    public function ruleset(array $rules): static
+    {
+        $clone = clone $this;
+        $clone->dslRules = [...$this->dslRules, ...$rules];
+
+        return $clone;
+    }
+
     public function getName(): string
     {
         return $this->name;
@@ -149,7 +213,7 @@ abstract class Field implements ArchitectField
         return $this->default;
     }
 
-    /** @return array<int, string> */
+    /** @return array<int, string|LaravelValidationRule> */
     public function getRules(): array
     {
         $rules = $this->rules;
@@ -160,7 +224,36 @@ abstract class Field implements ArchitectField
             array_unshift($rules, 'nullable');
         }
 
+        if ($this->preset !== null) {
+            $rules = [...$rules, ...$this->preset->compile()];
+        }
+
+        if ($this->dslRules !== []) {
+            $rules = [
+                ...$rules,
+                ...array_map(
+                    static fn (Rule|string $rule): string|LaravelValidationRule => $rule instanceof Rule ? $rule->compile() : $rule,
+                    $this->dslRules
+                ),
+            ];
+        }
+
         return $rules;
+    }
+
+    /**
+     * HTML5 attributes (required, min, max, pattern, type=email/url, ...)
+     * derived from this field's current rule set — the "progressive
+     * client-side subset" from FORMS_FEATURE_PLAN.md Phase 4. Purely
+     * additive browser-side feedback; server-side validation via
+     * getRules() remains authoritative and unchanged regardless of
+     * whether a view renders these attributes.
+     *
+     * @return array<string, string|int|float|bool>
+     */
+    public function getClientValidationAttributes(): array
+    {
+        return ClientValidationMapper::toHtmlAttributes($this->getRules());
     }
 
     public function getType(): string
