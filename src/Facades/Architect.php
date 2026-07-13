@@ -22,6 +22,9 @@ use Illuminate\Support\Facades\Facade;
  * @method static \Entelechy\Architect\Toolbar\ToolbarBuilder navToolbar()
  * @method static \Entelechy\Architect\Supersearch\SupersearchBuilder supersearch()
  * @method static \Entelechy\Architect\Persistence\Models\ArchitectUploads trackUpload(string $path, string $disk = 'public', ?string $contract = null)
+ * @method static \Entelechy\Architect\Forms\FormBuilder form(string $key = 'default')
+ * @method static \Entelechy\Architect\Forms\WizardBuilder wizard(string $key = 'wizard')
+ * @method static \Entelechy\Architect\Forms\ControlRegistry controls()
  *
  * @see \Entelechy\Architect\Architect
  */

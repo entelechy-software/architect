@@ -50,6 +50,21 @@ final class Architect
     private function __construct() {}
 
     /**
+     * Resolves the singleton instance bound in the container for the
+     * Architect facade (see ArchitectServiceProvider::register()).
+     * Architect holds no instance state — every real method is `public
+     * static` — this exists purely so Illuminate\Support\Facades\Facade
+     * can resolve *some* instance to dispatch calls onto, since the
+     * container cannot call a private constructor via reflection.
+     *
+     * @internal
+     */
+    public static function instance(): self
+    {
+        return new self;
+    }
+
+    /**
      * Generic factory — dispatches to the correct builder based on $type.
      *
      * @param  string  $type  'table' | 'navigator' | 'stat'
@@ -204,6 +219,21 @@ final class Architect
     public static function wizard(string $key = 'wizard'): WizardBuilder
     {
         return WizardBuilder::make($key);
+    }
+
+    /**
+     * The Forms control registry — the catalog of every field type
+     * (control) available to FormBuilder/WizardBuilder, seeded at boot
+     * with every shipped Wave A-D control (see
+     * ArchitectServiceProvider::registerControlLibrary()).
+     *
+     * Usage:
+     *   Architect::controls()->get('currency');
+     *   Architect::controls()->all();
+     */
+    public static function controls(): \Entelechy\Architect\Forms\ControlRegistry
+    {
+        return app(\Entelechy\Architect\Forms\ControlRegistry::class);
     }
 
     /**
