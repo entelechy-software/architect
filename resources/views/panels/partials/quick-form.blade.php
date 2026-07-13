@@ -3,6 +3,7 @@
  * @var \Entelechy\Architect\Panels\Panels\QuickFormPanel $panel
  * @var \Entelechy\Architect\Panels\ArchitectPanelDefinition $def
  * @var int $panelIndex
+ * @var \Closure(string): mixed $get
  * @var \Entelechy\Architect\Panels\Livewire\PanelEngine $this
  */
 @endphp
@@ -18,7 +19,7 @@
 
     <form wire:submit.prevent="submitQuickForm({{ $panelIndex }})">
         @foreach ($panel->getStructure() as $item)
-            @include('architect::forms.partials.structure-item', ['item' => $item])
+            @include('architect::forms.partials.structure-item', ['item' => $item, 'get' => $get])
         @endforeach
 
         <button type="submit"

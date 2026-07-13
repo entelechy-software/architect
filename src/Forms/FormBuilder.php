@@ -39,6 +39,17 @@ final class FormBuilder
 
     private ?int $autosaveInterval = null;
 
+    private ?string $onSavedDispatchEvent = null;
+
+    /** @var array<string, mixed> */
+    private array $onSavedDispatchPayload = [];
+
+    private ?Closure $onSaveSuccess = null;
+
+    private ?Closure $onSaveFailure = null;
+
+    private ?string $supersearchLabel = null;
+
     public static function make(string $key = 'default'): static
     {
         $instance = new self;
@@ -110,6 +121,57 @@ final class FormBuilder
         return $this;
     }
 
+    /**
+     * Dispatch an additional custom browser event after a successful save,
+     * alongside the standard architect:form:saved event (FORMS_FEATURE_PLAN.md
+     * Phase 5). Useful for host-app UI that needs to refresh independently
+     * of the generic saved event, e.g. a sibling Livewire component listing
+     * the records this form manages.
+     *
+     * @param  array<string, mixed>  $payload  Merged into the versioned EventPayload alongside form_key/version/timestamp.
+     */
+    public function onSavedDispatch(string $event, array $payload = []): static
+    {
+        $this->onSavedDispatchEvent = $event;
+        $this->onSavedDispatchPayload = $payload;
+
+        return $this;
+    }
+
+    /**
+     * Register success/failure callbacks invoked around saveUsing(),
+     * intended to call Architect::toast()/Architect::alert() from the
+     * existing Notifications subsystem — Forms never implements its own
+     * notification rendering (FORMS_FEATURE_PLAN.md Architectural
+     * Principle #10). $failure receives the Throwable saveUsing() threw;
+     * the exception is always rethrown afterward regardless of whether a
+     * failure callback is registered, so Livewire's own error handling is
+     * never suppressed.
+     */
+    public function notifyOnSave(?Closure $success = null, ?Closure $failure = null): static
+    {
+        $this->onSaveSuccess = $success;
+        $this->onSaveFailure = $failure;
+
+        return $this;
+    }
+
+    /**
+     * Declares this form as a Supersearch entry point with the given
+     * label. This records intent on the definition only — actually
+     * surfacing it in the Supersearch overlay requires the host app to
+     * wire Entelechy\Architect\Forms\FormSearchSet into their own
+     * HasSupersearchHook implementation together with a real URL, since
+     * a bare label alone has nothing to link to. See FormSearchSet's
+     * docblock for the full wiring example.
+     */
+    public function exposeToSupersearch(string $label): static
+    {
+        $this->supersearchLabel = $label;
+
+        return $this;
+    }
+
     public function build(): ArchitectFormDefinition
     {
         return new ArchitectFormDefinition(
@@ -121,6 +183,11 @@ final class FormBuilder
             afterSave: $this->afterSave,
             redirectAfterSave: $this->redirectAfterSave,
             autosaveInterval: $this->autosaveInterval,
+            onSavedDispatchEvent: $this->onSavedDispatchEvent,
+            onSavedDispatchPayload: $this->onSavedDispatchPayload,
+            onSaveSuccess: $this->onSaveSuccess,
+            onSaveFailure: $this->onSaveFailure,
+            supersearchLabel: $this->supersearchLabel,
         );
     }
 }

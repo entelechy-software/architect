@@ -17,6 +17,7 @@ final class ArchitectFormDefinition
 {
     /**
      * @param  array<int, StructureItem>  $structure
+     * @param  array<string, mixed>  $onSavedDispatchPayload
      */
     public function __construct(
         public readonly string $key,
@@ -27,5 +28,10 @@ final class ArchitectFormDefinition
         public readonly ?Closure $afterSave = null,
         public readonly ?string $redirectAfterSave = null,
         public readonly ?int $autosaveInterval = null,
+        public readonly ?string $onSavedDispatchEvent = null,
+        public readonly array $onSavedDispatchPayload = [],
+        public readonly ?Closure $onSaveSuccess = null,
+        public readonly ?Closure $onSaveFailure = null,
+        public readonly ?string $supersearchLabel = null,
     ) {}
 }

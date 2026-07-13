@@ -1,6 +1,7 @@
 @php
 /**
  * @var \Entelechy\Architect\Panels\ArchitectDashboardDefinition $definition
+ * @var \Closure(string): mixed $get
  */
 @endphp
 
@@ -15,7 +16,7 @@
                 $panelIndex = $loop->index;
             @endphp
             <div class="arch-dashboard__slot" data-span="{{ $span }}">
-                @include('architect::panels.partials.' . $def->type, ['panel' => $panel, 'def' => $def, 'panelIndex' => $panelIndex])
+                @include('architect::panels.partials.' . $def->type, ['panel' => $panel, 'def' => $def, 'panelIndex' => $panelIndex, 'get' => $get])
             </div>
         @endforeach
     </div>

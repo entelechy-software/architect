@@ -8,8 +8,10 @@ use Entelechy\Architect\Actions\Actions\CreateAction;
 use Entelechy\Architect\Actions\Actions\EditAction;
 use Entelechy\Architect\Actions\Actions\ViewAction;
 use Entelechy\Architect\Actions\Contracts\ArchitectAction;
+use Entelechy\Architect\Forms\ArchitectWizardDefinition;
 use Entelechy\Architect\Forms\Contracts\ArchitectField;
 use Entelechy\Architect\Forms\Contracts\StructureItem;
+use Entelechy\Architect\Forms\Events\FormEvents;
 use Illuminate\View\View;
 use Livewire\Attributes\On;
 use Livewire\Component;
@@ -128,13 +130,39 @@ class ActionEngine extends Component
      * this on successful save — its own saveUsing() closure owns the actual
      * persistence, so closing the panel is all ActionEngine needs to do.
      */
-    #[On('architect:form:saved')]
+    #[On(FormEvents::SAVED)]
     public function onNestedFormSaved(): void
     {
         if ($this->openPanel === 'form-class') {
             $this->closePanel();
             $this->dispatch('architect:action:completed');
         }
+    }
+
+    /**
+     * Mirrors onNestedFormSaved() for the case where ->formClass() resolves
+     * to an ArchitectWizardDefinition rather than a plain form — the
+     * nested WizardEngine dispatches this on final-step submit.
+     */
+    #[On(FormEvents::WIZARD_COMPLETED)]
+    public function onNestedWizardCompleted(): void
+    {
+        if ($this->openPanel === 'form-class') {
+            $this->closePanel();
+            $this->dispatch('architect:action:completed');
+        }
+    }
+
+    /**
+     * Whether ->formClass()'s definition() is a wizard rather than a
+     * standalone form — determines which engine component the 'form-class'
+     * panel mounts (see resources/views/actions/engine.blade.php).
+     *
+     * @param  class-string  $formClass
+     */
+    public function formClassIsWizard(string $formClass): bool
+    {
+        return $formClass::definition() instanceof ArchitectWizardDefinition;
     }
 
     public function closePanel(): void
