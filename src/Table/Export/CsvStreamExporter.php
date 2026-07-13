@@ -8,6 +8,7 @@ use Carbon\CarbonImmutable;
 use Entelechy\Architect\Table\ArchitectTableDefinition;
 use Entelechy\Architect\Table\Contracts\ArchitectDataModel;
 use Entelechy\Architect\Table\Permissions\FieldVisibilityFilter;
+use Entelechy\Architect\Table\Permissions\RedactionFilter;
 use Entelechy\Architect\Table\QueryContext;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -53,6 +54,7 @@ final class CsvStreamExporter
         }
 
         $visibility = app(FieldVisibilityFilter::class);
+        $redaction = app(RedactionFilter::class);
         $columns = $visibility->visibleColumns($user, $definition);
         $allowedFlip = $visibility->allowedKeysForRow($columns);
         $selectedFlip = $selectedIds !== null && $selectedIds !== []
@@ -62,7 +64,7 @@ final class CsvStreamExporter
         $filename = self::filename($definition);
 
         $response = new StreamedResponse(function () use (
-            $context, $dataModel, $visibility, $columns, $allowedFlip, $selectedFlip
+            $context, $dataModel, $visibility, $redaction, $columns, $allowedFlip, $selectedFlip, $user
         ): void {
             $out = fopen('php://output', 'w');
             if ($out === false) {
@@ -84,7 +86,7 @@ final class CsvStreamExporter
                     continue;
                 }
 
-                $stripped = $visibility->stripRowUsingAllowed($row, $allowedFlip);
+                $stripped = $redaction->redactRow($user, $columns, $visibility->stripRowUsingAllowed($row, $allowedFlip));
 
                 $line = [];
                 foreach ($columns as $column) {

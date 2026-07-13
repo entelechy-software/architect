@@ -9,6 +9,7 @@ use Entelechy\Architect\Forms\Contracts\ArchitectField;
 use Entelechy\Architect\Forms\Validation\ClientValidationMapper;
 use Entelechy\Architect\Forms\Validation\Preset;
 use Entelechy\Architect\Forms\Validation\Rule;
+use Entelechy\Architect\Support\Redaction\Redactable;
 use Illuminate\Contracts\Validation\ValidationRule as LaravelValidationRule;
 
 /**
@@ -21,6 +22,8 @@ use Illuminate\Contracts\Validation\ValidationRule as LaravelValidationRule;
  */
 abstract class Field implements ArchitectField
 {
+    use Redactable;
+
     protected string $label = '';
 
     protected bool $required = false;

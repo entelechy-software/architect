@@ -20,6 +20,7 @@ use Entelechy\Architect\Table\Export\ExportRowIterator;
 use Entelechy\Architect\Table\Export\HtmlExporter;
 use Entelechy\Architect\Table\Permissions\FieldVisibilityFilter;
 use Entelechy\Architect\Table\Permissions\PermissionGate;
+use Entelechy\Architect\Table\Permissions\RedactionFilter;
 use Entelechy\Architect\Table\QueryContext;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Contracts\Auth\Authenticatable;
@@ -184,6 +185,16 @@ class Engine extends Component
 
     /** Bound to the page-level "select all visible" checkbox. */
     public bool $selectAllOnPage = false;
+
+    /**
+     * Cells whose redacted value the current user has explicitly revealed
+     * this session, keyed by "{id}:{columnKey}" => real value. Populated
+     * only via revealColumn() after an authorised, per-cell fetch — never
+     * hydrated from the initial row set. Resets on full page reload.
+     *
+     * @var array<string, mixed>
+     */
+    public array $revealedCells = [];
 
     /** Optional success/error banner from the most recent bulk action. */
     public ?string $bulkMessage = null;
@@ -1124,6 +1135,82 @@ class Engine extends Component
     }
 
     /**
+     * Reveal the real value of a redacted, revealable cell for a single
+     * record. Called by wire:click from the reveal icon rendered next to
+     * a masked cell. Fetches only that one row from the data model —
+     * the real value is never present in the initial page payload.
+     *
+     * Authorisation is two-layered, matching toggleColumn()/handleRowAction():
+     *   1. Column::revealable() permission node (RedactionFilter::canReveal).
+     *   2. Table-level read scope for this specific record (Layer 3).
+     */
+    public function revealColumn(string $columnKey, int $id): void
+    {
+        $def = $this->definition();
+        $column = $def->column($columnKey);
+
+        if ($column === null) {
+            throw new \LogicException("Unknown column '{$columnKey}'");
+        }
+
+        $user = $this->currentUser();
+
+        if (! app(RedactionFilter::class)->canReveal($user, $column)) {
+            abort(403, 'Insufficient permissions to reveal this value');
+        }
+
+        app(PermissionGate::class)->assertCanActOnRecord($user, $def, $this->dataModel(), 'read', $id);
+
+        $row = $this->dataModel()->forList(new QueryContext(
+            search: '',
+            filters: ['id' => $id],
+            sortColumn: null,
+            sortDirection: 'asc',
+            page: 1,
+            perPage: 1,
+            includeArchived: true,
+            scope: $this->scope,
+        ))->items()[0] ?? null;
+
+        if ($row === null) {
+            abort(404, 'Record not found');
+        }
+
+        $row = $this->ensureArray($row);
+
+        $this->revealedCells["{$id}:{$columnKey}"] = $row[$columnKey] ?? '';
+    }
+
+    /** Whether the cell at (row $id, $columnKey) has already been revealed this session. */
+    public function isRevealed(int $id, string $columnKey): bool
+    {
+        return array_key_exists("{$id}:{$columnKey}", $this->revealedCells);
+    }
+
+    /**
+     * Restore any cells the user has already revealed this session,
+     * overriding the freshly-redacted value computed for this render.
+     *
+     * @param  array<string, mixed>  $row
+     * @return array<string, mixed>
+     */
+    private function applyRevealedOverrides(array $row): array
+    {
+        if ($this->revealedCells === [] || ! isset($row['id'])) {
+            return $row;
+        }
+
+        $id = (int) $row['id'];
+        foreach ($row as $key => $value) {
+            if (array_key_exists("{$id}:{$key}", $this->revealedCells)) {
+                $row[$key] = $this->revealedCells["{$id}:{$key}"];
+            }
+        }
+
+        return $row;
+    }
+
+    /**
      * Flip the boolean value of a toggleable column for a single record.
      *
      * Called by wire:click from the toggle switch cell. Reads the current
@@ -1438,8 +1525,11 @@ class Engine extends Component
 
             $paginator = $this->dataModel()->forList($context);
 
+            $redaction = app(RedactionFilter::class);
             $rows = array_map(
-                fn (mixed $row): array => $visibility->stripRowUsingAllowed($this->ensureArray($row), $allowedFlip),
+                fn (mixed $row): array => $this->applyRevealedOverrides(
+                    $redaction->redactRow($user, $columns, $visibility->stripRowUsingAllowed($this->ensureArray($row), $allowedFlip))
+                ),
                 $paginator->items()
             );
 

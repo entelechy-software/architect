@@ -744,6 +744,25 @@
                                                 <i class="{{ $badge['icon'] }}" aria-hidden="true"></i>
                                             @endif
                                         </span>
+                                    @elseif ($column->isRedacted())
+                                        {{-- $value is already masked-or-real by the time it reaches Blade
+                                             (Engine::render() -> RedactionFilter::redactRow()). The reveal
+                                             button only appears when the current user actually holds the
+                                             column's revealable() permission node. --}}
+                                        <span class="inline-flex items-center gap-1.5">
+                                            <span class="font-mono">{{ $value }}</span>
+                                            @if (! $this->isRevealed($rowId, $column->getKey()) && app(\Entelechy\Architect\Table\Permissions\RedactionFilter::class)->canReveal(auth()->user(), $column))
+                                                <button
+                                                    type="button"
+                                                    class="arch-btn arch-btn-link p-0 no-underline"
+                                                    title="{{ __('Reveal') }}"
+                                                    wire:click="revealColumn('{{ $column->getKey() }}', {{ $rowId }})"
+                                                    wire:loading.attr="disabled"
+                                                >
+                                                    <i class="fas fa-eye" aria-hidden="true"></i>
+                                                </button>
+                                            @endif
+                                        </span>
                                     @else
                                         {{ $value }}
                                     @endif

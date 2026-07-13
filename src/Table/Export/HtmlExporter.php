@@ -8,6 +8,7 @@ use Carbon\CarbonImmutable;
 use Entelechy\Architect\Table\ArchitectTableDefinition;
 use Entelechy\Architect\Table\Contracts\ArchitectDataModel;
 use Entelechy\Architect\Table\Permissions\FieldVisibilityFilter;
+use Entelechy\Architect\Table\Permissions\RedactionFilter;
 use Entelechy\Architect\Table\QueryContext;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -42,6 +43,7 @@ final class HtmlExporter
         }
 
         $visibility = app(FieldVisibilityFilter::class);
+        $redaction = app(RedactionFilter::class);
         $columns = $visibility->visibleColumns($user, $definition);
         $allowedFlip = $visibility->allowedKeysForRow($columns);
         $selectedFlip = $selectedIds !== null && $selectedIds !== []
@@ -53,7 +55,7 @@ final class HtmlExporter
         $generatedAt = CarbonImmutable::now('UTC')->format('Y-m-d H:i:s').' UTC';
 
         $response = new StreamedResponse(function () use (
-            $context, $dataModel, $visibility, $columns, $allowedFlip, $selectedFlip, $title, $generatedAt
+            $context, $dataModel, $visibility, $redaction, $columns, $allowedFlip, $selectedFlip, $title, $generatedAt, $user
         ): void {
             $out = fopen('php://output', 'w');
             if ($out === false) {
@@ -82,7 +84,7 @@ final class HtmlExporter
                     continue;
                 }
 
-                $stripped = $visibility->stripRowUsingAllowed($row, $allowedFlip);
+                $stripped = $redaction->redactRow($user, $columns, $visibility->stripRowUsingAllowed($row, $allowedFlip));
 
                 fwrite($out, '<tr>');
                 foreach ($columns as $column) {

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Entelechy\Architect\Table;
 
+use Entelechy\Architect\Support\Redaction\Redactable;
 use Entelechy\Architect\Table\Contracts\ArchitectFilter;
 use Entelechy\Architect\Table\Contracts\HasVisibleWhen;
 
@@ -20,6 +21,8 @@ use Entelechy\Architect\Table\Contracts\HasVisibleWhen;
  */
 final class Column implements HasVisibleWhen
 {
+    use Redactable;
+
     private string $label;
 
     private bool $searchable = false;
