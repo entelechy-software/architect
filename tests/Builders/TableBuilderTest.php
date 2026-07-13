@@ -7,6 +7,7 @@ namespace Entelechy\Architect\Tests\Builders;
 use Entelechy\Architect\Breadcrumbs\AutomaticBreadcrumbsResolver;
 use Entelechy\Architect\Forms\ArchitectFormDefinition;
 use Entelechy\Architect\Forms\ArchitectWizardDefinition;
+use Entelechy\Architect\Forms\WizardBuilder;
 use Entelechy\Architect\Table\Actions\BulkDeleteAction;
 use Entelechy\Architect\Table\Actions\BulkStatusAction;
 use Entelechy\Architect\Table\Actions\RowAction;
@@ -730,15 +731,9 @@ final class StubWizardFormDefinition
 {
     public static function definition(): ArchitectWizardDefinition
     {
-        return new ArchitectWizardDefinition(
-            key: 'stub-wizard-form',
-            steps: [
-                ['label' => 'Step 1', 'structure' => []],
-            ],
-            saveUsing: null,
-            cancelRoute: null,
-            completedRoute: null,
-        );
+        return WizardBuilder::make('stub-wizard-form')
+            ->step(id: 'step-1', label: 'Step 1', structure: [])
+            ->build();
     }
 }
 
