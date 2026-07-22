@@ -25,6 +25,9 @@ final class Column implements HasVisibleWhen
 
     private string $label;
 
+    /** Hover text shown next to the column header label. Native `title` attribute — no JS tooltip library. */
+    private ?string $tooltip = null;
+
     private bool $searchable = false;
 
     private bool $sortable = false;
@@ -247,6 +250,15 @@ final class Column implements HasVisibleWhen
     {
         $clone = clone $this;
         $clone->label = $label;
+
+        return $clone;
+    }
+
+    /** Hover-only help text shown next to the column header. Use hint()-style always-visible text elsewhere; this is for header space that can't spare a second line. */
+    public function tooltip(string $text): self
+    {
+        $clone = clone $this;
+        $clone->tooltip = $text;
 
         return $clone;
     }
@@ -751,6 +763,11 @@ final class Column implements HasVisibleWhen
             'icon' => $icon,
             'position' => $position,
         ];
+    }
+
+    public function getTooltip(): ?string
+    {
+        return $this->tooltip;
     }
 
     public function getVisibleTo(): ?string

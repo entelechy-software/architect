@@ -109,6 +109,27 @@ class TableBuilderTest extends TestCase
         $this->assertSame('left', $profile['position']);
     }
 
+    public function test_column_tooltip_is_null_by_default(): void
+    {
+        $this->assertNull(Column::make('status')->getTooltip());
+    }
+
+    public function test_column_tooltip_sets_and_returns_text(): void
+    {
+        $column = Column::make('status')->tooltip('Shown next to the header on hover');
+
+        $this->assertSame('Shown next to the header on hover', $column->getTooltip());
+    }
+
+    public function test_column_tooltip_is_immutable_clone(): void
+    {
+        $original = Column::make('status');
+        $withTooltip = $original->tooltip('Extra context');
+
+        $this->assertNull($original->getTooltip());
+        $this->assertSame('Extra context', $withTooltip->getTooltip());
+    }
+
     public function test_table_builder_make_returns_builder(): void
     {
         $this->assertInstanceOf(TableBuilder::class, TableBuilder::make());

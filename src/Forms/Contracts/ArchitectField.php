@@ -27,6 +27,8 @@ interface ArchitectField extends StructureItem
 
     public function getHint(): ?string;
 
+    public function getTooltip(): ?string;
+
     public function getDefault(): mixed;
 
     /** @return array<int, string|ValidationRule> */

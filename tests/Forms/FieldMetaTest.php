@@ -52,4 +52,25 @@ class FieldMetaTest extends TestCase
         $this->assertSame('Full Name', $field->getLabel());
         $this->assertTrue($field->isRequired());
     }
+
+    public function test_tooltip_is_null_by_default(): void
+    {
+        $this->assertNull(TextField::make('name')->getTooltip());
+    }
+
+    public function test_tooltip_sets_and_returns_text(): void
+    {
+        $field = TextField::make('name')->tooltip('Shown on hover next to the label');
+
+        $this->assertSame('Shown on hover next to the label', $field->getTooltip());
+    }
+
+    public function test_tooltip_is_immutable_clone(): void
+    {
+        $original = TextField::make('name');
+        $withTooltip = $original->tooltip('Extra context');
+
+        $this->assertNull($original->getTooltip());
+        $this->assertSame('Extra context', $withTooltip->getTooltip());
+    }
 }

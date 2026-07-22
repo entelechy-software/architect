@@ -569,6 +569,12 @@
                             @else
                                 {{ $column->getLabel() }}
                             @endif
+                            @if ($column->getTooltip() !== null)
+                                <i
+                                    class="fas fa-circle-info ml-1 text-xs text-gray-400 dark:text-gray-500 cursor-help"
+                                    title="{{ $column->getTooltip() }}"
+                                ></i>
+                            @endif
                         </th>
                     @endforeach
                     <th class="w-1 text-right"></th>

@@ -32,6 +32,9 @@ abstract class Field implements ArchitectField
 
     protected ?string $hint = null;
 
+    /** Hover-only help text shown next to the field label. Native `title` attribute — no JS tooltip library. */
+    protected ?string $tooltip = null;
+
     protected mixed $default = null;
 
     /** @var array<int, string> */
@@ -83,6 +86,15 @@ abstract class Field implements ArchitectField
     {
         $clone = clone $this;
         $clone->hint = $hint;
+
+        return $clone;
+    }
+
+    /** Hover-only help text; use hint() for always-visible text below the field instead. */
+    public function tooltip(string $text): static
+    {
+        $clone = clone $this;
+        $clone->tooltip = $text;
 
         return $clone;
     }
@@ -209,6 +221,11 @@ abstract class Field implements ArchitectField
     public function getHint(): ?string
     {
         return $this->hint;
+    }
+
+    public function getTooltip(): ?string
+    {
+        return $this->tooltip;
     }
 
     public function getDefault(): mixed

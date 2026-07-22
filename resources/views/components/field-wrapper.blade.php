@@ -14,6 +14,12 @@
     <label class="arch-field__label" for="field-{{ $field->getName() }}">
         {{ $field->getLabel() }}
         @if ($field->isRequired())<span class="arch-field__required">*</span>@endif
+        @if ($field->getTooltip() !== null)
+            <i
+                class="fas fa-circle-info ml-1 text-xs text-gray-400 dark:text-gray-500 cursor-help"
+                title="{{ $field->getTooltip() }}"
+            ></i>
+        @endif
     </label>
 
     <div class="arch-field__control">
