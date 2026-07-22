@@ -8,6 +8,7 @@ use Composer\InstalledVersions;
 use Entelechy\Architect\Actions\Livewire\ActionEngine;
 use Entelechy\Architect\Console\Commands\ArchitectFormsAuditKeysCommand;
 use Entelechy\Architect\Console\Commands\ArchitectInitCommand;
+use Entelechy\Architect\Console\Commands\ArchitectMakeTableCommand;
 use Entelechy\Architect\Console\Commands\ArchitectSetupStatusCommand;
 use Entelechy\Architect\Console\Commands\ArchitectStorageDiscoverCommand;
 use Entelechy\Architect\Console\Commands\ArchitectStorageInitCommand;
@@ -268,6 +269,7 @@ class ArchitectServiceProvider extends ServiceProvider
                 ArchitectStorageDiscoverCommand::class,
                 ArchitectStorageSweepCommand::class,
                 ArchitectFormsAuditKeysCommand::class,
+                ArchitectMakeTableCommand::class,
             ]);
         }
 
