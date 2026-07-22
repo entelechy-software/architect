@@ -229,6 +229,10 @@ class ArchitectServiceProvider extends ServiceProvider
         ], 'architect-config');
 
         $this->publishes([
+            __DIR__.'/../resources/views' => resource_path('views/vendor/architect'),
+        ], 'architect-views');
+
+        $this->publishes([
             __DIR__.'/../lang' => $this->app->langPath('vendor/architect'),
         ], 'architect-lang');
 

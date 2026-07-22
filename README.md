@@ -18,23 +18,54 @@ A Laravel package for building data-rich admin interfaces with tables, forms, na
 composer require entelechy/architect
 ```
 
-Publish the config and assets:
+For local path-repository development, you can point Composer at either the
+repository root or the `package/` subdirectory. The repository root now ships a
+Composer manifest specifically so Laravel package discovery still registers the
+`architect:*` Artisan commands when the whole repo is required locally.
+
+Publish package views only if you want to override the shipped Blade templates.
+
+Initialize the project setup and install hooks:
 
 ```bash
-php artisan vendor:publish --tag=architect-config
-php artisan vendor:publish --tag=architect-assets
+php artisan architect:init
+```
+
+`architect:init` now acts as the installation wizard:
+
+- publishes `architect-config` automatically if it is missing,
+- publishes `architect-assets` automatically if they are missing,
+- locks Architect's foundational setup choices into `config/architect.php`,
+- optionally wires a Blade layout with `@architectStyles`, `@architectScripts`, and `<livewire:architect-toast-manager />`,
+- supports non-interactive layout wiring via `--layout=resources/views/layouts/app.blade.php`,
+- supports preview mode via `--dry-run`,
+- is also available as `php artisan architect:install`.
+
+The install wizard prints an Architect banner in the terminal and mirrors Laravel's first-run feel, while still keeping layout changes explicit and reversible.
+
+Examples:
+
+```bash
+# Interactive install
+php artisan architect:install
+
+# Wire a specific layout non-interactively
+php artisan architect:init --layout=resources/views/layouts/app.blade.php
+
+# Preview all changes without writing files
+php artisan architect:init --dry-run --layout=resources/views/layouts/app.blade.php
+```
+
+If you want to override package Blade views directly, publish them separately:
+
+```bash
+php artisan vendor:publish --tag=architect-views
 ```
 
 Run the migrations:
 
 ```bash
 php artisan migrate
-```
-
-Initialize the project's foundational setup (required, one-time):
-
-```bash
-php artisan architect:init
 ```
 
 This interactive command asks five questions and permanently locks the answers into `config/architect.php`:

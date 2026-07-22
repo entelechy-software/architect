@@ -12,25 +12,50 @@ class ArchitectInitCommand extends Command
 {
     use WritesArchitectConfig;
 
+    private const PACKAGE_CONFIG_PATH = __DIR__.'/../../../config/architect.php';
+
+    private const LAYOUT_HEAD_START = "{{-- architect:start head --}}";
+
+    private const LAYOUT_HEAD_END = "{{-- architect:end head --}}";
+
+    private const LAYOUT_BODY_START = "{{-- architect:start body --}}";
+
+    private const LAYOUT_BODY_END = "{{-- architect:end body --}}";
+
     protected $signature = 'architect:init
         {--force-reconfigure : Allow updating soft-locked setup options}
         {--break-glass : Allow changing hard-locked setup options}
         {--only= : Restrict soft-lock reconfiguration to a comma-separated list of keys (e.g. state_connection,auth_guard)}
-        {--no-migration : Skip generating persistence migration when database mode is selected}';
+        {--no-migration : Skip generating persistence migration when database mode is selected}
+        {--layout= : Relative or absolute path to a Blade layout file to wire with Architect assets and toast manager}
+        {--dry-run : Show the install actions without writing files}';
 
     protected $description = 'Initialize Architect project setup and lock foundational options.';
 
+    protected function configure(): void
+    {
+        parent::configure();
+
+        $this->setAliases(['architect:install']);
+    }
+
     public function handle(Filesystem $files): int
     {
+        $this->renderBanner();
+
+        $this->ensureConfigPublished($files);
+
         $configPath = config_path('architect.php');
-        if (! $files->exists($configPath)) {
+        if (! $files->exists($configPath) && ! $this->isDryRun()) {
             $this->error('Could not find config/architect.php. Publish it first: php artisan vendor:publish --tag=architect-config');
 
             return self::FAILURE;
         }
 
         /** @var array<string, mixed> $existing */
-        $existing = require $configPath;
+        $existing = $files->exists($configPath)
+            ? require $configPath
+            : require self::PACKAGE_CONFIG_PATH;
 
         $setup = (array) ($existing['setup'] ?? []);
         $initialized = (bool) ($setup['initialized'] ?? false);
@@ -112,7 +137,9 @@ class ArchitectInitCommand extends Command
         $this->line('  auth guard       : '.$newChosen['auth_guard']);
         $this->newLine();
 
-        if (! $this->confirm('Write these values to config/architect.php?', true)) {
+        if ($this->isDryRun()) {
+            $this->warn('Dry run: no files will be written.');
+        } elseif (! $this->confirm('Write these values to config/architect.php?', true)) {
             $this->warn('Initialization cancelled.');
 
             return self::INVALID;
@@ -134,19 +161,222 @@ class ArchitectInitCommand extends Command
             'chosen' => $newChosen,
         ];
 
-        $this->writeConfig($files, $configPath, $existing);
-        $this->info('Updated config/architect.php');
-
-        if ($newChosen['persistence_mode'] === 'database' && ! (bool) $this->option('no-migration')) {
-            $migrationPath = $this->generateStateMigration(
-                $files,
-                $newChosen['state_table'],
-                $newChosen['state_connection'] ?? null
-            );
-            $this->info('Generated migration: '.$migrationPath);
+        if ($this->isDryRun()) {
+            $this->info('Dry run: would update config/architect.php');
+        } else {
+            $this->writeConfig($files, $configPath, $existing);
+            $this->info('Updated config/architect.php');
         }
 
+        if ($newChosen['persistence_mode'] === 'database' && ! (bool) $this->option('no-migration')) {
+            if ($this->isDryRun()) {
+                $this->info('Dry run: would generate migration: '.$this->plannedStateMigrationPath($newChosen['state_table']));
+            } else {
+                $migrationPath = $this->generateStateMigration(
+                    $files,
+                    $newChosen['state_table'],
+                    $newChosen['state_connection'] ?? null
+                );
+                $this->info('Generated migration: '.$migrationPath);
+            }
+        }
+
+        $this->ensureAssetsPublished($files);
+        $this->offerLayoutWiring($files);
+
         return self::SUCCESS;
+    }
+
+    private function ensureConfigPublished(Filesystem $files): void
+    {
+        $configPath = config_path('architect.php');
+
+        if ($files->exists($configPath)) {
+            return;
+        }
+
+        if ($this->isDryRun()) {
+            $this->info('Dry run: would publish Architect config to '.str_replace(base_path().'/', '', $configPath));
+
+            return;
+        }
+
+        $this->info('Publishing Architect config...');
+
+        $this->call('vendor:publish', [
+            '--tag' => 'architect-config',
+            '--force' => true,
+        ]);
+    }
+
+    private function ensureAssetsPublished(Filesystem $files): void
+    {
+        $assetsPath = public_path('vendor/architect');
+        $cssPath = $assetsPath.'/architect.css';
+        $jsPath = $assetsPath.'/architect.js';
+
+        if ($files->exists($cssPath) && $files->exists($jsPath)) {
+            return;
+        }
+
+        if ($this->isDryRun()) {
+            $this->info('Dry run: would publish Architect assets to '.str_replace(base_path().'/', '', $assetsPath));
+
+            return;
+        }
+
+        $this->info('Publishing Architect assets...');
+
+        $this->call('vendor:publish', [
+            '--tag' => 'architect-assets',
+            '--force' => true,
+        ]);
+    }
+
+    private function offerLayoutWiring(Filesystem $files): void
+    {
+        $layoutOptionRaw = $this->option('layout');
+        $layoutOption = is_string($layoutOptionRaw) ? trim($layoutOptionRaw) : '';
+
+        if ($layoutOption !== '') {
+            $this->wireLayout($files, $this->resolveLayoutPath($layoutOption));
+
+            return;
+        }
+
+        $defaultLayout = 'resources/views/layouts/app.blade.php';
+        $defaultLayoutPath = base_path($defaultLayout);
+
+        if (! $files->exists($defaultLayoutPath)) {
+            return;
+        }
+
+        if (! $this->confirm('Would you like Architect to wire a Blade layout with Architect styles, scripts, and toast manager?', true)) {
+            return;
+        }
+
+        $layoutAnswer = $this->ask('Blade layout path', $defaultLayout);
+        $layoutPath = is_string($layoutAnswer) && trim($layoutAnswer) !== ''
+            ? $this->resolveLayoutPath(trim($layoutAnswer))
+            : $defaultLayoutPath;
+
+        $this->wireLayout($files, $layoutPath);
+    }
+
+    private function resolveLayoutPath(string $path): string
+    {
+        if (str_starts_with($path, DIRECTORY_SEPARATOR)) {
+            return $path;
+        }
+
+        return base_path($path);
+    }
+
+    private function wireLayout(Filesystem $files, string $layoutPath): void
+    {
+        if (! $files->exists($layoutPath)) {
+            $this->warn('Skipping layout wiring: file not found at '.$layoutPath);
+
+            return;
+        }
+
+        $contents = $files->get($layoutPath);
+
+        if (
+            str_contains($contents, '@architectStyles')
+            && str_contains($contents, '@architectScripts')
+            && str_contains($contents, 'architect-toast-manager')
+        ) {
+            $this->info('Architect layout hooks already exist in '.$layoutPath);
+
+            return;
+        }
+
+        if (! preg_match('/<head\b[^>]*>/i', $contents, $headMatches, PREG_OFFSET_CAPTURE)) {
+            $this->warn('Skipping layout wiring: could not find a <head> tag in '.$layoutPath);
+
+            return;
+        }
+
+        if (preg_match_all('/<head\b[^>]*>/i', $contents) !== 1) {
+            $this->warn('Skipping layout wiring: expected exactly one <head> tag in '.$layoutPath);
+
+            return;
+        }
+
+        if (preg_match_all('/<\/body>/i', $contents) !== 1) {
+            $this->warn('Skipping layout wiring: expected exactly one </body> tag in '.$layoutPath);
+
+            return;
+        }
+
+        $lineEnding = str_contains($contents, "\r\n") ? "\r\n" : "\n";
+        $headBlock = $lineEnding.$lineEnding.implode($lineEnding, [
+            self::LAYOUT_HEAD_START,
+            '@architectStyles',
+            self::LAYOUT_HEAD_END,
+        ]);
+        $bodyBlock = $lineEnding.$lineEnding.implode($lineEnding, [
+            self::LAYOUT_BODY_START,
+            '@architectScripts',
+            '<livewire:architect-toast-manager />',
+            self::LAYOUT_BODY_END,
+        ]).$lineEnding;
+
+        $updatedContents = preg_replace('/<head\b[^>]*>/i', '$0'.$headBlock, $contents, 1);
+        if (! is_string($updatedContents)) {
+            $this->warn('Skipping layout wiring: failed to update <head> block in '.$layoutPath);
+
+            return;
+        }
+
+        $updatedContents = preg_replace('/<\/body>/i', $bodyBlock.'</body>', $updatedContents, 1);
+        if (! is_string($updatedContents)) {
+            $this->warn('Skipping layout wiring: failed to update </body> block in '.$layoutPath);
+
+            return;
+        }
+
+        if ($this->isDryRun()) {
+            $this->info('Dry run: would update Blade layout: '.$layoutPath);
+
+            return;
+        }
+
+        $backupPath = $layoutPath.'.bak-'.now()->format('Y_m_d_His');
+        if ($files->exists($backupPath)) {
+            $backupPath .= '-'.substr(uniqid('', true), -6);
+        }
+
+        $files->copy($layoutPath, $backupPath);
+        $files->put($layoutPath, $updatedContents);
+
+        $this->info('Updated Blade layout: '.$layoutPath);
+    }
+
+    private function plannedStateMigrationPath(string $tableName): string
+    {
+        $timestamp = now()->format('Y_m_d_His');
+        $fileName = $timestamp.'_create_'.str_replace('-', '_', $tableName).'_table.php';
+
+        return database_path('migrations/'.$fileName);
+    }
+
+    private function isDryRun(): bool
+    {
+        return (bool) $this->option('dry-run');
+    }
+
+    private function renderBanner(): void
+    {
+        $this->line('<fg=cyan>     _             _     _ _            _   </>');
+        $this->line('<fg=cyan>    / \   _ __ ___| |__ (_) |_ ___  ___| |_ </>');
+        $this->line('<fg=cyan>   / _ \\ | \'__/ __| \'_ \\| | __/ _ \\/ __| __|</>');
+        $this->line('<fg=cyan>  / ___ \\| | | (__| | | | | ||  __/ (__| |_ </>');
+        $this->line('<fg=cyan> /_/   \_\\_|  \___|_| |_|_|_|\__\___|\___|\__|</>');
+        $this->newLine();
+        $this->line('<fg=gray>Architect installation wizard</>');
+        $this->newLine();
     }
 
     /**
