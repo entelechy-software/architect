@@ -14,13 +14,13 @@ class ArchitectInitCommand extends Command
 
     private const PACKAGE_CONFIG_PATH = __DIR__.'/../../../config/architect.php';
 
-    private const LAYOUT_HEAD_START = "{{-- architect:start head --}}";
+    private const LAYOUT_HEAD_START = '{{-- architect:start head --}}';
 
-    private const LAYOUT_HEAD_END = "{{-- architect:end head --}}";
+    private const LAYOUT_HEAD_END = '{{-- architect:end head --}}';
 
-    private const LAYOUT_BODY_START = "{{-- architect:start body --}}";
+    private const LAYOUT_BODY_START = '{{-- architect:start body --}}';
 
-    private const LAYOUT_BODY_END = "{{-- architect:end body --}}";
+    private const LAYOUT_BODY_END = '{{-- architect:end body --}}';
 
     protected $signature = 'architect:init
         {--force-reconfigure : Allow updating soft-locked setup options}
