@@ -341,6 +341,27 @@ BLADE);
         $this->assertTrue($config['setup']['initialized']);
     }
 
+    public function test_first_time_init_warns_when_no_default_layout_exists_and_none_requested(): void
+    {
+        $dbChoices = $this->dbConnectionChoices();
+        $layoutPath = resource_path('views/layouts/app.blade.php');
+
+        $this->assertFileDoesNotExist($layoutPath);
+
+        $this->artisan('architect:init')
+            ->expectsChoice('Select persistence mode', 'localStorage', ['localStorage', 'database'])
+            ->expectsChoice('Select tenancy mode', 'single', ['single', 'multi'])
+            ->expectsQuestion('State table name (database mode)', 'architect_user_states')
+            ->expectsChoice('State storage DB connection', 'default', $dbChoices)
+            ->expectsQuestion('Architect auth guard', 'web')
+            ->expectsConfirmation('Write these values to config/architect.php?', 'yes')
+            ->expectsOutputToContain('Skipping layout wiring: no layout found at resources/views/layouts/app.blade.php.')
+            ->doesntExpectOutputToContain('Would you like Architect to wire a Blade layout')
+            ->assertExitCode(0);
+
+        $this->assertFileDoesNotExist($layoutPath);
+    }
+
     private function initializeWithDefaults(string $persistenceMode): void
     {
         $dbChoices = $this->dbConnectionChoices();

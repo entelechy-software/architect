@@ -248,6 +248,11 @@ class ArchitectInitCommand extends Command
         $defaultLayoutPath = base_path($defaultLayout);
 
         if (! $files->exists($defaultLayoutPath)) {
+            $this->warn("Skipping layout wiring: no layout found at {$defaultLayout}.");
+            $this->line('Every Architect component renders via Livewire and requires a layout with @architectStyles (in <head>) and @architectScripts (before </body>) — without it, pages render completely unstyled and client-side-only elements (banners, toasts, modals) can render permanently visible.');
+            $this->line('Create a layout and re-run with --layout=<path>, e.g.: php artisan architect:init --layout=resources/views/layouts/app.blade.php');
+            $this->line('See the Styling Guide "Loading the Assets" section for a minimal layout example.');
+
             return;
         }
 
