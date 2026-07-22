@@ -28,6 +28,9 @@ final readonly class QueryContext
      * @param  array<string, int|string>  $scope  URL-derived parent IDs (e.g. ['activity_id' => 42])
      * @param  array<string, ArchitectFilter>  $filterDefinitions  Filter objects keyed by name,
      *                                                             for use with ModuleTableFilterPipeline
+     * @param  list<string>  $searchableColumns  DB column keys marked ->searchable() on the
+     *                                           definition, for use by AbstractEloquentDataModel's
+     *                                           default free-text search implementation
      */
     public function __construct(
         public string $search = '',
@@ -39,6 +42,7 @@ final readonly class QueryContext
         public bool $includeArchived = false,
         public array $scope = [],
         public array $filterDefinitions = [],
+        public array $searchableColumns = [],
     ) {
         // Defensive normalisation — these are public readonly so callers
         // could otherwise hand us nonsense values.
@@ -67,6 +71,7 @@ final readonly class QueryContext
             $this->includeArchived,
             $this->scope,
             $this->filterDefinitions,
+            $this->searchableColumns,
         );
     }
 
@@ -92,6 +97,7 @@ final readonly class QueryContext
             $this->includeArchived,
             $this->scope,
             $definitions,
+            $this->searchableColumns,
         );
     }
 }

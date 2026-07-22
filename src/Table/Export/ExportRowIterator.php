@@ -65,6 +65,7 @@ final class ExportRowIterator
                 includeArchived: $context->includeArchived,
                 scope: $context->scope,
                 filterDefinitions: $context->filterDefinitions,
+                searchableColumns: $context->searchableColumns,
             );
 
             $paginator = $dataModel->forList($pageContext);

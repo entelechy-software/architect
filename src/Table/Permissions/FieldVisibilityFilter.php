@@ -115,6 +115,12 @@ final readonly class FieldVisibilityFilter
     /**
      * Strip keys the user may not see from a forForm() payload.
      *
+     * Most tables define their editable fields via ->column()->type()
+     * rather than the legacy ->field() list (which the form-panel view
+     * no longer renders), so the allow-list must also include visible
+     * modify-mode columns — otherwise every column-only table would have
+     * its edit payload reduced to just 'id'.
+     *
      * @param  array<string, mixed>  $payload
      * @return array<string, mixed>
      */
@@ -124,6 +130,13 @@ final readonly class FieldVisibilityFilter
             fn (ArchitectField $f): string => $f->name(),
             $this->visibleFields($user, $def)
         );
+
+        foreach ($def->getModifyColumns() as $column) {
+            if ($this->isVisible($user, $column->visibilityNodeForMode(false))) {
+                $allowedKeys[] = $column->getEditKey();
+            }
+        }
+
         $allowedKeys[] = 'id';
 
         return array_intersect_key($payload, array_flip($allowedKeys));

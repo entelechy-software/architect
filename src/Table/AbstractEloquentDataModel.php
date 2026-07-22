@@ -43,17 +43,32 @@ abstract class AbstractEloquentDataModel implements ArchitectDataModel, Supports
     }
 
     /**
-     * Override to translate QueryContext::$search and ::$filters into query
-     * constraints. The default is a no-op — the engine still applies
-     * column-level filters via ModuleTableFilterPipeline regardless of what
-     * this hook does, so only override when a module needs custom search
-     * behaviour beyond per-column filters.
+     * Override to add custom query constraints beyond the sane default —
+     * e.g. joins, computed columns, or search logic that can't be expressed
+     * as a plain LIKE across columns. Call parent::applyFilters() first to
+     * keep the default named-filter and free-text search behaviour.
+     *
+     * The default applies every active named filter via
+     * ModuleTableFilterPipeline, then — when $context->search is
+     * non-empty — ORs a LIKE '%term%' across every column marked
+     * ->searchable() on the table definition ($context->searchableColumns).
      *
      * @param  Builder<Model>  $query
      * @return Builder<Model>
      */
     protected function applyFilters(Builder $query, QueryContext $context): Builder
     {
+        ModuleTableFilterPipeline::apply($query, $context);
+
+        if ($context->search !== '' && $context->searchableColumns !== []) {
+            $term = $context->search;
+            $query->where(function (Builder $q) use ($term, $context): void {
+                foreach ($context->searchableColumns as $column) {
+                    $q->orWhere($column, 'like', '%'.$term.'%');
+                }
+            });
+        }
+
         return $query;
     }
 

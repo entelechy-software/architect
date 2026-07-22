@@ -1774,7 +1774,19 @@ class Engine extends Component
             includeArchived: $this->includeArchived,
             scope: $this->scope,
             filterDefinitions: $def->filtersByName(),
+            searchableColumns: $this->searchableColumnKeys($def),
         );
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function searchableColumnKeys(ArchitectTableDefinition $def): array
+    {
+        return array_values(array_map(
+            fn (Column $column): string => $column->getKey(),
+            array_filter($def->columns, fn (Column $column): bool => $column->isSearchable())
+        ));
     }
 
     /**
