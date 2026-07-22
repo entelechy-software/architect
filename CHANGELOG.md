@@ -9,6 +9,12 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Added
 
+- Nothing yet.
+
+## [0.1.21] — 2026-07-22
+
+### Added
+
 - **Forms** — expanded the control library from 28 to **99 field types** across 9 categories (Text & Structured Text, Choice & Selection, Date & Time, Numeric, Formatted & Validated Text, Relationships & Lookup, File & Media, Visual & Spatial, Structural). Every control is registered with complete metadata via the new `Entelechy\Architect\Forms\ControlRegistry`, queryable at runtime through `Architect::controls()`. No control ships as experimental — every type listed is stable from this release.
 - **Forms** — `WizardBuilder` gained id-based step navigation, conditional branching (`branch()`/`then()`), in-progress draft persistence (`drafts()`, `resumeUsingKey()`, `resumeToStepFromDraft()`), a dirty-navigation guard (`guardDirtyNavigation()`), per-step validation hooks (`onStepValidated()`), and deep-linkable step position (`?step=...`). The step graph is validated for reachability at `build()` time and throws `WizardGraphException` on any duplicate id, unknown branch target, or unreachable step.
 - **Forms** — new validation DSL under `Entelechy\Architect\Forms\Validation`: `Field::validate(?Preset $preset)` for zero-config named rule bundles (`Preset::workEmail()`, `Preset::ukPhone()`, `Preset::currency()`, etc.), `Field::ruleset(array $rules)` for a fluent, additive `Rule` DSL that compiles 1:1 to native Laravel rules, and `RuleRegistry::register()` for host-app custom named rules. `Field::getClientValidationAttributes()` derives progressive-enhancement HTML5 attributes from a field's compiled rules.
