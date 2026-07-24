@@ -8,6 +8,7 @@ use Entelechy\Architect\Breadcrumbs\AutomaticBreadcrumbsResolver;
 use Entelechy\Architect\Contracts\StateStore;
 use Entelechy\Architect\Contracts\TenantResolver;
 use Entelechy\Architect\Supersearch\Contracts\HasSupersearchHook;
+use Entelechy\Architect\Table\AbstractEloquentDataModel;
 use Entelechy\Architect\Table\Actions\BulkStatusAction;
 use Entelechy\Architect\Table\ArchitectTableDefinition;
 use Entelechy\Architect\Table\Column;
@@ -1325,6 +1326,20 @@ class Engine extends Component
                     definitionClass: $this->definitionClass,
                     id: $id,
                 );
+
+                return;
+            }
+        }
+
+        // 'clone' action (auto-added by ->clonable()): duplicate the record
+        // immediately when the bound data model supports it, rather than
+        // dispatching a browser event that nothing listens for by default.
+        if ($action->getKey() === 'clone') {
+            $dataModel = $this->dataModel();
+            if ($dataModel instanceof AbstractEloquentDataModel) {
+                $dataModel->duplicate($id, $def->clonableExcept);
+                $this->rowActionMessage = 'Record cloned successfully.';
+                $this->rowActionError = null;
 
                 return;
             }

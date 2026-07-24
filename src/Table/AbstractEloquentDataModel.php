@@ -157,6 +157,21 @@ abstract class AbstractEloquentDataModel implements ArchitectDataModel, Supports
     }
 
     /**
+     * Default implementation backing TableBuilder::clonable(). Copies every
+     * attribute except the primary key, timestamps, and unique IDs (all
+     * excluded automatically by Eloquent's replicate()) plus any columns
+     * named in $except (typically unique columns such as email/slug that
+     * ->clonable(['email']) declared should not be duplicated verbatim).
+     */
+    public function duplicate(int $id, array $except = []): int
+    {
+        $copy = $this->baseQuery()->findOrFail($id)->replicate($except);
+        $copy->save();
+
+        return $copy->getKey();
+    }
+
+    /**
      * Default: allow any authenticated user (no extra data-scope gate).
      * Override for record-level scoping, e.g. tenant ownership checks.
      */
