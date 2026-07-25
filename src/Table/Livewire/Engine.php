@@ -13,7 +13,6 @@ use Entelechy\Architect\Table\Actions\BulkStatusAction;
 use Entelechy\Architect\Table\ArchitectTableDefinition;
 use Entelechy\Architect\Table\Column;
 use Entelechy\Architect\Table\Contracts\ArchitectDataModel;
-use Entelechy\Architect\Table\Contracts\HasViewAll;
 use Entelechy\Architect\Table\Contracts\SupportsAutoRefreshFingerprint;
 use Entelechy\Architect\Table\Export\CsvStreamExporter;
 use Entelechy\Architect\Table\Export\ExcelExporter;
@@ -1317,18 +1316,18 @@ class Engine extends Component
             return;
         }
 
-        // 'view' action: if the Eloquent model implements HasViewAll, open
-        // the panel in view mode instead of dispatching the browser event.
+        // 'view' action: open the panel in view mode. FormPanel::openView()
+        // uses Model::viewAll() when the model implements HasViewAll, and
+        // otherwise falls back to a generic label/value list built from the
+        // table's column definitions — so ->viewable() works out of the box
+        // without requiring a hand-written viewAll() method.
         if ($action->getKey() === 'view') {
-            $modelClass = $this->dataModel()->modelClass();
-            if (is_a($modelClass, HasViewAll::class, true)) {
-                $this->dispatch('architect:open-view',
-                    definitionClass: $this->definitionClass,
-                    id: $id,
-                );
+            $this->dispatch('architect:open-view',
+                definitionClass: $this->definitionClass,
+                id: $id,
+            );
 
-                return;
-            }
+            return;
         }
 
         // 'clone' action (auto-added by ->clonable()): duplicate the record

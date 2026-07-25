@@ -230,18 +230,39 @@ class FormPanel extends Component
             return;
         }
 
-        if (! ($record instanceof HasViewAll)) {
-            return;
-        }
+        $this->viewRecord = $record instanceof HasViewAll
+            ? $record->viewAll()
+            : $this->buildGenericViewRecord($record);
 
         $this->recordId = $id;
-        $this->viewRecord = $record->viewAll();
         $this->panelState = 'view';
         $this->panelTitle = 'View '.($this->definition()->title ?? 'Record');
         $this->form = [];
         $this->errorMessage = null;
         $this->hasError = false;
         $this->open = true;
+    }
+
+    /**
+     * Default view-all payload for models that don't implement HasViewAll.
+     *
+     * Builds a label/value list straight from the table's column
+     * definitions (skipping columns explicitly hidden from the index),
+     * so ->viewable() works out of the box without requiring the
+     * developer to hand-write a viewAll() method.
+     *
+     * @return list<array{label: string, value: mixed}>
+     */
+    private function buildGenericViewRecord(Model $record): array
+    {
+        return collect($this->definition()->columns)
+            ->reject(fn (Column $column) => $column->isHiddenOnIndex())
+            ->map(fn (Column $column) => [
+                'label' => $column->getLabel(),
+                'value' => data_get($record, $column->getKey()),
+            ])
+            ->values()
+            ->all();
     }
 
     /**
