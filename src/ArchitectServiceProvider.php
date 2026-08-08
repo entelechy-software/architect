@@ -303,7 +303,11 @@ class ArchitectServiceProvider extends ServiceProvider
      * resources/js — i.e. it is provably non-functional today. A handful
      * of additional fields are Maturity::Beta where manual inspection
      * found a real but narrower-than-advertised implementation (see the
-     * inline comment on each). Everything else is Maturity::Stable.
+     * inline comment on each). The Wave 3 hardware/media-capture fields
+     * (camera, mic, canvas/signature capture) are Maturity::Planned —
+     * deliberately descoped from Phase 1's active work per
+     * ARCHITECT_IMPROVEMENT_PLAN.md, not just unwired by accident.
+     * Everything else is Maturity::Stable.
      */
     private function registerControlLibrary(): void
     {
@@ -377,10 +381,10 @@ class ArchitectServiceProvider extends ServiceProvider
             ->register('map-location', MapLocationField::class, 'Visual & Spatial', 'array', 'Map-based location picker.', Maturity::Experimental)
             ->register('geographic-boundary', GeographicBoundaryField::class, 'Visual & Spatial', 'array', 'Draws a boundary on a map.', Maturity::Experimental)
             ->register('gradient-editor', GradientEditorField::class, 'Visual & Spatial', 'array', 'Multi-stop colour gradient editor.', Maturity::Experimental)
-            ->register('signature-pad', SignaturePadField::class, 'Visual & Spatial', 'string', 'Canvas-based signature capture.', Maturity::Experimental)
+            ->register('signature-pad', SignaturePadField::class, 'Visual & Spatial', 'string', 'Canvas-based signature capture.', Maturity::Planned) // Wave 3 hardware/media field, deferred — see ARCHITECT_IMPROVEMENT_PLAN.md
             ->register('annotation', AnnotationField::class, 'Visual & Spatial', 'array', 'Draws bounding boxes/polygons/labels over an image.', Maturity::Experimental)
-            ->register('drawing-sketch', DrawingSketchField::class, 'Visual & Spatial', 'string', 'Free-hand drawing/sketch canvas.', Maturity::Experimental)
-            ->register('canvas-manipulation', CanvasManipulationField::class, 'Visual & Spatial', 'array', 'Drag/resize/rotate objects on a canvas.', Maturity::Experimental)
+            ->register('drawing-sketch', DrawingSketchField::class, 'Visual & Spatial', 'string', 'Free-hand drawing/sketch canvas.', Maturity::Planned) // Wave 3 hardware/media field, deferred — see ARCHITECT_IMPROVEMENT_PLAN.md
+            ->register('canvas-manipulation', CanvasManipulationField::class, 'Visual & Spatial', 'array', 'Drag/resize/rotate objects on a canvas.', Maturity::Planned) // Wave 3 hardware/media field, deferred — see ARCHITECT_IMPROVEMENT_PLAN.md
             ->register('dial-knob', DialKnobField::class, 'Visual & Spatial', 'decimal', 'Rotational dial/knob control.', Maturity::Experimental)
             ->register('matrix-input', MatrixInputField::class, 'Visual & Spatial', 'array', 'Survey-style response grid.', Maturity::Stable)
             ->register('sortable-list', SortableListField::class, 'Structural', 'array', 'Drag-to-reorder list.', Maturity::Experimental)
@@ -389,12 +393,12 @@ class ArchitectServiceProvider extends ServiceProvider
             ->register('relationship-picker', RelationshipPickerField::class, 'Relationships & Lookup', 'array', 'Links this record to another record/event/entity.', Maturity::Experimental)
             ->register('timeline-editor', TimelineEditorField::class, 'Visual & Spatial', 'array', 'Timeline editor for labelled segments.', Maturity::Experimental)
             ->register('image-comparison-slider', ImageComparisonSliderField::class, 'Visual & Spatial', 'decimal', 'Draggable divider comparing two images.', Maturity::Experimental)
-            ->register('camera-capture', CameraCaptureField::class, 'File & Media', 'string', 'Photo capture via the device camera.', Maturity::Experimental)
-            ->register('audio-recorder', AudioRecorderField::class, 'File & Media', 'string', 'Audio recording via the device microphone.', Maturity::Experimental)
-            ->register('video-recorder', VideoRecorderField::class, 'File & Media', 'string', 'Video recording via camera + microphone.', Maturity::Experimental)
-            ->register('document-scanner', DocumentScannerField::class, 'File & Media', 'string', 'Camera-based document edge detection and cleanup.', Maturity::Experimental)
-            ->register('barcode-qr-scanner', BarcodeQrScannerField::class, 'File & Media', 'string', 'Barcode/QR-code scanner.', Maturity::Experimental)
-            ->register('audio-waveform-selection', AudioWaveformSelectionField::class, 'Visual & Spatial', 'array', 'Selects a segment of an audio waveform.', Maturity::Experimental)
+            ->register('camera-capture', CameraCaptureField::class, 'File & Media', 'string', 'Photo capture via the device camera.', Maturity::Planned) // Wave 3 hardware/media field, deferred — see ARCHITECT_IMPROVEMENT_PLAN.md
+            ->register('audio-recorder', AudioRecorderField::class, 'File & Media', 'string', 'Audio recording via the device microphone.', Maturity::Planned) // Wave 3 hardware/media field, deferred — see ARCHITECT_IMPROVEMENT_PLAN.md
+            ->register('video-recorder', VideoRecorderField::class, 'File & Media', 'string', 'Video recording via camera + microphone.', Maturity::Planned) // Wave 3 hardware/media field, deferred — see ARCHITECT_IMPROVEMENT_PLAN.md
+            ->register('document-scanner', DocumentScannerField::class, 'File & Media', 'string', 'Camera-based document edge detection and cleanup.', Maturity::Planned) // Wave 3 hardware/media field, deferred — see ARCHITECT_IMPROVEMENT_PLAN.md
+            ->register('barcode-qr-scanner', BarcodeQrScannerField::class, 'File & Media', 'string', 'Barcode/QR-code scanner.', Maturity::Planned) // Wave 3 hardware/media field, deferred — see ARCHITECT_IMPROVEMENT_PLAN.md
+            ->register('audio-waveform-selection', AudioWaveformSelectionField::class, 'Visual & Spatial', 'array', 'Selects a segment of an audio waveform.', Maturity::Planned) // Wave 3 hardware/media field, deferred — see ARCHITECT_IMPROVEMENT_PLAN.md
             ->register('formula-expression-editor', FormulaExpressionEditorField::class, 'Text & Structured Text', 'string', 'Formula/expression editor with field references.', Maturity::Experimental)
             ->register('math-equation-editor', MathEquationEditorField::class, 'Text & Structured Text', 'string', 'Visual math equation editor.', Maturity::Experimental)
             ->register('mention-editor', MentionEditorField::class, 'Text & Structured Text', 'string', 'Rich text editor supporting @mentions.', Maturity::Experimental)
