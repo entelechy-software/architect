@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Entelechy\Architect\Forms\Contracts;
 
 use Entelechy\Architect\Forms\Fields\Field;
+use Entelechy\Architect\Support\Maturity;
 
 /**
  * Describes a control (form field type) registered in the Forms control
@@ -36,4 +37,10 @@ interface ControlMetadata
 
     /** Short one-line description for the control catalog docs. */
     public function description(): string;
+
+    /**
+     * How much this control can be trusted to work today. See
+     * {@see Maturity} for what each level means.
+     */
+    public function maturity(): Maturity;
 }

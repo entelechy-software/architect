@@ -9,7 +9,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Added
 
-- Nothing yet.
+- **Forms** — `Entelechy\Architect\Support\Maturity` enum (`Stable`/`Beta`/`Experimental`/`Planned`) and a new required `Maturity` parameter on `ControlRegistry::register()`. Every one of the 99 registered Forms controls has been mechanically re-audited against its actual Blade view + Alpine.js wiring and re-labelled accordingly: **50 Stable**, **5 Beta** (works, but narrower than advertised — see the inline comment on each in `ArchitectServiceProvider::registerControlLibrary()`), **44 Experimental** (Blade view references an Alpine component with no matching `Alpine.data(...)` registration anywhere — not functional today). This corrects the 0.1.21 changelog's "no control ships as experimental" claim, which predated this audit. `ControlRegistry::byMaturity()` lets consumers filter by maturity.
 
 ## [0.1.21] — 2026-07-22
 

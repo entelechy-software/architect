@@ -8,6 +8,7 @@ use Entelechy\Architect\Facades\Architect;
 use Entelechy\Architect\Forms\ControlRegistry;
 use Entelechy\Architect\Forms\Fields\CurrencyField;
 use Entelechy\Architect\Forms\Fields\TextField;
+use Entelechy\Architect\Support\Maturity;
 use Entelechy\Architect\Tests\TestCase;
 
 class ControlRegistryTest extends TestCase
@@ -15,7 +16,7 @@ class ControlRegistryTest extends TestCase
     public function test_register_and_get(): void
     {
         $registry = new ControlRegistry;
-        $registry->register('text', TextField::class, 'Text & Structured Text', 'string', 'Single-line text input.');
+        $registry->register('text', TextField::class, 'Text & Structured Text', 'string', 'Single-line text input.', Maturity::Stable);
 
         $control = $registry->get('text');
 
@@ -24,6 +25,7 @@ class ControlRegistryTest extends TestCase
         $this->assertSame(TextField::class, $control->fieldClass());
         $this->assertSame('Text & Structured Text', $control->category());
         $this->assertSame('string', $control->valueType());
+        $this->assertSame(Maturity::Stable, $control->maturity());
     }
 
     public function test_has_reflects_registration(): void
@@ -32,7 +34,7 @@ class ControlRegistryTest extends TestCase
 
         $this->assertFalse($registry->has('currency'));
 
-        $registry->register('currency', CurrencyField::class, 'Numeric', 'decimal', 'Currency amount input.');
+        $registry->register('currency', CurrencyField::class, 'Numeric', 'decimal', 'Currency amount input.', Maturity::Stable);
 
         $this->assertTrue($registry->has('currency'));
     }
@@ -40,13 +42,25 @@ class ControlRegistryTest extends TestCase
     public function test_by_category_filters(): void
     {
         $registry = new ControlRegistry;
-        $registry->register('text', TextField::class, 'Text & Structured Text', 'string', '...');
-        $registry->register('currency', CurrencyField::class, 'Numeric', 'decimal', '...');
+        $registry->register('text', TextField::class, 'Text & Structured Text', 'string', '...', Maturity::Stable);
+        $registry->register('currency', CurrencyField::class, 'Numeric', 'decimal', '...', Maturity::Stable);
 
         $numeric = $registry->byCategory('Numeric');
 
         $this->assertCount(1, $numeric);
         $this->assertArrayHasKey('currency', $numeric);
+    }
+
+    public function test_by_maturity_filters(): void
+    {
+        $registry = new ControlRegistry;
+        $registry->register('text', TextField::class, 'Text & Structured Text', 'string', '...', Maturity::Stable);
+        $registry->register('currency', CurrencyField::class, 'Numeric', 'decimal', '...', Maturity::Experimental);
+
+        $experimental = $registry->byMaturity(Maturity::Experimental);
+
+        $this->assertCount(1, $experimental);
+        $this->assertArrayHasKey('currency', $experimental);
     }
 
     public function test_container_singleton_is_seeded_by_service_provider(): void

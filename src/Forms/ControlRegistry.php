@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Entelechy\Architect\Forms;
 
 use Entelechy\Architect\Forms\Contracts\ControlMetadata;
+use Entelechy\Architect\Support\Maturity;
 
 /**
  * Central catalog of every Forms control (field type), keyed by a short
@@ -28,10 +29,14 @@ final class ControlRegistry
      * @template TField of \Entelechy\Architect\Forms\Fields\Field
      *
      * @param  class-string<TField>  $fieldClass
+     *
+     * $maturity is required (no default) so every call site is forced to
+     * make an honest, explicit claim about whether the control actually
+     * works today. See {@see Maturity}.
      */
-    public function register(string $key, string $fieldClass, string $category, string $valueType, string $description): static
+    public function register(string $key, string $fieldClass, string $category, string $valueType, string $description, Maturity $maturity): static
     {
-        $this->controls[$key] = new ControlDefinition($key, $fieldClass, $category, $valueType, $description);
+        $this->controls[$key] = new ControlDefinition($key, $fieldClass, $category, $valueType, $description, $maturity);
 
         return $this;
     }
@@ -56,6 +61,12 @@ final class ControlRegistry
     public function byCategory(string $category): array
     {
         return array_filter($this->controls, static fn (ControlMetadata $c): bool => $c->category() === $category);
+    }
+
+    /** @return array<string, ControlMetadata> */
+    public function byMaturity(Maturity $maturity): array
+    {
+        return array_filter($this->controls, static fn (ControlMetadata $c): bool => $c->maturity() === $maturity);
     }
 
     /** Clears every registered control. Intended for test isolation between cases. */
