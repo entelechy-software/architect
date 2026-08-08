@@ -304,10 +304,10 @@ class ArchitectServiceProvider extends ServiceProvider
      * of additional fields are Maturity::Beta where manual inspection
      * found a real but narrower-than-advertised implementation (see the
      * inline comment on each). The Wave 3 hardware/media-capture fields
-     * (camera, mic, canvas/signature capture) are Maturity::Planned —
-     * deliberately descoped from Phase 1's active work per
-     * ARCHITECT_IMPROVEMENT_PLAN.md, not just unwired by accident.
-     * Everything else is Maturity::Stable.
+     * (camera, mic, canvas/signature capture) and the two address-lookup
+     * fields (no provider chosen yet) are Maturity::Planned — deliberately
+     * descoped from Phase 1's active work per ARCHITECT_IMPROVEMENT_PLAN.md,
+     * not just unwired by accident. Everything else is Maturity::Stable.
      */
     private function registerControlLibrary(): void
     {
@@ -371,8 +371,8 @@ class ArchitectServiceProvider extends ServiceProvider
             ->register('numeric-stepper', NumericStepperField::class, 'Numeric', 'integer', 'Numeric input with +/- stepper controls.', Maturity::Stable)
             ->register('masked-input', MaskedInputField::class, 'Formatted & Validated Text', 'string', 'Text input enforcing a fixed format mask.', Maturity::Beta) // data-mask attribute is rendered but nothing applies the mask yet
             ->register('password-strength', PasswordStrengthField::class, 'Formatted & Validated Text', 'string', 'Password input with live strength feedback.', Maturity::Experimental)
-            ->register('address-autocomplete', AddressAutocompleteField::class, 'Formatted & Validated Text', 'array', 'Address search resolving to a structured address.', Maturity::Experimental)
-            ->register('postal-code-lookup', PostalCodeLookupField::class, 'Formatted & Validated Text', 'array', 'Postcode lookup with address selection.', Maturity::Experimental)
+            ->register('address-autocomplete', AddressAutocompleteField::class, 'Formatted & Validated Text', 'array', 'Address search resolving to a structured address.', Maturity::Planned) // address-lookup provider not yet chosen — see ARCHITECT_IMPROVEMENT_PLAN.md
+            ->register('postal-code-lookup', PostalCodeLookupField::class, 'Formatted & Validated Text', 'array', 'Postcode lookup with address selection.', Maturity::Planned) // address-lookup provider not yet chosen — see ARCHITECT_IMPROVEMENT_PLAN.md
             ->register('card-input', CardInputField::class, 'Formatted & Validated Text', 'string', 'Card entry via a payment provider\'s hosted fields.', Maturity::Experimental)
             ->register('search-with-filters', SearchWithFiltersField::class, 'Formatted & Validated Text', 'array', 'Search input with structured filter chips.', Maturity::Experimental)
             ->register('query-language-text', QueryLanguageTextField::class, 'Formatted & Validated Text', 'string', 'Structured query-language text input.', Maturity::Stable)
