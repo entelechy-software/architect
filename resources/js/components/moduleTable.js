@@ -1217,6 +1217,54 @@ export function registerModuleTable(Alpine) {
                 );
             });
 
+            // ── 8b. Bulk-action browser events ───────────────────────── //
+            //
+            // Engine::bulkAction() intercepts 'export'/'copy'/'email'/'status'
+            // and dispatches these events instead of calling the action's
+            // handle() — the actual UI (compose modal, status picker, real
+            // clipboard write, selected-rows export) has not been built yet.
+            // These are honest stubs (a toast, matching row-action:audit
+            // above) rather than a silent no-op — see
+            // ARCHITECT_IMPROVEMENT_PLAN.md Phase 0.
+
+            // architect:export — bulk "Export selected" (distinct from the
+            // toolbar's whole-table export, which already streams via a
+            // real URL).
+            Livewire.on('architect:export', ({ ids }) => {
+                window.architectToast.info(
+                    `Exporting a specific selection (${ids.length} record(s)) is not yet available — use the toolbar Export instead.`,
+                    'Export',
+                    { timeOut: 4000 }
+                );
+            });
+
+            // architect:copy — bulk "Copy to clipboard".
+            Livewire.on('architect:copy', ({ ids }) => {
+                window.architectToast.info(
+                    `Copying ${ids.length} record(s) to the clipboard is not yet available.`,
+                    'Copy',
+                    { timeOut: 3000 }
+                );
+            });
+
+            // architect:bulk-email — bulk "Email".
+            Livewire.on('architect:bulk-email', ({ ids }) => {
+                window.architectToast.info(
+                    `Composing an email to ${ids.length} recipient(s) is not yet available.`,
+                    'Email',
+                    { timeOut: 3000 }
+                );
+            });
+
+            // architect:bulk-status — bulk "Change Status".
+            Livewire.on('architect:bulk-status', ({ ids }) => {
+                window.architectToast.info(
+                    `The status picker for ${ids.length} record(s) is not yet available.`,
+                    'Change Status',
+                    { timeOut: 3000 }
+                );
+            });
+
             // ── 9. Tooltip hook ─────────────────────────────────────── //
             ensureTooltipHook();
 
