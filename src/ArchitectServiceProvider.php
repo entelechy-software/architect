@@ -6,6 +6,7 @@ namespace Entelechy\Architect;
 
 use Composer\InstalledVersions;
 use Entelechy\Architect\Actions\Livewire\ActionEngine;
+use Entelechy\Architect\Console\Commands\ArchitectDoctorCommand;
 use Entelechy\Architect\Console\Commands\ArchitectFormsAuditKeysCommand;
 use Entelechy\Architect\Console\Commands\ArchitectInitCommand;
 use Entelechy\Architect\Console\Commands\ArchitectMakeTableCommand;
@@ -268,6 +269,7 @@ class ArchitectServiceProvider extends ServiceProvider
             $this->commands([
                 ArchitectInitCommand::class,
                 ArchitectSetupStatusCommand::class,
+                ArchitectDoctorCommand::class,
                 ArchitectStorageInitCommand::class,
                 ArchitectStorageDiscoverCommand::class,
                 ArchitectStorageSweepCommand::class,
