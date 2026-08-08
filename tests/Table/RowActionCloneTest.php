@@ -7,6 +7,7 @@ namespace Entelechy\Architect\Tests\Table;
 use Entelechy\Architect\Table\AbstractEloquentDataModel;
 use Entelechy\Architect\Table\ArchitectTableDefinition;
 use Entelechy\Architect\Table\Column;
+use Entelechy\Architect\Table\Livewire\Engine;
 use Entelechy\Architect\Table\TableBuilder;
 use Entelechy\Architect\Tests\TestCase;
 use Illuminate\Database\Eloquent\Model;
@@ -41,7 +42,7 @@ class RowActionCloneTest extends TestCase
     {
         $widget = CloneWidgetModel::query()->create(['name' => 'Ada', 'email' => 'ada@example.com']);
 
-        Livewire::test(\Entelechy\Architect\Table\Livewire\Engine::class, ['definitionClass' => CloneWidgetTableDefinition::class])
+        Livewire::test(Engine::class, ['definitionClass' => CloneWidgetTableDefinition::class])
             ->call('handleRowAction', 'clone', $widget->getKey())
             ->assertSet('rowActionMessage', 'Record cloned successfully.')
             ->assertSet('rowActionError', null);

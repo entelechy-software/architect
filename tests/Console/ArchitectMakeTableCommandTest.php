@@ -7,6 +7,7 @@ namespace Entelechy\Architect\Tests\Console;
 use Entelechy\Architect\Table\Livewire\Engine;
 use Entelechy\Architect\Table\Livewire\FormPanel;
 use Entelechy\Architect\Tests\TestCase;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\File;
 use Livewire\Livewire;
 
@@ -50,7 +51,7 @@ class ArchitectMakeTableCommandTest extends TestCase
         $this->assertStringContainsString('namespace App\Modules\Members\Components\Tables;', $definitionContents);
         $this->assertStringContainsString('final class MembersTableDefinition', $definitionContents);
         $this->assertStringContainsString('use App\Modules\Members\Models\MemberDataModel;', $definitionContents);
-        $this->assertStringContainsString("->model(MemberDataModel::class)", $definitionContents);
+        $this->assertStringContainsString('->model(MemberDataModel::class)', $definitionContents);
         $this->assertStringContainsString("read: 'members.read',", $definitionContents);
 
         $modelContents = File::get($modelPath);
@@ -145,7 +146,7 @@ class ArchitectMakeTableCommandTest extends TestCase
             ->call('submit')
             ->assertDispatched('architect:created');
 
-        /** @var \Illuminate\Database\Eloquent\Model $member */
+        /** @var Model $member */
         $member = $modelClass::query()->firstOrFail();
         $this->assertSame('Ada Lovelace', $member->name);
 
