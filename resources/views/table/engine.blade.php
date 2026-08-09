@@ -140,7 +140,7 @@
 <x-architect::table.shell>
 {{-- Navigator (position = top, rendered above the card) --}}
 @if ($definition->navigator && $definition->navigator->position !== 'bottom')
-    <x-architect::definition-renderer :definition="$definition->navigator" />
+    <x-architect::static :definition="$definition->navigator" />
 @endif
 
 <div class="arch-card">
@@ -2150,7 +2150,7 @@
 
 {{-- Navigator (position = bottom, rendered after the filter panel) --}}
 @if ($definition->navigator && $definition->navigator->position === 'bottom')
-    <x-architect::definition-renderer :definition="$definition->navigator" />
+    <x-architect::static :definition="$definition->navigator" />
 @endif
 
 </div>
