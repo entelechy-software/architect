@@ -5,7 +5,7 @@
 --}}
 @php
     /** @var \Entelechy\Architect\Toolbar\Items\Dropdown\DropdownRadioGroup $dropdownItem */
-    $compoundKey   = $parentDropKey . '.' . $dropdownItem->key();
+    $compoundKey   = $parentDropKey . '.' . $dropdownItem->getKey();
     $currentValue  = $dropdownRadioValues[$compoundKey] ?? $dropdownItem->getDefault() ?? '';
     $persist       = $dropdownItem->getPersist();
     $lsKey         = $persist === 'local'

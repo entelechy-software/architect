@@ -6,7 +6,7 @@
     /** @var \Entelechy\Architect\Toolbar\Items\ToolbarButtonGroup $item */
 @endphp
 
-<div class="btn-group" role="group" aria-label="{{ $item->key() }}">
+<div class="btn-group{{ $item->getSize() === 'sm' ? ' btn-group-sm' : '' }}" role="group" aria-label="{{ $item->getKey() }}">
     @foreach ($item->getItems() as $groupItem)
         @include('architect::toolbar.partials.' . $groupItem->getItemType(), [
             'item' => $groupItem,

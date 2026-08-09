@@ -161,6 +161,16 @@ final class NavigatorBuilder
     /**
      * Set the position of the navigator relative to the content block.
      *
+     * KNOWN GAP (tracked, not yet wired): this value is validated and stored
+     * on ArchitectNavigatorDefinition::$position, but no Blade partial or
+     * component reads it anywhere in the package — Navigator renders as a
+     * standalone component (never wraps host content), so applying
+     * top/bottom/left/right automatically isn't possible without the host
+     * app's own layout markup. Today this is purely descriptive metadata:
+     * place the `<x-architect::static>`/navigator tag in your own template
+     * wherever you intend "top/bottom/left/right" to mean. See
+     * ARCHITECT_IMPROVEMENT_PLAN.md Phase 2 Feature Matrix.
+     *
      * @param  string  $position  top | bottom | left | right
      */
     public function position(string $position): self

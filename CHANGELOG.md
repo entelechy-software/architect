@@ -9,6 +9,22 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Added
 
+- **Tooling** — `php artisan architect:doctor` gained a fifth check: `Support\Doctor\StubbedFeatureAuditor` mechanically verifies that every Phase 2 "known gap" disclosure (`ToolbarBuilder::bind()`, `ToolbarBadge::live()`, `NavigatorBuilder::position()`, `StatBuilder`'s standalone top-level types) stays documented until it's genuinely fixed — see `PHASE2_FEATURE_MATRIX.md` for the full audit.
+
+### Fixed
+
+- **Toolbar** — Phase 2 systemic wiring audit (see `PHASE2_FEATURE_MATRIX.md`): the Toolbar subsystem had zero test coverage before this phase. The first comprehensive fixture test surfaced 4 fatal/dead-property bugs, all fixed: 9 Blade partials called an undefined `->key()` instead of `->getKey()` (14 call sites); `dropdown-text-input.blade.php` called undefined `->getType()` (real accessor is `->getInputType()`); `dropdown-submenu.blade.php` called undefined `->getSubItems()` (real accessor is `->getItems()`); `ToolbarButtonGroup::size()` was set but never applied. Also fixed: toolbar-level `->size()`/`->bordered()` were stored but never read by `engine.blade.php` — both are now applied to the toolbar's wrapping element.
+- **Stats** — `MetricCard::live()` cards always rendered `—` regardless of their live callable; `DashboardEngine::resolveMetrics()` now actually invokes it, relying on the dashboard's existing `->poll()` interval for periodic re-resolution.
+
+### Documented (known gaps, tracked via `architect:doctor`)
+
+- `ToolbarBuilder::bind()` — `ToolbarEngine` dispatches `architect:toolbar:bound-changed` but no consumer listens for it anywhere.
+- `ToolbarBadge::live()` — Toolbar has no polling mechanism; the live callable is never invoked.
+- `NavigatorBuilder::position()` — validated and stored, but no Blade partial or component reads it; Navigator never wraps host content, so this is host-app placement metadata only.
+- `StatBuilder`'s non-`dashboard`-type top-level `->build()` (standalone metric grid/chart/table/crosstab) — `DashboardEngine` only ever resolves `dashboard`-type `$definition->sections`; nest these types inside a dashboard's `->section()` instead.
+
+### Added
+
 - **Tenancy (Con #4)** — `TenantResolver::resolve(): TenantContext` replaces `currentIdentifier(): string` (see Changed, below). `TenantContext` (`identifier`, `connection`, `metadata`) supports both multi-tenancy strategies under one contract: row-level scoping in a shared database (`connection: null`) and database-per-tenant connection switching (a non-null `connection`), combinable per-model in the same host app. New `Entelechy\Architect\Tenancy\Contracts\HasTenantScope` marker interface — implement it on an Eloquent model (optionally with the `Tenancy\Concerns\ScopedToTenant` trait for the `tenant_id` default column) to have `AbstractEloquentDataModel::baseQuery()` automatically filter every query by the current tenant. A non-null `TenantContext::$connection` switches `baseQuery()` to that connection regardless of `HasTenantScope`. Both mechanisms are proven by real two-tenant isolation tests (`tests/Tenancy/`), not just assertions on generated SQL/code.
 - **Tooling** — `php artisan architect:doctor` gained a third check: `Support\Doctor\TenantScopeAuditor` scans `config('architect.tenant.discovery.paths')` (opt-in, empty by default) for `AbstractEloquentDataModel` subclasses that override `baseQuery()` without calling `parent::baseQuery()` first — a mistake that silently disables tenant scoping/connection switching for that model with no error anywhere.
 

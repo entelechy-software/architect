@@ -23,9 +23,13 @@ use Illuminate\Contracts\Container\Container;
  *
  * ->live(fn (Container $app): int => ..., every: 30) marks the badge as
  * self-refreshing — same convention as Stats\Elements\MetricCard::live().
- * Note: as with MetricCard, ToolbarEngine does not yet resolve the live
- * callable on a poll cycle; this stores the intent so a host app's own
- * Blade override or a future engine update can wire the refresh.
+ *
+ * KNOWN GAP (tracked, not yet wired): unlike MetricCard::live() — which
+ * DashboardEngine now resolves on every render — ToolbarEngine does NOT
+ * currently call getLiveCallable() anywhere, and Toolbar has no ->poll()
+ * mechanism to trigger periodic re-renders. This stores the intent so a
+ * host app's own Blade override or a future engine update can wire the
+ * refresh. See ARCHITECT_IMPROVEMENT_PLAN.md Phase 2 Feature Matrix.
  */
 final class ToolbarBadge implements ToolbarItem
 {

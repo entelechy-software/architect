@@ -6,19 +6,19 @@
 --}}
 @php
     /** @var \Entelechy\Architect\Toolbar\Items\ToolbarRadioGroup $item */
-    $currentValue = $radioValues[$item->key()] ?? $item->getDefault() ?? '';
+    $currentValue = $radioValues[$item->getKey()] ?? $item->getDefault() ?? '';
     $persist      = $item->getPersist();
-    $lsKey        = $persist === 'local' ? "architectToolbar_{$toolbarKey}_radio_{$item->key()}" : null;
+    $lsKey        = $persist === 'local' ? "architectToolbar_{$toolbarKey}_radio_{$item->getKey()}" : null;
 @endphp
 
 <div
     class="btn-group{{ $item->getSize() === 'sm' ? ' btn-group-sm' : '' }}"
     role="group"
-    aria-label="{{ $item->key() }}"
+    aria-label="{{ $item->getKey() }}"
     @if ($lsKey)
         x-init="
             const __stored = localStorage.getItem('{{ $lsKey }}');
-            if (__stored !== null) $wire.call('setRadio', '{{ $item->key() }}', __stored);
+            if (__stored !== null) $wire.call('setRadio', '{{ $item->getKey() }}', __stored);
         "
     @endif
 >
@@ -30,7 +30,7 @@
         <button
             type="button"
             class="arch-btn arch-btn-sm {{ $btnClass }}"
-            wire:click="setRadio('{{ $item->key() }}', '{{ $option['value'] }}')"
+            wire:click="setRadio('{{ $item->getKey() }}', '{{ $option['value'] }}')"
             @if ($item->isDisabled() || $option['disabled']) disabled @endif
             aria-pressed="{{ $isActive ? 'true' : 'false' }}"
         >

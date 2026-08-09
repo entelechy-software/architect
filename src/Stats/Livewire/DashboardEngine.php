@@ -244,8 +244,17 @@ class DashboardEngine extends Component
         // Static array of MetricCard objects — resolve non-live values now
         return array_map(function (MetricCard $card) use ($range, $app): array {
             if ($card->isLive()) {
-                // Live cards are rendered as wire:poll children — don't resolve here
-                return ['card' => $card, 'value' => null, 'live' => true];
+                // Live cards ignore the dashboard date filter and resolve fresh on
+                // every render. Auto-refresh comes from the dashboard's own
+                // ->poll() interval (wire:poll re-renders the whole engine, which
+                // re-invokes this resolver) — see StatBuilder::poll().
+                $liveCallable = $card->getLiveCallable();
+
+                return [
+                    'card' => $card,
+                    'value' => $liveCallable !== null ? $liveCallable($app) : null,
+                    'live' => true,
+                ];
             }
 
             $callable = $card->getValueCallable();

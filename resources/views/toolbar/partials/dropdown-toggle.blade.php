@@ -7,7 +7,7 @@
     /** @var \Entelechy\Architect\Toolbar\Items\Dropdown\DropdownCheckbox $dropdownItem */
     if (!$this->can($dropdownItem->getPermission())) return;
 
-    $compoundKey = $parentDropKey . '.' . $dropdownItem->key();
+    $compoundKey = $parentDropKey . '.' . $dropdownItem->getKey();
     $isOn        = $toggleValues[$compoundKey] ?? $dropdownItem->getDefault();
     $persist     = $dropdownItem->getPersist();
     $lsKey       = $persist === 'local'
