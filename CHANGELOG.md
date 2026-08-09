@@ -9,6 +9,8 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Added
 
+- **Tenancy (Con #4)** — `TenantResolver::resolve(): TenantContext` replaces `currentIdentifier(): string` (see Changed, below). `TenantContext` (`identifier`, `connection`, `metadata`) supports both multi-tenancy strategies under one contract: row-level scoping in a shared database (`connection: null`) and database-per-tenant connection switching (a non-null `connection`), combinable per-model in the same host app. New `Entelechy\Architect\Tenancy\Contracts\HasTenantScope` marker interface — implement it on an Eloquent model (optionally with the `Tenancy\Concerns\ScopedToTenant` trait for the `tenant_id` default column) to have `AbstractEloquentDataModel::baseQuery()` automatically filter every query by the current tenant. A non-null `TenantContext::$connection` switches `baseQuery()` to that connection regardless of `HasTenantScope`. Both mechanisms are proven by real two-tenant isolation tests (`tests/Tenancy/`), not just assertions on generated SQL/code.
+
 - **Forms** — `Entelechy\Architect\Support\Maturity` enum (`Stable`/`Beta`/`Experimental`/`Planned`) and a new required `Maturity` parameter on `ControlRegistry::register()`. Every one of the 99 registered Forms controls has been mechanically re-audited against its actual Blade view + Alpine.js wiring and re-labelled accordingly: **50 Stable**, **5 Beta** (works, but narrower than advertised — see the inline comment on each in `ArchitectServiceProvider::registerControlLibrary()`), **33 Experimental** (Blade view references an Alpine component with no matching `Alpine.data(...)` registration anywhere — not functional today), **11 Planned** (9 Wave 3 hardware/media-capture fields — camera, mic, canvas/signature — plus `AddressAutocompleteField`/`PostalCodeLookupField`, all deliberately descoped from Phase 1 pending further decisions, see `ARCHITECT_IMPROVEMENT_PLAN.md`). This corrects the 0.1.21 changelog's "no control ships as experimental" claim, which predated this audit. `ControlRegistry::byMaturity()` lets consumers filter by maturity.
 - **Tooling** — new `php artisan architect:doctor` command and two paired PHPUnit regression tests (`ControlMaturityAuditTest`, `ActionWiringAuditTest`, backed by shared `Support\Doctor\*` auditor classes) that mechanically detect two recurring "half-wired feature" bug shapes: (1) a Forms control labelled `Maturity::Stable` whose view references a non-existent Alpine component, and (2) a built-in Table row/bulk action (`clone`, `view`, `audit`, `export`, `copy`, `email`, `status`) whose browser event has no client-side listener at all. Fixed the latter for `export`/`copy`/`email`/`status` bulk actions, which previously dispatched a browser event with **zero** listener (not even a toast) — now show an honest "not yet available" toast, matching the existing `clonable()`/`viewable()`/`auditable()` precedent.
 - **Forms** — Phase 1 Wave 1 (see `ARCHITECT_IMPROVEMENT_PLAN.md`): implemented real, dependency-free interactivity for 7 fields that were previously registered as `Beta`/`Experimental` stubs, and re-labelled all 7 `Maturity::Stable` now that `architect:doctor`'s Alpine-wiring audit confirms them clean. All use hand-rolled vanilla JS/DOM APIs — no third-party libraries, per Wave 1's dependency policy:
@@ -91,6 +93,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Changed
 
+- **BREAKING (Tenancy)** — `Contracts\TenantResolver::currentIdentifier(): string` is replaced by `resolve(): Tenancy\TenantContext`. Every call site inside the package (`Table\Livewire\Engine`'s state persistence, `Table\Import\ImportProcessor`/`ImportRateLimiter`/`Table\Livewire\ImportWizard`) has been updated. Custom `TenantResolver` implementations must implement `resolve()` instead of `currentIdentifier()`; `NullTenantResolver` (the single-tenant default) is unaffected in behavior.
 - **Breaking (Tables)** — `formMode('page')` is removed. Use `formMode('wizard')` and pair it with `customForm(for: 'create'|'modify', ...)` when wizard mode is enabled.
 - **Navigator / Tables** — SPA inherit-mode tab breadcrumbs now resolve automatic table breadcrumbs consistently with standalone table rendering.
 
@@ -102,6 +105,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Migration
 
+- **Tenancy**: any custom `TenantResolver` implementation must rename `currentIdentifier(): string` to `resolve(): Tenancy\TenantContext` (e.g. `return new TenantContext($previousIdentifierLogic);`). Host apps using the default `NullTenantResolver` need no changes.
 - Replace:
 	- `->formMode(create: 'page')` with `->formMode(create: 'wizard')`
 	- `->formMode(modify: 'page')` with `->formMode(modify: 'wizard')`
