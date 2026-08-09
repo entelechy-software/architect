@@ -74,7 +74,7 @@ final class ImportRateLimiter
         $limit = $importDef->rateLimitUnion;
         $since = $this->parseWindow($limit['period']);
 
-        $tenantIdentifier = app(TenantResolver::class)->currentIdentifier();
+        $tenantIdentifier = app(TenantResolver::class)->resolve()->identifier;
         $count = ImportBatch::countForTenantWithin($definitionClass, $since, $tenantIdentifier);
 
         if ($count >= $limit['attempts']) {

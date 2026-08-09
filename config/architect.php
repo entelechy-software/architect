@@ -144,8 +144,12 @@ return [
     | Tenancy
     |--------------------------------------------------------------------------
     | FQCN of the class implementing \Entelechy\Architect\Contracts\TenantResolver.
-    | Defaults to NullTenantResolver (returns empty string — single-tenant).
-    | Multi-tenant host apps implement their own resolver (e.g. spatie adapter).
+    | Defaults to NullTenantResolver (resolve() returns an empty, connection-less
+    | TenantContext — single-tenant). Multi-tenant host apps implement their own
+    | resolver returning a Tenancy\TenantContext: set ->identifier for row-level
+    | scoping (models implementing Tenancy\Contracts\HasTenantScope), and/or
+    | ->connection for database-per-tenant connection switching (e.g. bridging
+    | stancl/tenancy's already-resolved tenant connection).
     */
     'tenant' => [
         'resolver' => NullTenantResolver::class,

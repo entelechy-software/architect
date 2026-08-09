@@ -8,12 +8,13 @@ use Entelechy\Architect\Contracts\TenantResolver;
 
 /**
  * Default TenantResolver for single-tenant applications.
- * Always returns an empty string — no tenant isolation applied.
+ * Always returns an empty, connection-less TenantContext — no tenant
+ * isolation applied.
  */
 final class NullTenantResolver implements TenantResolver
 {
-    public function currentIdentifier(): string
+    public function resolve(): TenantContext
     {
-        return '';
+        return new TenantContext;
     }
 }

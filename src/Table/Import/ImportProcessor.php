@@ -436,7 +436,7 @@ final class ImportProcessor
             return true;
         });
 
-        $tenantIdentifier = app(TenantResolver::class)->currentIdentifier();
+        $tenantIdentifier = app(TenantResolver::class)->resolve()->identifier;
 
         $dataModel = app($definition->dataModelClass);
         $dataModelClass = $definition->dataModelClass;

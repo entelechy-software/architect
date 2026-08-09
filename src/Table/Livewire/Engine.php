@@ -1669,7 +1669,7 @@ class Engine extends Component
 
         return app(StateStore::class)->get(
             (int) $user->getAuthIdentifier(),
-            app(TenantResolver::class)->currentIdentifier(),
+            app(TenantResolver::class)->resolve()->identifier,
             'table',
             $this->stateKey($name)
         );
@@ -1693,7 +1693,7 @@ class Engine extends Component
 
         app(StateStore::class)->put(
             (int) $user->getAuthIdentifier(),
-            app(TenantResolver::class)->currentIdentifier(),
+            app(TenantResolver::class)->resolve()->identifier,
             'table',
             $this->stateKey($name),
             ['value' => $value]
@@ -1718,7 +1718,7 @@ class Engine extends Component
 
         app(StateStore::class)->forget(
             (int) $user->getAuthIdentifier(),
-            app(TenantResolver::class)->currentIdentifier(),
+            app(TenantResolver::class)->resolve()->identifier,
             'table',
             $this->stateKey($name)
         );

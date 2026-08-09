@@ -712,7 +712,7 @@ class ImportWizard extends Component
      */
     private function loadHistory(): void
     {
-        $tenantIdentifier = app(TenantResolver::class)->currentIdentifier();
+        $tenantIdentifier = app(TenantResolver::class)->resolve()->identifier;
 
         $query = ImportBatch::query()
             ->where('definition_class', $this->definitionClass)
