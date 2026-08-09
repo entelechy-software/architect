@@ -8,6 +8,7 @@ use Entelechy\Architect\Forms\ControlRegistry;
 use Entelechy\Architect\Support\Doctor\ActionWiringAuditor;
 use Entelechy\Architect\Support\Doctor\ControlMaturityAuditor;
 use Entelechy\Architect\Support\Doctor\DefinitionInterfaceAuditor;
+use Entelechy\Architect\Support\Doctor\TenantScopeAuditor;
 use Illuminate\Console\Command;
 
 /**
@@ -49,7 +50,12 @@ class ArchitectDoctorCommand extends Command
             (new DefinitionInterfaceAuditor)->findings(),
         );
 
-        $clean = $controlsClean && $actionsClean && $definitionInterfacesClean;
+        $tenantScopeClean = $this->report(
+            'Tenant scoping (baseQuery() overrides must call parent::baseQuery() first)',
+            (new TenantScopeAuditor)->findings(),
+        );
+
+        $clean = $controlsClean && $actionsClean && $definitionInterfacesClean && $tenantScopeClean;
 
         $this->newLine();
 

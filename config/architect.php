@@ -150,9 +150,17 @@ return [
     | scoping (models implementing Tenancy\Contracts\HasTenantScope), and/or
     | ->connection for database-per-tenant connection switching (e.g. bridging
     | stancl/tenancy's already-resolved tenant connection).
+    |
+    | 'discovery.paths' is scanned by `php artisan architect:doctor` for
+    | AbstractEloquentDataModel subclasses that override baseQuery() without
+    | calling parent::baseQuery() first — silently bypassing tenant scoping
+    | and connection switching. Empty (the default) skips this check.
     */
     'tenant' => [
         'resolver' => NullTenantResolver::class,
+        'discovery' => [
+            'paths' => [],
+        ],
     ],
 
     /*
