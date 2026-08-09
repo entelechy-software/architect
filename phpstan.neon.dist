@@ -21,6 +21,13 @@ parameters:
             message: '#Trait Entelechy\\Architect\\Concerns\\HasStorageContract is used zero times and is not analysed#'
             path: src/Concerns/HasStorageContract.php
         -
+            # Public convenience trait for host-app Eloquent models opting
+            # into row-level tenant scoping (see ARCHITECT_IMPROVEMENT_PLAN.md
+            # Phase 4) — never used inside the package itself, so PHPStan
+            # can't analyse it in this scope.
+            message: '#Trait Entelechy\\Architect\\Tenancy\\Concerns\\ScopedToTenant is used zero times and is not analysed#'
+            path: src/Tenancy/Concerns/ScopedToTenant.php
+        -
             # Larastan's view-string literal check requires the analysed app
             # to have the package's views actually registered via a booted
             # ServiceProvider (loadViewsFrom('architect')). When analysing

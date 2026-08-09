@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace Entelechy\Architect\Table;
 
+use Entelechy\Architect\Contracts\TenantResolver;
 use Entelechy\Architect\Table\Contracts\ArchitectDataModel;
 use Entelechy\Architect\Table\Contracts\SupportsAutoRefreshFingerprint;
+use Entelechy\Architect\Tenancy\Contracts\HasTenantScope;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
@@ -30,16 +32,35 @@ abstract class AbstractEloquentDataModel implements ArchitectDataModel, Supports
     abstract public function modelClass(): string;
 
     /**
-     * Override to customise the base query — eager loads, tenant scoping
-     * (only if the host app does not already switch connections via
-     * middleware — see Phase 3.2's tenancy notes), excluding soft-deleted
-     * rows by default, etc.
+     * Override to customise the base query further — eager loads, custom
+     * excludes, etc. Always call parent::baseQuery() first (or replicate
+     * its behaviour) to keep the automatic tenant scoping below.
+     *
+     * Tenant handling (see ARCHITECT_IMPROVEMENT_PLAN.md Phase 4): resolves
+     * the current TenantContext once per query. A non-null
+     * TenantContext::$connection switches the query to that database
+     * connection (database-per-tenant). When the bound model additionally
+     * implements Tenancy\Contracts\HasTenantScope, the query is also
+     * filtered by tenantScopeColumn() = TenantContext::$identifier
+     * (row-level scoping in a shared database). Both apply independently —
+     * a host app can combine them per-model.
      *
      * @return Builder<Model>
      */
     protected function baseQuery(): Builder
     {
-        return $this->modelClass()::query();
+        $modelClass = $this->modelClass();
+        $context = app(TenantResolver::class)->resolve();
+
+        $query = $context->connection !== null
+            ? $modelClass::on($context->connection)
+            : $modelClass::query();
+
+        if ($context->identifier !== '' && is_subclass_of($modelClass, HasTenantScope::class)) {
+            $query->where($modelClass::tenantScopeColumn(), $context->identifier);
+        }
+
+        return $query;
     }
 
     /**
