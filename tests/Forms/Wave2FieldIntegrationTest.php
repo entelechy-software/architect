@@ -18,6 +18,7 @@ use Entelechy\Architect\Forms\Fields\TemplateEditorField;
 use Entelechy\Architect\Forms\Fields\TreeSelectField;
 use Entelechy\Architect\Forms\FormBuilder;
 use Entelechy\Architect\Forms\Livewire\FormEngine;
+use Entelechy\Architect\Forms\Contracts\ProvidesFormDefinition;
 use Entelechy\Architect\Tests\TestCase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Config;
@@ -182,7 +183,7 @@ class Wave2FieldIntegrationTest extends TestCase
     }
 }
 
-final class KanbanBoardFormDefinition
+final class KanbanBoardFormDefinition implements ProvidesFormDefinition
 {
     /** @var array<string, mixed> */
     public static array $savedData = [];
@@ -202,7 +203,7 @@ final class KanbanBoardFormDefinition
     }
 }
 
-final class ImageCropperFormDefinition
+final class ImageCropperFormDefinition implements ProvidesFormDefinition
 {
     /** @var array<string, mixed> */
     public static array $savedData = [];
@@ -218,7 +219,7 @@ final class ImageCropperFormDefinition
     }
 }
 
-final class ImageComparisonSliderFormDefinition
+final class ImageComparisonSliderFormDefinition implements ProvidesFormDefinition
 {
     /** @var array<string, mixed> */
     public static array $savedData = [];
@@ -238,7 +239,7 @@ final class ImageComparisonSliderFormDefinition
     }
 }
 
-final class GradientEditorFormDefinition
+final class GradientEditorFormDefinition implements ProvidesFormDefinition
 {
     /** @var array<string, mixed> */
     public static array $savedData = [];
@@ -254,7 +255,7 @@ final class GradientEditorFormDefinition
     }
 }
 
-final class EntityPickerFormDefinition
+final class EntityPickerFormDefinition implements ProvidesFormDefinition
 {
     /** @var array<string, mixed> */
     public static array $savedData = [];
@@ -270,7 +271,7 @@ final class EntityPickerFormDefinition
     }
 }
 
-final class RelationshipPickerFormDefinition
+final class RelationshipPickerFormDefinition implements ProvidesFormDefinition
 {
     /** @var array<string, mixed> */
     public static array $savedData = [];
@@ -290,7 +291,7 @@ final class RelationshipPickerFormDefinition
     }
 }
 
-final class TreeSelectFormDefinition
+final class TreeSelectFormDefinition implements ProvidesFormDefinition
 {
     /** @var array<string, mixed> */
     public static array $savedData = [];
@@ -313,7 +314,7 @@ final class TreeSelectFormDefinition
     }
 }
 
-final class DualListboxFormDefinition
+final class DualListboxFormDefinition implements ProvidesFormDefinition
 {
     /** @var array<string, mixed> */
     public static array $savedData = [];
@@ -331,7 +332,7 @@ final class DualListboxFormDefinition
     }
 }
 
-final class TemplateEditorFormDefinition
+final class TemplateEditorFormDefinition implements ProvidesFormDefinition
 {
     /** @var array<string, mixed> */
     public static array $savedData = [];
@@ -347,7 +348,7 @@ final class TemplateEditorFormDefinition
     }
 }
 
-final class MentionEditorFormDefinition
+final class MentionEditorFormDefinition implements ProvidesFormDefinition
 {
     /** @var array<string, mixed> */
     public static array $savedData = [];
@@ -363,7 +364,7 @@ final class MentionEditorFormDefinition
     }
 }
 
-final class RegexBuilderTesterFormDefinition
+final class RegexBuilderTesterFormDefinition implements ProvidesFormDefinition
 {
     /** @var array<string, mixed> */
     public static array $savedData = [];

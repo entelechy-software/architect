@@ -15,6 +15,7 @@ use Entelechy\Architect\Forms\Fields\RankingField;
 use Entelechy\Architect\Forms\Fields\SortableListField;
 use Entelechy\Architect\Forms\FormBuilder;
 use Entelechy\Architect\Forms\Livewire\FormEngine;
+use Entelechy\Architect\Forms\Contracts\ProvidesFormDefinition;
 use Entelechy\Architect\Tests\TestCase;
 use Illuminate\Support\Facades\Config;
 use Livewire\Livewire;
@@ -134,7 +135,7 @@ class Wave1FieldIntegrationTest extends TestCase
     }
 }
 
-final class PasswordStrengthFormDefinition
+final class PasswordStrengthFormDefinition implements ProvidesFormDefinition
 {
     public static function definition(): ArchitectFormDefinition
     {
@@ -145,7 +146,7 @@ final class PasswordStrengthFormDefinition
     }
 }
 
-final class RankingFormDefinition
+final class RankingFormDefinition implements ProvidesFormDefinition
 {
     /** @var array<string, mixed> */
     public static array $savedData = [];
@@ -161,7 +162,7 @@ final class RankingFormDefinition
     }
 }
 
-final class SortableListFormDefinition
+final class SortableListFormDefinition implements ProvidesFormDefinition
 {
     /** @var array<string, mixed> */
     public static array $savedData = [];
@@ -177,7 +178,7 @@ final class SortableListFormDefinition
     }
 }
 
-final class CheckboxTreeFormDefinition
+final class CheckboxTreeFormDefinition implements ProvidesFormDefinition
 {
     /** @var array<string, mixed> */
     public static array $savedData = [];
@@ -200,7 +201,7 @@ final class CheckboxTreeFormDefinition
     }
 }
 
-final class ShortcutFormDefinition
+final class ShortcutFormDefinition implements ProvidesFormDefinition
 {
     /** @var array<string, mixed> */
     public static array $savedData = [];
@@ -216,7 +217,7 @@ final class ShortcutFormDefinition
     }
 }
 
-final class DialKnobFormDefinition
+final class DialKnobFormDefinition implements ProvidesFormDefinition
 {
     /** @var array<string, mixed> */
     public static array $savedData = [];
@@ -232,7 +233,7 @@ final class DialKnobFormDefinition
     }
 }
 
-final class MaskedInputFormDefinition
+final class MaskedInputFormDefinition implements ProvidesFormDefinition
 {
     /** @var array<string, mixed> */
     public static array $savedData = [];
@@ -248,7 +249,7 @@ final class MaskedInputFormDefinition
     }
 }
 
-final class CardInputFormDefinition
+final class CardInputFormDefinition implements ProvidesFormDefinition
 {
     /** @var array<string, mixed> */
     public static array $savedData = [];

@@ -16,6 +16,7 @@ use Entelechy\Architect\Forms\Fields\RulesWorkflowBuilderField;
 use Entelechy\Architect\Forms\Fields\SchemaDrivenObjectEditorField;
 use Entelechy\Architect\Forms\FormBuilder;
 use Entelechy\Architect\Forms\Livewire\FormEngine;
+use Entelechy\Architect\Forms\Contracts\ProvidesFormDefinition;
 use Entelechy\Architect\Tests\TestCase;
 use Illuminate\Support\Facades\Config;
 use Livewire\Livewire;
@@ -181,7 +182,7 @@ class Wave4FieldIntegrationTest extends TestCase
     }
 }
 
-final class FormulaExpressionEditorFormDefinition
+final class FormulaExpressionEditorFormDefinition implements ProvidesFormDefinition
 {
     /** @var array<string, mixed> */
     public static array $savedData = [];
@@ -197,7 +198,7 @@ final class FormulaExpressionEditorFormDefinition
     }
 }
 
-final class MathEquationEditorFormDefinition
+final class MathEquationEditorFormDefinition implements ProvidesFormDefinition
 {
     /** @var array<string, mixed> */
     public static array $savedData = [];
@@ -213,7 +214,7 @@ final class MathEquationEditorFormDefinition
     }
 }
 
-final class QueryBuilderFormDefinition
+final class QueryBuilderFormDefinition implements ProvidesFormDefinition
 {
     /** @var array<string, mixed> */
     public static array $savedData = [];
@@ -229,7 +230,7 @@ final class QueryBuilderFormDefinition
     }
 }
 
-final class RulesWorkflowBuilderFormDefinition
+final class RulesWorkflowBuilderFormDefinition implements ProvidesFormDefinition
 {
     /** @var array<string, mixed> */
     public static array $savedData = [];
@@ -245,7 +246,7 @@ final class RulesWorkflowBuilderFormDefinition
     }
 }
 
-final class SchemaDrivenObjectEditorFormDefinition
+final class SchemaDrivenObjectEditorFormDefinition implements ProvidesFormDefinition
 {
     /** @var array<string, mixed> */
     public static array $savedData = [];
@@ -270,7 +271,7 @@ final class SchemaDrivenObjectEditorFormDefinition
     }
 }
 
-final class NodeGraphEditorFormDefinition
+final class NodeGraphEditorFormDefinition implements ProvidesFormDefinition
 {
     /** @var array<string, mixed> */
     public static array $savedData = [];
@@ -286,7 +287,7 @@ final class NodeGraphEditorFormDefinition
     }
 }
 
-final class DataMappingFormDefinition
+final class DataMappingFormDefinition implements ProvidesFormDefinition
 {
     /** @var array<string, mixed> */
     public static array $savedData = [];
@@ -306,7 +307,7 @@ final class DataMappingFormDefinition
     }
 }
 
-final class CronScheduleBuilderFormDefinition
+final class CronScheduleBuilderFormDefinition implements ProvidesFormDefinition
 {
     /** @var array<string, mixed> */
     public static array $savedData = [];
@@ -322,7 +323,7 @@ final class CronScheduleBuilderFormDefinition
     }
 }
 
-final class RoleBuilderFormDefinition
+final class RoleBuilderFormDefinition implements ProvidesFormDefinition
 {
     /** @var array<string, mixed> */
     public static array $savedData = [];
