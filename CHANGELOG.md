@@ -9,6 +9,11 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Added
 
+- **Docs (Phase 5)** — three new doc pages: **Feature Maturity** (`architect-status.html`, the Stable/Beta/Experimental/Planned legend plus every non-Stable Forms control in one lookup), **Multi-tenancy** (`architect-multi-tenancy.html`, row-level scoping vs database-per-tenant connection switching, a decision tree, and a `stancl/tenancy` adapter cookbook recipe — deferred from Phase 4), and **Feature Matrix (Phase 2)** (`architect-feature-matrix.html`, publishing `PHASE2_FEATURE_MATRIX.md` as a browsable doc page). `architect-form-controls.html` gained a "Roadmap" section grouping all 22 non-Stable controls by maturity with caveats, plus an inline maturity badge on each of those 22 rows in the category tables.
+- **Tooling** — `php artisan architect:doctor` gained a sixth check: `Support\Doctor\DocMaturityAuditor` scans `docs/_documentation/*.html` for `maturity-badge` spans and cross-references them against `ControlRegistry`, failing if a non-Stable control has no doc badge, or if a badge's level has drifted out of sync with the registry.
+
+### Added
+
 - **Tooling** — `php artisan architect:doctor` gained a fifth check: `Support\Doctor\StubbedFeatureAuditor` mechanically verifies that every Phase 2 "known gap" disclosure (`ToolbarBuilder::bind()`, `ToolbarBadge::live()`, `NavigatorBuilder::position()`, `StatBuilder`'s standalone top-level types) stays documented until it's genuinely fixed — see `PHASE2_FEATURE_MATRIX.md` for the full audit.
 
 ### Fixed

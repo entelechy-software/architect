@@ -8,6 +8,7 @@ use Entelechy\Architect\Forms\ControlRegistry;
 use Entelechy\Architect\Support\Doctor\ActionWiringAuditor;
 use Entelechy\Architect\Support\Doctor\ControlMaturityAuditor;
 use Entelechy\Architect\Support\Doctor\DefinitionInterfaceAuditor;
+use Entelechy\Architect\Support\Doctor\DocMaturityAuditor;
 use Entelechy\Architect\Support\Doctor\StubbedFeatureAuditor;
 use Entelechy\Architect\Support\Doctor\TenantScopeAuditor;
 use Illuminate\Console\Command;
@@ -61,7 +62,13 @@ class ArchitectDoctorCommand extends Command
             (new StubbedFeatureAuditor)->findings(),
         );
 
-        $clean = $controlsClean && $actionsClean && $definitionInterfacesClean && $tenantScopeClean && $stubbedFeaturesClean;
+        $docMaturityClean = $this->report(
+            'Doc maturity badges (non-Stable controls must have an up-to-date doc badge)',
+            (new DocMaturityAuditor($this->laravel->make(ControlRegistry::class)))->findings(),
+        );
+
+        $clean = $controlsClean && $actionsClean && $definitionInterfacesClean && $tenantScopeClean
+            && $stubbedFeaturesClean && $docMaturityClean;
 
         $this->newLine();
 
