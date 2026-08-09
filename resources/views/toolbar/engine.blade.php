@@ -22,7 +22,7 @@
         urlPersistKeys: {{ \Illuminate\Support\Js::from($this->buildUrlPersistKeys($definition)) }},
     })"
     x-init="init()"
-    class="architect-toolbar flex items-center gap-2 px-4 py-2 bg-white border-b border-gray-200 dark:bg-gray-900 dark:border-gray-700 {{ $definition->isSticky() ? 'sticky top-0 z-20' : '' }}"
+    class="architect-toolbar flex items-center bg-white dark:bg-gray-900 {{ $definition->getSize() === 'sm' ? 'gap-1.5 px-2 py-1' : 'gap-2 px-4 py-2' }} {{ $definition->isBordered() ? 'border-b border-gray-200 dark:border-gray-700' : '' }} {{ $definition->isSticky() ? 'sticky top-0 z-20' : '' }}"
     role="toolbar"
     aria-label="Toolbar"
 >

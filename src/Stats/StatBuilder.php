@@ -26,25 +26,35 @@ use Illuminate\Support\Str;
  *       ->build();
  *
  *   // Standalone metric grid (above a table, etc.)
+ *   //
+ *   // KNOWN GAP (tracked, not yet wired): building a non-'dashboard' type
+ *   // as the TOP-LEVEL definition (i.e. NOT passed to ->section() on a
+ *   // dashboard) currently has no render path anywhere in the package.
+ *   // DashboardEngine only ever resolves $definition->sections, which is
+ *   // empty unless the type is 'dashboard'; there is no public API for
+ *   // resolving a lone MetricCard/chart/table/crosstab section's data
+ *   // outside of DashboardEngine's own private resolve*() methods. Use
+ *   // this only nested inside a dashboard's ->section(...) for now — see
+ *   // ARCHITECT_IMPROVEMENT_PLAN.md Phase 2 Feature Matrix.
  *   Architect::make('stat')->type('metrics')
  *       ->columns(4)
  *       ->layout('inline')
  *       ->cards([MetricCard::make('Open Cases')->live(fn(Container $app) => ..., every: 30)])
  *       ->build();
  *
- *   // Standalone chart
+ *   // Standalone chart — same known gap as above.
  *   Architect::make('stat')->type('chart')->style('line')
  *       ->title('Case Activity')
  *       ->series(fn(DateRange $range, string $granularity, Container $app) => ...)
  *       ->build();
  *
- *   // Read-only table
+ *   // Read-only table — same known gap as above.
  *   Architect::make('stat')->type('table')
  *       ->title('Closure Reasons')
  *       ->data(fn(DateRange $range, Container $app) => ...)
  *       ->build();
  *
- *   // Cross-tab matrix
+ *   // Cross-tab matrix — same known gap as above.
  *   Architect::make('stat')->type('crosstab')
  *       ->title('Year of Study by Category')
  *       ->data(fn(DateRange $range, Container $app) => ...)

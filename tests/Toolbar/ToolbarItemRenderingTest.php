@@ -55,6 +55,22 @@ class ToolbarItemRenderingTest extends TestCase
 
         $component->assertSeeHtml('btn-group-sm');
     }
+
+    /**
+     * Regression coverage for a second Phase 2 finding: ArchitectToolbarDefinition::
+     * getSize()/isBordered() were stored (via ToolbarBuilder::size()/->bordered())
+     * but never read by engine.blade.php — only the unrelated per-item
+     * ToolbarButtonGroup/ToolbarRadioGroup ->getSize() were consumed. The toolbar
+     * always rendered at 'md' padding with a border regardless of these settings.
+     */
+    public function test_toolbar_level_size_and_bordered_are_applied_to_wrapping_element(): void
+    {
+        $component = Livewire::test(ToolbarEngine::class, ['definitionClass' => FullToolbarDefinition::class]);
+
+        $component->assertSeeHtml('architect-toolbar flex items-center bg-white');
+        $component->assertSeeHtml('gap-1.5 px-2 py-1');
+        $component->assertSeeHtml('border-b border-gray-200');
+    }
 }
 
 final class FullToolbarDefinition implements ProvidesToolbarDefinition

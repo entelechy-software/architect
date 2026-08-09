@@ -8,6 +8,7 @@ use Entelechy\Architect\Forms\ControlRegistry;
 use Entelechy\Architect\Support\Doctor\ActionWiringAuditor;
 use Entelechy\Architect\Support\Doctor\ControlMaturityAuditor;
 use Entelechy\Architect\Support\Doctor\DefinitionInterfaceAuditor;
+use Entelechy\Architect\Support\Doctor\StubbedFeatureAuditor;
 use Entelechy\Architect\Support\Doctor\TenantScopeAuditor;
 use Illuminate\Console\Command;
 
@@ -55,7 +56,12 @@ class ArchitectDoctorCommand extends Command
             (new TenantScopeAuditor)->findings(),
         );
 
-        $clean = $controlsClean && $actionsClean && $definitionInterfacesClean && $tenantScopeClean;
+        $stubbedFeaturesClean = $this->report(
+            'Stubbed features (tracked known-gap disclosures must stay in place)',
+            (new StubbedFeatureAuditor)->findings(),
+        );
+
+        $clean = $controlsClean && $actionsClean && $definitionInterfacesClean && $tenantScopeClean && $stubbedFeaturesClean;
 
         $this->newLine();
 
