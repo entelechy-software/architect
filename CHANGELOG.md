@@ -47,6 +47,19 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   - `Builder`'s "block sub-field gap" mentioned in the plan was investigated and found to be a pre-existing, already-documented, deliberately deferred limitation (`builder.blade.php`'s own comment: "pending Phase 8 nested-structure support") — not a Wave 4 concern.
 
   New npm dependency: `cron-parser`. New `Wave4FieldIntegrationTest` covers each field's `FormEngine` submit/validation round-trip.
+- **Rendering (Con #3)** — new `Entelechy\Architect\Contracts\ArchitectDefinitionProvider` marker interface (`public static function definition(): object;`) plus 9 per-subsystem narrowing interfaces, each covariantly typing the return to its subsystem's definition class: `Table\Contracts\ProvidesTableDefinition`, `Content\Contracts\ProvidesContentDefinition`, `Stats\Contracts\ProvidesStatDefinition`, `Panels\Contracts\ProvidesDashboardDefinition`, `Forms\Contracts\ProvidesFormDefinition`, `Forms\Contracts\ProvidesWizardDefinition`, `Toolbar\Contracts\ProvidesToolbarDefinition`, `Supersearch\Contracts\ProvidesSupersearchDefinition`, `Navigator\Contracts\ProvidesNavigatorDefinition`. Every host-app "definition class" (Table/Content/Stats/Panels/Forms/Wizard/Toolbar/Supersearch/Navigator) must now `implements` the matching interface — every engine resolves definition classes via `is_subclass_of()`/`instanceof` instead of `method_exists()` duck-typing, so a misconfigured definition class now fails at static-analysis time (or with a clear `LogicException`/`InvalidArgumentException` naming the missing interface) instead of silently duck-typing.
+
+### Changed
+
+- **BREAKING — Toolbar / Supersearch / Navigator rendering convention unified.** `ToolbarBuilder`/`SupersearchBuilder`/Navigator's `ModuleTabsManager` (workspace-tabs) definition classes must now expose a static `definition()` method (previously `build()`); the old method name is no longer recognized. Update any custom Toolbar/Supersearch/workspace-tabs definition class: rename its static factory method from `build()` to `definition()` and add `implements Provides*Definition` (see Added, above).
+- **BREAKING** — Navigator's Blade-only rendering component (used for `tabs`/`pills`/`buttons`/`stepper`/`sidebar`/`dropdown` types) is renamed from `<x-architect::definition-renderer>` to `<x-architect::static>` — the "static" counterpart to every other subsystem's Livewire `<livewire:architect-*>` ("live") tag, since Navigator is the only subsystem that ever renders without a Livewire round-trip. Update any Blade view referencing the old tag name.
+
+### Migration notes
+
+1. For every custom Toolbar/Supersearch/workspace-tabs Navigator definition class: rename `public static function build()` → `public static function definition()`.
+2. Add `implements Provides{Subsystem}Definition` to every definition class (Table/Content/Stats/Panels/Forms/Wizard/Toolbar/Supersearch/Navigator), importing the matching interface from `Entelechy\Architect\{Subsystem}\Contracts\Provides{Subsystem}Definition`.
+3. Replace any `<x-architect::definition-renderer ...>` Blade reference with `<x-architect::static ...>`.
+4. Run `php artisan architect:doctor` to confirm every definition class in your app now satisfies its required interface.
 
 ## [0.1.21] — 2026-07-22
 
