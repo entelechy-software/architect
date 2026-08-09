@@ -8,6 +8,7 @@
 import Sortable from 'sortablejs';
 import Cropper from 'cropperjs';
 import Tribute from 'tributejs';
+import { CronExpressionParser } from 'cron-parser';
 
 /**
  * Drag state for the FileUpload dropzone. The actual upload is handled by
@@ -1410,6 +1411,801 @@ function architectRegexTester({ wireField, sampleText = '' }) {
     };
 }
 
+/**
+ * Backs FormulaExpressionEditorField — bespoke input + field-reference
+ * chip insertion + live highlighting of recognized field names
+ * (ARCHITECT_IMPROVEMENT_PLAN.md Phase 1 Wave 4). Deliberately no
+ * third-party expression-editor library per the dependency policy
+ * table: evaluation is a host-app concern, this field only builds the
+ * raw expression string.
+ *
+ * @param {Object}          options
+ * @param {string}          options.wireField
+ * @param {Array<string>}   options.availableFields
+ */
+function architectFormulaExpressionEditor({ wireField, availableFields = [] }) {
+    return {
+        init() {
+            const value = this.$wire.get(wireField) ?? '';
+            this.$refs.input.value = value;
+            this.renderPreview(value);
+        },
+
+        onInput(value) {
+            this.$wire.set(wireField, value);
+            this.renderPreview(value);
+        },
+
+        insertField(name) {
+            const input = this.$refs.input;
+            const start = input.selectionStart ?? input.value.length;
+            const end = input.selectionEnd ?? input.value.length;
+            input.value = input.value.slice(0, start) + name + input.value.slice(end);
+            input.dispatchEvent(new Event('input', { bubbles: true }));
+            this.onInput(input.value);
+        },
+
+        renderPreview(value) {
+            const escaped = value.replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[c]);
+
+            if (availableFields.length === 0) {
+                this.$refs.preview.innerHTML = escaped;
+
+                return;
+            }
+
+            const sorted = [...availableFields].sort((a, b) => b.length - a.length);
+            const pattern = new RegExp(`\\b(${sorted.map((f) => f.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')})\\b`, 'g');
+            this.$refs.preview.innerHTML = escaped.replace(pattern, (match) => `<span class="arch-formula-expression-editor__token">${match}</span>`);
+        },
+    };
+}
+
+/**
+ * Backs MathEquationEditorField — lightweight LaTeX snippet palette +
+ * raw-string editing (ARCHITECT_IMPROVEMENT_PLAN.md Phase 1 Wave 4).
+ * Deliberately vanilla, no MathQuill: the real npm `mathquill` package
+ * hard-depends on jQuery 1.x, which conflicts with this codebase's
+ * lightweight/no-legacy-dependency policy. The field's value is just
+ * the resulting LaTeX string (visual rendering, if desired, is a
+ * host-app concern via KaTeX/MathJax).
+ *
+ * @param {Object} options
+ * @param {string} options.wireField
+ */
+function architectMathEquationEditor({ wireField }) {
+    return {
+        value: '',
+
+        init() {
+            this.value = this.$wire.get(wireField) ?? '';
+            this.$refs.editor.value = this.value;
+        },
+
+        onInput(value) {
+            this.value = value;
+            this.$wire.set(wireField, value);
+        },
+
+        insert(snippet, cursorOffset = 0) {
+            const input = this.$refs.editor;
+            const start = input.selectionStart ?? input.value.length;
+            const end = input.selectionEnd ?? input.value.length;
+            input.value = input.value.slice(0, start) + snippet + input.value.slice(end);
+            const caret = start + snippet.length + cursorOffset;
+            input.focus();
+            input.setSelectionRange(caret, caret);
+            this.onInput(input.value);
+        },
+    };
+}
+
+/**
+ * Backs QueryBuilderField — recursive nested AND/OR condition-group
+ * builder (ARCHITECT_IMPROVEMENT_PLAN.md Phase 1 Wave 4). Value shape:
+ * {operator: 'and'|'or', conditions: Array<Condition|Group>}. Bespoke
+ * imperative DOM (no library): the field never evaluates the tree
+ * itself (host-app concern), so pulling in an evaluation library such
+ * as json-logic-js would be dead weight.
+ *
+ * @param {Object}        options
+ * @param {string}        options.wireField
+ * @param {Array<string>} options.availableFields
+ */
+function architectQueryBuilder({ wireField, availableFields = [] }) {
+    const emptyGroup = () => ({ operator: 'and', conditions: [] });
+    const emptyCondition = () => ({ field: availableFields[0] ?? '', operator: '=', value: '' });
+
+    return {
+        root: emptyGroup(),
+
+        init() {
+            this.root = this.$wire.get(wireField) ?? emptyGroup();
+            this.render();
+        },
+
+        commit() {
+            this.$wire.set(wireField, this.root);
+            this.render();
+        },
+
+        render() {
+            const container = this.$refs.groups;
+            container.innerHTML = '';
+            container.appendChild(this.buildGroup(this.root, []));
+        },
+
+        groupAt(path) {
+            return path.reduce((group, index) => group.conditions[index], this.root);
+        },
+
+        buildGroup(group, path) {
+            const wrapper = document.createElement('div');
+            wrapper.className = 'arch-query-builder__group';
+
+            const toolbar = document.createElement('div');
+            toolbar.className = 'arch-query-builder__group-toolbar';
+
+            const operatorSelect = document.createElement('select');
+            operatorSelect.className = 'arch-select';
+            ['and', 'or'].forEach((op) => {
+                const option = document.createElement('option');
+                option.value = op;
+                option.textContent = op.toUpperCase();
+                option.selected = group.operator === op;
+                operatorSelect.appendChild(option);
+            });
+            operatorSelect.addEventListener('change', () => {
+                group.operator = operatorSelect.value;
+                this.commit();
+            });
+            toolbar.appendChild(operatorSelect);
+
+            const addConditionBtn = document.createElement('button');
+            addConditionBtn.type = 'button';
+            addConditionBtn.className = 'arch-button';
+            addConditionBtn.dataset.variant = 'outline';
+            addConditionBtn.dataset.size = 'sm';
+            addConditionBtn.textContent = 'Add condition';
+            addConditionBtn.addEventListener('click', () => {
+                group.conditions.push(emptyCondition());
+                this.commit();
+            });
+            toolbar.appendChild(addConditionBtn);
+
+            const addGroupBtn = document.createElement('button');
+            addGroupBtn.type = 'button';
+            addGroupBtn.className = 'arch-button';
+            addGroupBtn.dataset.variant = 'outline';
+            addGroupBtn.dataset.size = 'sm';
+            addGroupBtn.textContent = 'Add group';
+            addGroupBtn.addEventListener('click', () => {
+                group.conditions.push(emptyGroup());
+                this.commit();
+            });
+            toolbar.appendChild(addGroupBtn);
+
+            wrapper.appendChild(toolbar);
+
+            const rows = document.createElement('div');
+            rows.className = 'arch-query-builder__rows';
+            group.conditions.forEach((entry, index) => {
+                const row = 'conditions' in entry
+                    ? this.buildGroup(entry, [...path, index])
+                    : this.buildCondition(entry, group, index);
+                rows.appendChild(row);
+            });
+            wrapper.appendChild(rows);
+
+            return wrapper;
+        },
+
+        buildCondition(condition, parentGroup, index) {
+            const row = document.createElement('div');
+            row.className = 'arch-query-builder__condition';
+
+            const fieldSelect = document.createElement('select');
+            fieldSelect.className = 'arch-select';
+            availableFields.forEach((f) => {
+                const option = document.createElement('option');
+                option.value = f;
+                option.textContent = f;
+                option.selected = condition.field === f;
+                fieldSelect.appendChild(option);
+            });
+            fieldSelect.addEventListener('change', () => {
+                condition.field = fieldSelect.value;
+                this.commit();
+            });
+            row.appendChild(fieldSelect);
+
+            const operatorSelect = document.createElement('select');
+            operatorSelect.className = 'arch-select';
+            ['=', '!=', '>', '>=', '<', '<=', 'contains'].forEach((op) => {
+                const option = document.createElement('option');
+                option.value = op;
+                option.textContent = op;
+                option.selected = condition.operator === op;
+                operatorSelect.appendChild(option);
+            });
+            operatorSelect.addEventListener('change', () => {
+                condition.operator = operatorSelect.value;
+                this.commit();
+            });
+            row.appendChild(operatorSelect);
+
+            const valueInput = document.createElement('input');
+            valueInput.type = 'text';
+            valueInput.className = 'arch-input';
+            valueInput.value = condition.value ?? '';
+            valueInput.addEventListener('input', () => {
+                condition.value = valueInput.value;
+                this.commit();
+            });
+            row.appendChild(valueInput);
+
+            const removeBtn = document.createElement('button');
+            removeBtn.type = 'button';
+            removeBtn.className = 'arch-repeater__remove';
+            removeBtn.textContent = 'Remove';
+            removeBtn.addEventListener('click', () => {
+                parentGroup.conditions.splice(index, 1);
+                this.commit();
+            });
+            row.appendChild(removeBtn);
+
+            return row;
+        },
+    };
+}
+
+/**
+ * Backs RulesWorkflowBuilderField — ordered node list + from/to edge
+ * list (ARCHITECT_IMPROVEMENT_PLAN.md Phase 1 Wave 4). Deliberately a
+ * structured list builder rather than a drag-positioned canvas: the
+ * field's own value shape has no (x, y) coordinates (unlike
+ * NodeGraphEditorField), so a full 2D canvas would be surface without
+ * substance. No json-logic-js: the field only builds the node/edge
+ * data, it never evaluates it (host-app concern).
+ *
+ * @param {Object}        options
+ * @param {string}        options.wireField
+ * @param {Array<string>} options.availableNodeTypes
+ */
+function architectRulesWorkflowBuilder({ wireField, availableNodeTypes = [] }) {
+    let nodeSeq = 0;
+
+    return {
+        nodes: [],
+        edges: [],
+
+        init() {
+            const initial = this.$wire.get(wireField) ?? { nodes: [], edges: [] };
+            this.nodes = initial.nodes ?? [];
+            this.edges = initial.edges ?? [];
+            nodeSeq = this.nodes.length;
+            this.render();
+        },
+
+        commit() {
+            this.$wire.set(wireField, { nodes: this.nodes, edges: this.edges });
+            this.render();
+        },
+
+        addNode() {
+            this.nodes.push({ id: `node-${nodeSeq++}`, type: availableNodeTypes[0] ?? '', config: {} });
+            this.commit();
+        },
+
+        addEdge() {
+            if (this.nodes.length < 2) return;
+            this.edges.push({ from: this.nodes[0].id, to: this.nodes[1].id });
+            this.commit();
+        },
+
+        render() {
+            this.renderNodes();
+            this.renderEdges();
+        },
+
+        renderNodes() {
+            const container = this.$refs.nodes;
+            container.innerHTML = '';
+            this.nodes.forEach((node, index) => {
+                const row = document.createElement('div');
+                row.className = 'arch-rules-workflow-builder__node';
+
+                const idLabel = document.createElement('span');
+                idLabel.className = 'arch-badge';
+                idLabel.dataset.color = 'primary';
+                idLabel.dataset.variant = 'soft';
+                idLabel.textContent = node.id;
+                row.appendChild(idLabel);
+
+                const typeSelect = document.createElement('select');
+                typeSelect.className = 'arch-select';
+                availableNodeTypes.forEach((type) => {
+                    const option = document.createElement('option');
+                    option.value = type;
+                    option.textContent = type;
+                    option.selected = node.type === type;
+                    typeSelect.appendChild(option);
+                });
+                typeSelect.addEventListener('change', () => {
+                    node.type = typeSelect.value;
+                    this.commit();
+                });
+                row.appendChild(typeSelect);
+
+                const configInput = document.createElement('input');
+                configInput.type = 'text';
+                configInput.className = 'arch-input arch-input--code';
+                configInput.value = JSON.stringify(node.config ?? {});
+                configInput.addEventListener('change', () => {
+                    try {
+                        node.config = JSON.parse(configInput.value || '{}');
+                        this.commit();
+                    } catch {
+                        configInput.value = JSON.stringify(node.config ?? {});
+                    }
+                });
+                row.appendChild(configInput);
+
+                const removeBtn = document.createElement('button');
+                removeBtn.type = 'button';
+                removeBtn.className = 'arch-repeater__remove';
+                removeBtn.textContent = 'Remove';
+                removeBtn.addEventListener('click', () => {
+                    this.nodes.splice(index, 1);
+                    this.edges = this.edges.filter((e) => e.from !== node.id && e.to !== node.id);
+                    this.commit();
+                });
+                row.appendChild(removeBtn);
+
+                container.appendChild(row);
+            });
+        },
+
+        renderEdges() {
+            const container = this.$refs.edges;
+            container.innerHTML = '';
+            this.edges.forEach((edge, index) => {
+                const row = document.createElement('div');
+                row.className = 'arch-rules-workflow-builder__edge';
+
+                const fromSelect = this.nodeSelect(edge.from, (value) => { edge.from = value; this.commit(); });
+                const toSelect = this.nodeSelect(edge.to, (value) => { edge.to = value; this.commit(); });
+                row.appendChild(fromSelect);
+
+                const arrow = document.createElement('span');
+                arrow.textContent = '→';
+                row.appendChild(arrow);
+                row.appendChild(toSelect);
+
+                const removeBtn = document.createElement('button');
+                removeBtn.type = 'button';
+                removeBtn.className = 'arch-repeater__remove';
+                removeBtn.textContent = 'Remove';
+                removeBtn.addEventListener('click', () => {
+                    this.edges.splice(index, 1);
+                    this.commit();
+                });
+                row.appendChild(removeBtn);
+
+                container.appendChild(row);
+            });
+        },
+
+        nodeSelect(selectedId, onChange) {
+            const select = document.createElement('select');
+            select.className = 'arch-select';
+            this.nodes.forEach((node) => {
+                const option = document.createElement('option');
+                option.value = node.id;
+                option.textContent = node.id;
+                option.selected = node.id === selectedId;
+                select.appendChild(option);
+            });
+            select.addEventListener('change', () => onChange(select.value));
+
+            return select;
+        },
+    };
+}
+
+/**
+ * Backs SchemaDrivenObjectEditorField — renders one input per JSON
+ * Schema property, recursing into nested `type: object` properties
+ * (ARCHITECT_IMPROVEMENT_PLAN.md Phase 1 Wave 4). Bespoke, no
+ * JSON-schema-form library per the dependency policy table.
+ *
+ * @param {Object} options
+ * @param {string} options.wireField
+ * @param {Object} options.schema  A JSON Schema object.
+ */
+function architectSchemaDrivenObjectEditor({ wireField, schema = {} }) {
+    return {
+        data: {},
+
+        init() {
+            this.data = this.$wire.get(wireField) ?? {};
+            this.render();
+        },
+
+        commit() {
+            this.$wire.set(wireField, this.data);
+        },
+
+        render() {
+            const container = this.$refs.form;
+            container.innerHTML = '';
+            container.appendChild(this.buildObject(schema, this.data));
+        },
+
+        buildObject(objectSchema, target) {
+            const wrapper = document.createElement('div');
+            wrapper.className = 'arch-schema-driven-object-editor__object';
+            const properties = objectSchema.properties ?? {};
+
+            Object.entries(properties).forEach(([key, propSchema]) => {
+                const field = document.createElement('label');
+                field.className = 'arch-schema-driven-object-editor__field';
+
+                const label = document.createElement('span');
+                label.className = 'arch-field__label';
+                label.textContent = propSchema.title ?? key;
+                field.appendChild(label);
+
+                field.appendChild(this.buildControl(propSchema, target, key));
+                wrapper.appendChild(field);
+            });
+
+            return wrapper;
+        },
+
+        buildControl(propSchema, target, key) {
+            if (propSchema.type === 'object') {
+                target[key] = target[key] ?? {};
+
+                return this.buildObject(propSchema, target[key]);
+            }
+
+            if (Array.isArray(propSchema.enum)) {
+                const select = document.createElement('select');
+                select.className = 'arch-select';
+                propSchema.enum.forEach((value) => {
+                    const option = document.createElement('option');
+                    option.value = value;
+                    option.textContent = value;
+                    option.selected = target[key] === value;
+                    select.appendChild(option);
+                });
+                select.addEventListener('change', () => {
+                    target[key] = select.value;
+                    this.commit();
+                });
+
+                return select;
+            }
+
+            if (propSchema.type === 'boolean') {
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.checked = Boolean(target[key]);
+                checkbox.addEventListener('change', () => {
+                    target[key] = checkbox.checked;
+                    this.commit();
+                });
+
+                return checkbox;
+            }
+
+            const input = document.createElement('input');
+            input.type = propSchema.type === 'number' || propSchema.type === 'integer' ? 'number' : 'text';
+            input.className = 'arch-input';
+            input.value = target[key] ?? '';
+            input.addEventListener('input', () => {
+                target[key] = input.type === 'number' ? Number(input.value) : input.value;
+                this.commit();
+            });
+
+            return input;
+        },
+    };
+}
+
+/**
+ * Backs NodeGraphEditorField — draggable, positioned nodes connected by
+ * SVG edges (ARCHITECT_IMPROVEMENT_PLAN.md Phase 1 Wave 4). Value
+ * shape: {nodes: Array<{id, type, x, y}>, edges: Array<{from, to}>}.
+ * Bespoke Pointer Events canvas, no graph-visualization library per the
+ * dependency policy table.
+ *
+ * @param {Object}        options
+ * @param {string}        options.wireField
+ * @param {Array<string>} options.availableNodeTypes
+ */
+function architectNodeGraphEditor({ wireField, availableNodeTypes = [] }) {
+    let nodeSeq = 0;
+
+    return {
+        nodes: [],
+        edges: [],
+        pendingConnection: null,
+
+        init() {
+            const initial = this.$wire.get(wireField) ?? { nodes: [], edges: [] };
+            this.nodes = initial.nodes ?? [];
+            this.edges = initial.edges ?? [];
+            nodeSeq = this.nodes.length;
+            this.render();
+        },
+
+        commit() {
+            this.$wire.set(wireField, { nodes: this.nodes, edges: this.edges });
+            this.renderEdges();
+        },
+
+        addNode(type) {
+            this.nodes.push({ id: `node-${nodeSeq++}`, type, x: 20 + (this.nodes.length * 30) % 200, y: 20 + (this.nodes.length * 40) % 200 });
+            this.commit();
+            this.renderNodes();
+        },
+
+        beginConnection(nodeId) {
+            this.pendingConnection = nodeId;
+        },
+
+        completeConnection(nodeId) {
+            if (!this.pendingConnection || this.pendingConnection === nodeId) {
+                this.pendingConnection = null;
+
+                return;
+            }
+            this.edges.push({ from: this.pendingConnection, to: nodeId });
+            this.pendingConnection = null;
+            this.commit();
+        },
+
+        render() {
+            this.renderNodes();
+            this.renderEdges();
+        },
+
+        renderNodes() {
+            const canvas = this.$refs.canvas;
+            canvas.querySelectorAll('.arch-node-graph-editor__node').forEach((el) => el.remove());
+
+            this.nodes.forEach((node) => {
+                const el = document.createElement('div');
+                el.className = 'arch-node-graph-editor__node';
+                el.style.left = `${node.x}px`;
+                el.style.top = `${node.y}px`;
+                el.textContent = `${node.type} (${node.id})`;
+
+                el.addEventListener('click', (event) => {
+                    if (event.shiftKey) {
+                        this.completeConnection(node.id);
+                    } else {
+                        this.beginConnection(node.id);
+                    }
+                });
+
+                let dragging = false;
+                el.addEventListener('pointerdown', (event) => {
+                    dragging = true;
+                    el.setPointerCapture(event.pointerId);
+                });
+                el.addEventListener('pointermove', (event) => {
+                    if (!dragging) return;
+                    const canvasRect = canvas.getBoundingClientRect();
+                    node.x = Math.max(0, event.clientX - canvasRect.left - el.offsetWidth / 2);
+                    node.y = Math.max(0, event.clientY - canvasRect.top - el.offsetHeight / 2);
+                    el.style.left = `${node.x}px`;
+                    el.style.top = `${node.y}px`;
+                    this.renderEdges();
+                });
+                el.addEventListener('pointerup', () => {
+                    if (!dragging) return;
+                    dragging = false;
+                    this.commit();
+                });
+
+                canvas.appendChild(el);
+            });
+        },
+
+        renderEdges() {
+            const svg = this.$refs.svg;
+            svg.innerHTML = '';
+
+            this.edges.forEach((edge) => {
+                const from = this.nodes.find((n) => n.id === edge.from);
+                const to = this.nodes.find((n) => n.id === edge.to);
+                if (!from || !to) return;
+
+                const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                line.setAttribute('x1', String(from.x + 40));
+                line.setAttribute('y1', String(from.y + 16));
+                line.setAttribute('x2', String(to.x + 40));
+                line.setAttribute('y2', String(to.y + 16));
+                line.setAttribute('class', 'arch-node-graph-editor__edge-line');
+                svg.appendChild(line);
+            });
+        },
+    };
+}
+
+/**
+ * Backs DataMappingField — repeatable {source, destination, transform}
+ * rows (ARCHITECT_IMPROVEMENT_PLAN.md Phase 1 Wave 4).
+ *
+ * @param {Object}        options
+ * @param {string}        options.wireField
+ * @param {Array<string>} options.sourceFields
+ * @param {Array<string>} options.destinationFields
+ */
+function architectDataMapping({ wireField, sourceFields = [], destinationFields = [] }) {
+    return {
+        rows: [],
+
+        init() {
+            this.rows = this.$wire.get(wireField) ?? [];
+            this.render();
+        },
+
+        commit() {
+            this.$wire.set(wireField, this.rows);
+            this.render();
+        },
+
+        addRow() {
+            this.rows.push({ source: sourceFields[0] ?? '', destination: destinationFields[0] ?? '', transform: null });
+            this.commit();
+        },
+
+        render() {
+            const container = this.$refs.rows;
+            container.innerHTML = '';
+
+            this.rows.forEach((row, index) => {
+                const wrapper = document.createElement('div');
+                wrapper.className = 'arch-data-mapping__row';
+
+                const sourceSelect = this.optionSelect(sourceFields, row.source, (value) => { row.source = value; this.commit(); });
+                wrapper.appendChild(sourceSelect);
+
+                const arrow = document.createElement('span');
+                arrow.textContent = '→';
+                wrapper.appendChild(arrow);
+
+                const destinationSelect = this.optionSelect(destinationFields, row.destination, (value) => { row.destination = value; this.commit(); });
+                wrapper.appendChild(destinationSelect);
+
+                const transformInput = document.createElement('input');
+                transformInput.type = 'text';
+                transformInput.className = 'arch-input';
+                transformInput.placeholder = 'Transform (optional)';
+                transformInput.value = row.transform ?? '';
+                transformInput.addEventListener('input', () => {
+                    row.transform = transformInput.value === '' ? null : transformInput.value;
+                    this.commit();
+                });
+                wrapper.appendChild(transformInput);
+
+                const removeBtn = document.createElement('button');
+                removeBtn.type = 'button';
+                removeBtn.className = 'arch-repeater__remove';
+                removeBtn.textContent = 'Remove';
+                removeBtn.addEventListener('click', () => {
+                    this.rows.splice(index, 1);
+                    this.commit();
+                });
+                wrapper.appendChild(removeBtn);
+
+                container.appendChild(wrapper);
+            });
+        },
+
+        optionSelect(values, selected, onChange) {
+            const select = document.createElement('select');
+            select.className = 'arch-select';
+            values.forEach((value) => {
+                const option = document.createElement('option');
+                option.value = value;
+                option.textContent = value;
+                option.selected = value === selected;
+                select.appendChild(option);
+            });
+            select.addEventListener('change', () => onChange(select.value));
+
+            return select;
+        },
+    };
+}
+
+/**
+ * Backs CronScheduleBuilderField — friendly per-field schedule builder
+ * that assembles a 5-field cron expression, validated (and previewed
+ * via next-3-run-times) using cron-parser
+ * (ARCHITECT_IMPROVEMENT_PLAN.md Phase 1 Wave 4). The builder UI itself
+ * stays bespoke per the dependency policy table; cron-parser handles
+ * only validation/next-run computation, matching its real strength
+ * (correctly handling step values, ranges, and DST).
+ *
+ * @param {Object} options
+ * @param {string} options.wireField
+ */
+function architectCronScheduleBuilder({ wireField }) {
+    const fieldDefs = [
+        { key: 'minute', label: 'Minute' },
+        { key: 'hour', label: 'Hour' },
+        { key: 'dayOfMonth', label: 'Day of month' },
+        { key: 'month', label: 'Month' },
+        { key: 'dayOfWeek', label: 'Day of week' },
+    ];
+
+    return {
+        parts: { minute: '*', hour: '*', dayOfMonth: '*', month: '*', dayOfWeek: '*' },
+
+        init() {
+            const existing = this.$wire.get(wireField) ?? '';
+            const segments = existing.trim().split(/\s+/);
+            if (segments.length === 5) {
+                fieldDefs.forEach((def, index) => { this.parts[def.key] = segments[index]; });
+            }
+            this.render();
+            this.commit();
+        },
+
+        expression() {
+            return fieldDefs.map((def) => this.parts[def.key]).join(' ');
+        },
+
+        commit() {
+            const expression = this.expression();
+            this.$wire.set(wireField, expression);
+            this.updatePreview(expression);
+        },
+
+        updatePreview(expression) {
+            try {
+                const interval = CronExpressionParser.parse(expression);
+                const next = interval.take(3).map((date) => date.toString());
+                this.$refs.preview.textContent = `Next: ${next.join(', ')}`;
+            } catch (error) {
+                this.$refs.preview.textContent = `Invalid schedule: ${error.message}`;
+            }
+        },
+
+        render() {
+            const container = this.$refs.builder;
+            container.innerHTML = '';
+
+            fieldDefs.forEach((def) => {
+                const label = document.createElement('label');
+                label.className = 'arch-cron-schedule-builder__field';
+
+                const span = document.createElement('span');
+                span.className = 'arch-field__label';
+                span.textContent = def.label;
+                label.appendChild(span);
+
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.className = 'arch-input arch-input--code';
+                input.value = this.parts[def.key];
+                input.addEventListener('input', () => {
+                    this.parts[def.key] = input.value === '' ? '*' : input.value;
+                    this.commit();
+                });
+                label.appendChild(input);
+
+                container.appendChild(label);
+            });
+        },
+    };
+}
 
 export function registerArchitectForms(Alpine) {
     Alpine.data('architectFileUpload', architectFileUpload);
@@ -1439,4 +2235,12 @@ export function registerArchitectForms(Alpine) {
     Alpine.data('architectTemplateEditor', architectTemplateEditor);
     Alpine.data('architectMentionEditor', architectMentionEditor);
     Alpine.data('architectRegexTester', architectRegexTester);
+    Alpine.data('architectFormulaExpressionEditor', architectFormulaExpressionEditor);
+    Alpine.data('architectMathEquationEditor', architectMathEquationEditor);
+    Alpine.data('architectQueryBuilder', architectQueryBuilder);
+    Alpine.data('architectRulesWorkflowBuilder', architectRulesWorkflowBuilder);
+    Alpine.data('architectSchemaDrivenObjectEditor', architectSchemaDrivenObjectEditor);
+    Alpine.data('architectNodeGraphEditor', architectNodeGraphEditor);
+    Alpine.data('architectDataMapping', architectDataMapping);
+    Alpine.data('architectCronScheduleBuilder', architectCronScheduleBuilder);
 }

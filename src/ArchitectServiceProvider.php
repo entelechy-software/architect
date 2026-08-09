@@ -399,22 +399,22 @@ class ArchitectServiceProvider extends ServiceProvider
             ->register('document-scanner', DocumentScannerField::class, 'File & Media', 'string', 'Camera-based document edge detection and cleanup.', Maturity::Planned) // Wave 3 hardware/media field, deferred — see ARCHITECT_IMPROVEMENT_PLAN.md
             ->register('barcode-qr-scanner', BarcodeQrScannerField::class, 'File & Media', 'string', 'Barcode/QR-code scanner.', Maturity::Planned) // Wave 3 hardware/media field, deferred — see ARCHITECT_IMPROVEMENT_PLAN.md
             ->register('audio-waveform-selection', AudioWaveformSelectionField::class, 'Visual & Spatial', 'array', 'Selects a segment of an audio waveform.', Maturity::Planned) // Wave 3 hardware/media field, deferred — see ARCHITECT_IMPROVEMENT_PLAN.md
-            ->register('formula-expression-editor', FormulaExpressionEditorField::class, 'Text & Structured Text', 'string', 'Formula/expression editor with field references.', Maturity::Experimental)
-            ->register('math-equation-editor', MathEquationEditorField::class, 'Text & Structured Text', 'string', 'Visual math equation editor.', Maturity::Experimental)
+            ->register('formula-expression-editor', FormulaExpressionEditorField::class, 'Text & Structured Text', 'string', 'Formula/expression editor with field references.', Maturity::Stable)
+            ->register('math-equation-editor', MathEquationEditorField::class, 'Text & Structured Text', 'string', 'Visual math equation editor.', Maturity::Stable)
             ->register('mention-editor', MentionEditorField::class, 'Text & Structured Text', 'string', 'Rich text editor supporting @mentions.', Maturity::Stable)
             ->register('template-editor', TemplateEditorField::class, 'Text & Structured Text', 'string', 'Text editor with {{ variable }} placeholders.', Maturity::Stable)
             ->register('block-editor', BlockEditor::class, 'Structural', 'array', 'Full page/layout builder (extends Builder).', Maturity::Experimental)
             ->register('diff-merge', DiffMergeField::class, 'Structural', 'array', 'Presents two versions for per-field merge selection.', Maturity::Stable)
-            ->register('query-builder', QueryBuilderField::class, 'Structural', 'array', 'Visual nested AND/OR query builder.', Maturity::Experimental)
-            ->register('rules-workflow-builder', RulesWorkflowBuilderField::class, 'Structural', 'array', 'Visual workflow builder (nodes + edges).', Maturity::Experimental)
-            ->register('schema-driven-object-editor', SchemaDrivenObjectEditorField::class, 'Structural', 'array', 'Renders a form from a JSON Schema.', Maturity::Experimental)
-            ->register('node-graph-editor', NodeGraphEditorField::class, 'Structural', 'array', 'Node graph editor connecting ports between blocks.', Maturity::Experimental)
+            ->register('query-builder', QueryBuilderField::class, 'Structural', 'array', 'Visual nested AND/OR query builder.', Maturity::Stable)
+            ->register('rules-workflow-builder', RulesWorkflowBuilderField::class, 'Structural', 'array', 'Visual workflow builder (nodes + edges).', Maturity::Stable)
+            ->register('schema-driven-object-editor', SchemaDrivenObjectEditorField::class, 'Structural', 'array', 'Renders a form from a JSON Schema.', Maturity::Stable)
+            ->register('node-graph-editor', NodeGraphEditorField::class, 'Structural', 'array', 'Node graph editor connecting ports between blocks.', Maturity::Stable)
             ->register('permission-matrix', PermissionMatrixField::class, 'Structural', 'array', 'Grid of resources x actions.', Maturity::Stable)
-            ->register('role-builder', RoleBuilderField::class, 'Structural', 'array', 'Combines permissions and inheritance into a role.', Maturity::Beta) // only permissions + inherits_from are wired; scope/exceptions are not yet implemented
+            ->register('role-builder', RoleBuilderField::class, 'Structural', 'array', 'Combines permissions and inheritance into a role.', Maturity::Stable)
             ->register('dependency-builder', DependencyBuilderField::class, 'Structural', 'array', 'Builds a conditional-visibility rule.', Maturity::Stable)
-            ->register('data-mapping', DataMappingField::class, 'Relationships & Lookup', 'array', 'Maps incoming fields to application fields.', Maturity::Experimental)
+            ->register('data-mapping', DataMappingField::class, 'Relationships & Lookup', 'array', 'Maps incoming fields to application fields.', Maturity::Stable)
             ->register('api-request-builder', ApiRequestBuilderField::class, 'Structural', 'array', 'Structured HTTP request builder.', Maturity::Stable)
-            ->register('cron-schedule-builder', CronScheduleBuilderField::class, 'Date & Time', 'string', 'Builds a cron expression from a friendly schedule.', Maturity::Experimental)
+            ->register('cron-schedule-builder', CronScheduleBuilderField::class, 'Date & Time', 'string', 'Builds a cron expression from a friendly schedule.', Maturity::Stable)
             ->register('regex-builder-tester', RegexBuilderTesterField::class, 'Formatted & Validated Text', 'array', 'Regex pattern builder/tester.', Maturity::Stable)
             ->register('keyboard-shortcut-recorder', KeyboardShortcutRecorderField::class, 'Structural', 'string', 'Records a keyboard shortcut combination.', Maturity::Stable);
     }

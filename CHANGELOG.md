@@ -32,6 +32,22 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
   New npm dependencies: `sortablejs`, `cropperjs` (v1.x — the long-established `new Cropper(el, opts)` API, not the 2024 Web-Components v2 rewrite), `tributejs`. New `Wave2FieldIntegrationTest` covers each field's `FormEngine` submit/validation round-trip.
 
+- **Forms** — Phase 1 Wave 4 (see `ARCHITECT_IMPROVEMENT_PLAN.md`): implemented real interactivity for the "meta/builder / mini-DSL editor" tier of fields, re-labelled `Maturity::Stable` now that `architect:doctor`'s Alpine-wiring audit confirms them clean. Wave 3 (hardware/media capture) remains deliberately `Maturity::Planned` — not part of this rollout, per the plan's own confirmed deferral:
+  - `QueryBuilderField` — recursive nested AND/OR condition-group builder (bespoke imperative DOM; the field only builds the tree, evaluation is a host-app concern).
+  - `RulesWorkflowBuilderField` — ordered node list + from/to edge list. Deliberately a structured list builder rather than a drag-positioned canvas: the field's own value shape has no `(x, y)` coordinates, so a full 2D canvas would be surface without substance.
+  - `NodeGraphEditorField` — draggable, positioned nodes (Pointer Events) connected by SVG edges; this field's value shape does include `(x, y)`, so a real canvas was warranted here.
+  - `SchemaDrivenObjectEditorField` — renders one input per JSON Schema property (recursing into nested `type: object` properties), no JSON-schema-form library.
+  - `FormulaExpressionEditorField` — bespoke input + field-reference chip insertion + live highlighting of recognized field names.
+  - `DataMappingField` — repeatable `{source, destination, transform}` rows.
+  - `CronScheduleBuilderField` — friendly per-field schedule builder that assembles a 5-field cron expression; validation and next-3-run-times preview powered by `cron-parser` (the builder UI itself stays bespoke).
+  - `RoleBuilderField` — was `Maturity::Beta` (only `permissions`/`inherits_from` were wired); completed to match its own docblock by adding `scope` (plain text input) and `exceptions` (reusing the existing `TagsInputField` Alpine component, `architectTagsInput`, rather than writing a new one).
+  - `RecurrenceBuilderField`, `QueryLanguageTextField`, `PermissionMatrixField`, `DependencyBuilderField`, `ApiRequestBuilderField` were found already `Maturity::Stable` and fully functional during the pre-implementation audit — no changes needed.
+  - `MathEquationEditorField` — deliberately **not** built on MathQuill: the real npm `mathquill` package hard-depends on jQuery `^1.12.3` (a legacy dependency this codebase otherwise avoids entirely), so this ships as a lightweight LaTeX-snippet palette (fraction/exponent/square-root/π buttons) over a plain text input instead. The field's value is the resulting LaTeX string; visual rendering (KaTeX/MathJax) is left as a host-app concern.
+  - `RulesWorkflowBuilderField`/`QueryBuilderField` — the plan's dependency-policy table suggested `json-logic-js` for rule evaluation; not bundled, since neither field evaluates rules itself (that's a host-app concern) — it would have been dead code in the package.
+  - `Builder`'s "block sub-field gap" mentioned in the plan was investigated and found to be a pre-existing, already-documented, deliberately deferred limitation (`builder.blade.php`'s own comment: "pending Phase 8 nested-structure support") — not a Wave 4 concern.
+
+  New npm dependency: `cron-parser`. New `Wave4FieldIntegrationTest` covers each field's `FormEngine` submit/validation round-trip.
+
 ## [0.1.21] — 2026-07-22
 
 ### Added

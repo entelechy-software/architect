@@ -642,6 +642,45 @@
 .arch-regex-builder-tester__sample mark { background: var(--arch-color-warning); color: #000; }
 .arch-regex-builder-tester__groups { font-size: var(--arch-font-size-xs); color: var(--arch-color-text-muted); @apply mt-1; }
 
+/* Formula expression editor */
+.arch-formula-expression-editor__fields { @apply flex flex-wrap gap-1 mb-2; }
+.arch-formula-expression-editor__preview { @apply mt-2 p-2 text-sm; font-family: var(--arch-font-family-mono); border: 1px solid var(--arch-color-border); border-radius: var(--arch-radius-md); }
+.arch-formula-expression-editor__token { background: var(--arch-color-primary-muted); border-radius: 0.2rem; padding: 0 0.2rem; }
+
+/* Math equation editor */
+.arch-math-equation-editor__palette { @apply flex flex-wrap gap-1 mb-2; }
+.arch-math-equation-editor__preview { @apply mt-2 p-2 text-sm; font-family: var(--arch-font-family-mono); border: 1px solid var(--arch-color-border); border-radius: var(--arch-radius-md); background: var(--arch-color-surface-alt); }
+
+/* Query builder */
+.arch-query-builder__group { border: 1px solid var(--arch-color-border); border-radius: var(--arch-radius-md); @apply p-3 mb-2; }
+.arch-query-builder__group-toolbar { @apply flex items-center gap-2 mb-2; }
+.arch-query-builder__rows { @apply flex flex-col gap-2 pl-3; border-left: 2px solid var(--arch-color-border); }
+.arch-query-builder__condition { @apply flex items-center gap-2; }
+
+/* Rules workflow builder */
+.arch-rules-workflow-builder__nodes,
+.arch-rules-workflow-builder__edges { @apply flex flex-col gap-2 mb-2; }
+.arch-rules-workflow-builder__node,
+.arch-rules-workflow-builder__edge { @apply flex items-center gap-2; }
+
+/* Schema-driven object editor */
+.arch-schema-driven-object-editor__object { @apply flex flex-col gap-2; }
+.arch-schema-driven-object-editor__field { @apply flex flex-col gap-1; }
+
+/* Node graph editor */
+.arch-node-graph-editor__toolbar { @apply flex items-center gap-2 mb-2; }
+.arch-node-graph-editor__canvas { position: relative; height: 320px; border: 1px solid var(--arch-color-border); border-radius: var(--arch-radius-md); background: var(--arch-color-surface-alt); overflow: hidden; }
+.arch-node-graph-editor__node { position: absolute; @apply px-2 py-1 text-xs; background: var(--arch-color-surface); border: 1px solid var(--arch-color-primary); border-radius: var(--arch-radius-md); cursor: grab; user-select: none; }
+.arch-node-graph-editor__edges { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.arch-node-graph-editor__edge-line { stroke: var(--arch-color-primary); stroke-width: 2; }
+
+/* Data mapping */
+.arch-data-mapping__row { @apply flex items-center gap-2 mb-2; }
+
+/* Cron schedule builder */
+.arch-cron-schedule-builder__field { @apply flex flex-col gap-1; }
+.arch-field__preview { font-size: var(--arch-font-size-sm); color: var(--arch-color-text-muted); @apply mt-2; }
+
 /* Stats & Charts */
 
 /* Dashboard section layout-edit ring — uses outline so it never disturbs box-shadow/ring utilities */
