@@ -113,6 +113,23 @@ return [
         'draft_ttl_days' => 7,
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Doctor
+    |--------------------------------------------------------------------------
+    | 'discovery.paths' is scanned by `php artisan architect:doctor`'s
+    | DefinitionInterfaceAuditor check for classes exposing a static
+    | definition()/build() method across every subsystem (Table, Content,
+    | Stats, Panels, Forms, Wizard, Toolbar, Supersearch, Navigator), to
+    | verify each implements its required Provides*Definition marker
+    | interface. Defaults to app_path() when left empty.
+    */
+    'doctor' => [
+        'discovery' => [
+            'paths' => [],
+        ],
+    ],
+
     'state' => [
         // Runtime persistence mode selected by architect:init.
         'mode' => 'localStorage',

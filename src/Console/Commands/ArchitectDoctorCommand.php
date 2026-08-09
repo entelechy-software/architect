@@ -7,6 +7,7 @@ namespace Entelechy\Architect\Console\Commands;
 use Entelechy\Architect\Forms\ControlRegistry;
 use Entelechy\Architect\Support\Doctor\ActionWiringAuditor;
 use Entelechy\Architect\Support\Doctor\ControlMaturityAuditor;
+use Entelechy\Architect\Support\Doctor\DefinitionInterfaceAuditor;
 use Illuminate\Console\Command;
 
 /**
@@ -43,7 +44,12 @@ class ArchitectDoctorCommand extends Command
             (new ActionWiringAuditor)->findings(),
         );
 
-        $clean = $controlsClean && $actionsClean;
+        $definitionInterfacesClean = $this->report(
+            'Definition class interfaces (must implement a Provides*Definition marker interface)',
+            (new DefinitionInterfaceAuditor)->findings(),
+        );
+
+        $clean = $controlsClean && $actionsClean && $definitionInterfacesClean;
 
         $this->newLine();
 
