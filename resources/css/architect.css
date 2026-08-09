@@ -7,6 +7,7 @@
    ======================================================================= */
 
 @import 'flatpickr/dist/flatpickr.css';
+@import 'cropperjs/dist/cropper.css';
 @import '@fortawesome/fontawesome-free/css/all.min.css';
 
 @tailwind base;
@@ -572,6 +573,74 @@
 .arch-dial-knob__face { position: relative; width: 5rem; height: 5rem; border-radius: 50%; background: var(--arch-color-surface-alt); border: 1px solid var(--arch-color-border); cursor: grab; touch-action: none; }
 .arch-dial-knob__pointer { position: absolute; top: 0.375rem; left: 50%; width: 0.25rem; height: 1.5rem; margin-left: -0.125rem; background: var(--arch-color-primary); border-radius: var(--arch-radius-full); transform-origin: 50% 2.125rem; }
 .arch-dial-knob__value { position: absolute; inset: 0; @apply flex items-center justify-center; font-size: var(--arch-font-size-sm); font-weight: var(--arch-font-weight-medium); color: var(--arch-color-text); pointer-events: none; }
+
+/* Kanban board */
+.arch-kanban-board { @apply flex gap-4; align-items: flex-start; }
+.arch-kanban-board__column { @apply flex-1; background: var(--arch-color-surface-alt); border-radius: var(--arch-radius-md); @apply p-3; min-width: 12rem; }
+.arch-kanban-board__column h4 { font-size: var(--arch-font-size-sm); font-weight: var(--arch-font-weight-semibold); @apply mb-2; }
+.arch-kanban-board__items { @apply flex flex-col gap-2; min-height: 2rem; }
+.arch-kanban-board__card { background: var(--arch-color-surface); border: 1px solid var(--arch-color-border); border-radius: var(--arch-radius-md); @apply px-3 py-2 text-sm; cursor: grab; }
+
+/* Image cropper */
+.arch-image-cropper__canvas { max-width: 100%; @apply mt-2; }
+.arch-image-cropper__actions { @apply flex gap-2 mt-2; }
+
+/* Image comparison slider */
+.arch-image-comparison-slider__container { position: relative; overflow: hidden; border-radius: var(--arch-radius-md); user-select: none; }
+.arch-image-comparison-slider__container img { display: block; width: 100%; height: auto; }
+.arch-image-comparison-slider__after-wrap { position: absolute; top: 0; left: 0; height: 100%; overflow: hidden; }
+.arch-image-comparison-slider__after-wrap img { width: auto; max-width: none; height: 100%; }
+.arch-image-comparison-slider__handle { position: absolute; top: 0; bottom: 0; width: 3px; background: #fff; cursor: ew-resize; transform: translateX(-50%); box-shadow: 0 0 4px rgba(0,0,0,0.4); }
+
+/* Gradient editor */
+.arch-gradient-editor__preview { height: 3rem; border-radius: var(--arch-radius-md); border: 1px solid var(--arch-color-border); }
+.arch-gradient-editor__angle { @apply flex items-center gap-2 mt-2 text-sm; color: var(--arch-color-text-muted); }
+.arch-gradient-editor__stops { @apply flex flex-col gap-2 mt-2; }
+.arch-gradient-editor__stop { @apply flex items-center gap-2; }
+
+/* Entity picker */
+.arch-entity-picker__results { @apply flex flex-col gap-1 mt-2; }
+.arch-entity-picker__card { @apply flex items-center gap-2 px-3 py-2 text-sm; border-radius: var(--arch-radius-md); cursor: pointer; }
+.arch-entity-picker__card:hover { background: var(--arch-color-surface-alt); }
+.arch-entity-picker__card[data-selected="true"] { background: var(--arch-color-primary-muted); }
+.arch-entity-picker__avatar { width: 1.75rem; height: 1.75rem; border-radius: 50%; object-fit: cover; }
+.arch-entity-picker__subtitle { font-size: var(--arch-font-size-xs); color: var(--arch-color-text-muted); }
+
+/* Relationship picker */
+.arch-relationship-picker { @apply flex flex-col gap-2; }
+.arch-relationship-picker__results { @apply flex flex-col gap-1; }
+.arch-relationship-picker__result { @apply px-3 py-2 text-sm; border-radius: var(--arch-radius-md); cursor: pointer; }
+.arch-relationship-picker__result:hover { background: var(--arch-color-surface-alt); }
+
+/* Tree select */
+.arch-tree-select__row { @apply flex items-center gap-1 px-2 py-1 text-sm; border-radius: var(--arch-radius-md); }
+.arch-tree-select__row[data-selected="true"] { background: var(--arch-color-primary-muted); }
+.arch-tree-select__toggle { @apply inline-flex items-center justify-center; width: 1.25rem; background: none; border: none; cursor: pointer; color: var(--arch-color-text-muted); }
+.arch-tree-select__label { cursor: pointer; }
+.arch-tree-select__children { margin-left: var(--arch-gap-md); }
+
+/* Dual listbox */
+.arch-dual-listbox { @apply flex items-center gap-2; }
+.arch-dual-listbox__pane { @apply flex-1; border: 1px solid var(--arch-color-border); border-radius: var(--arch-radius-md); @apply p-2; min-height: 8rem; }
+.arch-dual-listbox__pane h5 { font-size: var(--arch-font-size-xs); font-weight: var(--arch-font-weight-semibold); color: var(--arch-color-text-muted); @apply mb-1; }
+.arch-dual-listbox__list { @apply flex flex-col gap-1; }
+.arch-dual-listbox__item { @apply px-2 py-1 text-sm; border-radius: var(--arch-radius-md); cursor: pointer; }
+.arch-dual-listbox__item[data-highlighted="true"] { background: var(--arch-color-primary-muted); }
+.arch-dual-listbox__controls { @apply flex flex-col gap-1; }
+
+/* Template editor */
+.arch-template-editor__variables { @apply flex flex-wrap gap-1 mb-2; }
+.arch-template-editor__preview { @apply mt-2 p-2 text-sm; border: 1px solid var(--arch-color-border); border-radius: var(--arch-radius-md); background: var(--arch-color-surface-alt); white-space: pre-wrap; }
+.arch-template-editor__token--known { background: var(--arch-color-success); color: #fff; border-radius: 0.2rem; padding: 0 0.2rem; }
+.arch-template-editor__token--unknown { background: var(--arch-color-danger); color: #fff; border-radius: 0.2rem; padding: 0 0.2rem; }
+
+/* Mention editor */
+.arch-mention-editor__content { min-height: 4rem; @apply p-2; border: 1px solid var(--arch-color-border); border-radius: var(--arch-radius-md); }
+
+/* Regex builder/tester */
+.arch-regex-builder-tester__sample { @apply mt-2 p-2 text-sm; font-family: var(--arch-font-family-mono); border: 1px solid var(--arch-color-border); border-radius: var(--arch-radius-md); white-space: pre-wrap; }
+.arch-regex-builder-tester__sample mark { background: var(--arch-color-warning); color: #000; }
+.arch-regex-builder-tester__groups { font-size: var(--arch-font-size-xs); color: var(--arch-color-text-muted); @apply mt-1; }
 
 /* Stats & Charts */
 

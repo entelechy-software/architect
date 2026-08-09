@@ -14,6 +14,9 @@ class KanbanBoardField extends Field
     /** @var array<int, string> */
     private array $columns = [];
 
+    /** @var array<string, string> */
+    private array $items = [];
+
     /** @param  array<int, string>  $columns */
     public function columns(array $columns): static
     {
@@ -23,10 +26,25 @@ class KanbanBoardField extends Field
         return $clone;
     }
 
+    /** @param  array<string, string>  $items  itemKey => card label. */
+    public function items(array $items): static
+    {
+        $clone = clone $this;
+        $clone->items = $items;
+
+        return $clone;
+    }
+
     /** @return array<int, string> */
     public function getColumns(): array
     {
         return $this->columns;
+    }
+
+    /** @return array<string, string> */
+    public function getItems(): array
+    {
+        return $this->items;
     }
 
     public function getViewName(): string

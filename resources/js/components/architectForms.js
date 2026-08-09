@@ -5,6 +5,9 @@
  * Each export is registered as an Alpine.data() factory and instantiated
  * via x-data="architectXyz({...})" in the matching Blade view.
  */
+import Sortable from 'sortablejs';
+import Cropper from 'cropperjs';
+import Tribute from 'tributejs';
 
 /**
  * Drag state for the FileUpload dropzone. The actual upload is handled by
@@ -683,6 +686,730 @@ function architectCardInput({ wireField, providerScriptUrl = null, publishableKe
     };
 }
 
+/**
+ * Backs KanbanBoardField — drag-between-columns board (ARCHITECT_IMPROVEMENT_PLAN.md
+ * Phase 1 Wave 2). Uses SortableJS (per the Wave 2 dependency policy table)
+ * since, unlike Wave 1's single-list Ranking/SortableList, this needs
+ * cross-column dragging that native HTML5 drag-and-drop makes painful to
+ * implement correctly (drop-target detection across sibling containers).
+ *
+ * @param {Object}               options
+ * @param {string}               options.wireField
+ * @param {Array<string>}        options.columns
+ * @param {Object<string,string>} options.items  itemKey => card label.
+ */
+function architectKanbanBoard({ wireField, columns = [], items = {} }) {
+    return {
+        board: {},
+
+        init() {
+            const stored = this.$wire.get(wireField);
+            this.board = stored && Object.keys(stored).length > 0
+                ? stored
+                : { [columns[0]]: Object.keys(items), ...Object.fromEntries(columns.slice(1).map((c) => [c, []])) };
+
+            this.$el.querySelectorAll('[data-column-items]').forEach((container) => {
+                const column = container.dataset.columnItems;
+                (this.board[column] ?? []).forEach((itemKey) => container.appendChild(this.buildCard(itemKey)));
+
+                Sortable.create(container, {
+                    group: `architect-kanban-${wireField}`,
+                    animation: 150,
+                    onEnd: () => this.syncBoard(),
+                });
+            });
+        },
+
+        buildCard(itemKey) {
+            const card = document.createElement('div');
+            card.className = 'arch-kanban-board__card';
+            card.dataset.item = itemKey;
+            card.textContent = items[itemKey] ?? itemKey;
+
+            return card;
+        },
+
+        syncBoard() {
+            const board = {};
+            this.$el.querySelectorAll('[data-column-items]').forEach((container) => {
+                board[container.dataset.columnItems] = Array.from(container.children).map((el) => el.dataset.item);
+            });
+            this.board = board;
+            this.$wire.set(wireField, board);
+        },
+    };
+}
+
+/**
+ * Backs ImageCropperField — Cropper.js-powered crop/rotate/zoom step
+ * before the file is handed to Livewire's native wire:model upload
+ * (ARCHITECT_IMPROVEMENT_PLAN.md Phase 1 Wave 2). Never uploads the
+ * original file: the cropped output replaces the input's FileList (via
+ * DataTransfer) before Livewire's own change listener fires the upload.
+ *
+ * @param {Object}      options
+ * @param {string}      options.wireField
+ * @param {number|null} options.aspectRatio
+ */
+function architectImageCropper({ wireField, aspectRatio = null }) {
+    return {
+        cropper: null,
+        cropping: false,
+
+        onFileSelected(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = () => {
+                this.$refs.canvas.innerHTML = '';
+                const img = document.createElement('img');
+                img.src = reader.result;
+                img.style.maxWidth = '100%';
+                this.$refs.canvas.appendChild(img);
+
+                this.cropper?.destroy();
+                this.cropper = new Cropper(img, { aspectRatio: aspectRatio ?? NaN, viewMode: 1 });
+                this.cropping = true;
+            };
+            reader.readAsDataURL(file);
+        },
+
+        applyCrop(inputEl) {
+            if (!this.cropper) return;
+
+            this.cropper.getCroppedCanvas().toBlob((blob) => {
+                const croppedFile = new File([blob], 'cropped.jpg', { type: 'image/jpeg' });
+                const dataTransfer = new DataTransfer();
+                dataTransfer.items.add(croppedFile);
+                inputEl.files = dataTransfer.files;
+                inputEl.dispatchEvent(new Event('change', { bubbles: true }));
+
+                this.cropper.destroy();
+                this.cropper = null;
+                this.cropping = false;
+            }, 'image/jpeg', 0.92);
+        },
+
+        cancelCrop() {
+            this.cropper?.destroy();
+            this.cropper = null;
+            this.cropping = false;
+            this.$refs.canvas.innerHTML = '';
+            this.$refs.input.value = '';
+        },
+    };
+}
+
+/**
+ * Backs ImageComparisonSliderField — draggable divider between a before
+ * and after image, using Pointer Events (no third-party lib — Wave 2's
+ * dependency table flags this one as "likely no dependency needed").
+ *
+ * @param {Object}      options
+ * @param {string}      options.wireField
+ * @param {string|null} options.beforeImageUrl
+ * @param {string|null} options.afterImageUrl
+ */
+function architectImageComparisonSlider({ wireField, beforeImageUrl = null, afterImageUrl = null }) {
+    return {
+        position: 50,
+
+        init() {
+            this.position = this.$wire.get(wireField) ?? 50;
+
+            const container = this.$refs.slider;
+            container.classList.add('arch-image-comparison-slider__container');
+
+            const before = document.createElement('img');
+            before.className = 'arch-image-comparison-slider__before';
+            before.src = beforeImageUrl ?? '';
+
+            const afterWrap = document.createElement('div');
+            afterWrap.className = 'arch-image-comparison-slider__after-wrap';
+            const after = document.createElement('img');
+            after.className = 'arch-image-comparison-slider__after';
+            after.src = afterImageUrl ?? '';
+            afterWrap.appendChild(after);
+
+            const handle = document.createElement('div');
+            handle.className = 'arch-image-comparison-slider__handle';
+
+            container.append(before, afterWrap, handle);
+            this._afterWrap = afterWrap;
+            this._handle = handle;
+            this.updatePosition(this.position);
+
+            let dragging = false;
+            const move = (clientX) => {
+                const rect = container.getBoundingClientRect();
+                const pct = Math.min(100, Math.max(0, ((clientX - rect.left) / rect.width) * 100));
+                this.updatePosition(pct);
+                this.$wire.set(wireField, pct);
+            };
+
+            handle.addEventListener('pointerdown', (e) => {
+                dragging = true;
+                handle.setPointerCapture(e.pointerId);
+            });
+            handle.addEventListener('pointermove', (e) => { if (dragging) move(e.clientX); });
+            handle.addEventListener('pointerup', () => { dragging = false; });
+        },
+
+        updatePosition(pct) {
+            this.position = pct;
+            this._afterWrap.style.width = `${pct}%`;
+            this._handle.style.left = `${pct}%`;
+        },
+    };
+}
+
+/**
+ * Backs GradientEditorField — multi-stop CSS linear-gradient editor
+ * (ARCHITECT_IMPROVEMENT_PLAN.md Phase 1 Wave 2, "extends existing
+ * ColorPicker patterns" — plain <input type="color"> per stop, no
+ * third-party lib).
+ *
+ * @param {Object} options
+ * @param {string} options.wireField
+ */
+function architectGradientEditor({ wireField }) {
+    return {
+        angle: 90,
+        stops: [],
+
+        init() {
+            const stored = this.$wire.get(wireField);
+            this.angle = stored?.angle ?? 90;
+            this.stops = stored?.stops?.length ? stored.stops : [
+                { color: '#3b82f6', position: 0 },
+                { color: '#8b5cf6', position: 100 },
+            ];
+            this.$refs.angle.value = this.angle;
+            this.render();
+        },
+
+        onAngleInput(value) {
+            this.angle = Number(value);
+            this.sync();
+        },
+
+        addStop() {
+            this.stops.push({ color: '#ffffff', position: 50 });
+            this.sync();
+        },
+
+        removeStop(index) {
+            this.stops.splice(index, 1);
+            this.sync();
+        },
+
+        updateStop(index, key, value) {
+            this.stops[index][key] = key === 'position' ? Number(value) : value;
+            this.sync();
+        },
+
+        sync() {
+            this.$wire.set(wireField, { angle: this.angle, stops: this.stops });
+            this.render();
+        },
+
+        gradientCss() {
+            const stops = [...this.stops]
+                .sort((a, b) => a.position - b.position)
+                .map((s) => `${s.color} ${s.position}%`)
+                .join(', ');
+
+            return `linear-gradient(${this.angle}deg, ${stops})`;
+        },
+
+        render() {
+            this.$refs.preview.style.background = this.gradientCss();
+
+            const container = this.$refs.stops;
+            container.innerHTML = '';
+            this.stops.forEach((stop, index) => {
+                const row = document.createElement('div');
+                row.className = 'arch-gradient-editor__stop';
+
+                const color = document.createElement('input');
+                color.type = 'color';
+                color.value = stop.color;
+                color.addEventListener('input', (e) => this.updateStop(index, 'color', e.target.value));
+
+                const position = document.createElement('input');
+                position.type = 'range';
+                position.min = 0;
+                position.max = 100;
+                position.value = stop.position;
+                position.addEventListener('input', (e) => this.updateStop(index, 'position', e.target.value));
+
+                const remove = document.createElement('button');
+                remove.type = 'button';
+                remove.className = 'arch-btn-close';
+                remove.textContent = '×';
+                remove.addEventListener('click', () => this.removeStop(index));
+
+                row.append(color, position, remove);
+                container.appendChild(row);
+            });
+        },
+    };
+}
+
+/**
+ * Backs EntityPickerField — richer templated search results (avatar,
+ * subtitle) than the plain-label LookupField/architectCombobox
+ * (ARCHITECT_IMPROVEMENT_PLAN.md Phase 1 Wave 2). Expects searchUrl's
+ * JSON response as `[{id, label, subtitle?, avatar?}, ...]`.
+ *
+ * @param {Object}  options
+ * @param {string}  options.wireField
+ * @param {string|null} options.searchUrl
+ * @param {boolean} options.multiple
+ */
+function architectEntityPicker({ wireField, searchUrl = null, multiple = false }) {
+    return {
+        results: [],
+        selected: multiple ? [] : null,
+        _debounce: null,
+
+        init() {
+            this.selected = this.$wire.get(wireField) ?? (multiple ? [] : null);
+            this.$refs.search.addEventListener('input', (e) => {
+                clearTimeout(this._debounce);
+                this._debounce = setTimeout(() => this.search(e.target.value), 250);
+            });
+        },
+
+        async search(term) {
+            if (!searchUrl) return;
+            try {
+                const response = await fetch(`${searchUrl}?q=${encodeURIComponent(term)}`);
+                const data = await response.json();
+                this.results = Array.isArray(data) ? data : (data.results ?? []);
+            } catch {
+                this.results = [];
+            }
+            this.render();
+        },
+
+        select(result) {
+            if (multiple) {
+                if (!this.selected.includes(result.id)) this.selected.push(result.id);
+            } else {
+                this.selected = result.id;
+            }
+            this.$wire.set(wireField, this.selected);
+            this.render();
+        },
+
+        render() {
+            const container = this.$refs.results;
+            container.innerHTML = '';
+            this.results.forEach((result) => {
+                const card = document.createElement('div');
+                card.className = 'arch-entity-picker__card';
+                card.dataset.selected = String(multiple ? this.selected.includes(result.id) : this.selected === result.id);
+
+                if (result.avatar) {
+                    const avatar = document.createElement('img');
+                    avatar.className = 'arch-entity-picker__avatar';
+                    avatar.src = result.avatar;
+                    card.appendChild(avatar);
+                }
+
+                const text = document.createElement('div');
+                const label = document.createElement('div');
+                label.className = 'arch-entity-picker__label';
+                label.textContent = result.label;
+                text.appendChild(label);
+
+                if (result.subtitle) {
+                    const subtitle = document.createElement('div');
+                    subtitle.className = 'arch-entity-picker__subtitle';
+                    subtitle.textContent = result.subtitle;
+                    text.appendChild(subtitle);
+                }
+
+                card.appendChild(text);
+                card.addEventListener('click', () => this.select(result));
+                container.appendChild(card);
+            });
+        },
+    };
+}
+
+/**
+ * Backs RelationshipPickerField — links this record to another
+ * record/event/entity of a chosen type (ARCHITECT_IMPROVEMENT_PLAN.md
+ * Phase 1 Wave 2). searchUrl receives `?type=...&q=...`.
+ *
+ * @param {Object}        options
+ * @param {string}        options.wireField
+ * @param {Array<string>} options.allowedTypes
+ * @param {string|null}   options.searchUrl
+ */
+function architectRelationshipPicker({ wireField, allowedTypes = [], searchUrl = null }) {
+    return {
+        results: [],
+        _debounce: null,
+
+        init() {
+            const stored = this.$wire.get(wireField);
+            if (stored?.type) this.$refs.type.value = stored.type;
+        },
+
+        onTypeChanged() {
+            this.search(this.$refs.search.value);
+        },
+
+        onSearchInput(value) {
+            clearTimeout(this._debounce);
+            this._debounce = setTimeout(() => this.search(value), 250);
+        },
+
+        async search(term) {
+            if (!searchUrl) return;
+            const type = this.$refs.type.value;
+            try {
+                const response = await fetch(`${searchUrl}?type=${encodeURIComponent(type)}&q=${encodeURIComponent(term)}`);
+                const data = await response.json();
+                this.results = Array.isArray(data) ? data : (data.results ?? []);
+            } catch {
+                this.results = [];
+            }
+            this.render();
+        },
+
+        select(result) {
+            const value = { type: this.$refs.type.value, id: result.id };
+            this.$wire.set(wireField, value);
+        },
+
+        render() {
+            const container = this.$refs.results;
+            container.innerHTML = '';
+            this.results.forEach((result) => {
+                const item = document.createElement('div');
+                item.className = 'arch-relationship-picker__result';
+                item.textContent = result.label ?? String(result.id);
+                item.addEventListener('click', () => this.select(result));
+                container.appendChild(item);
+            });
+        },
+    };
+}
+
+/**
+ * Backs TreeSelectField — a dropdown-free hierarchical single-select tree
+ * (ARCHITECT_IMPROVEMENT_PLAN.md Phase 1 Wave 2). Branch nodes toggle
+ * expand/collapse; leaves (and branches too, when selectableBranches is
+ * true) are selectable.
+ *
+ * @param {Object}  options
+ * @param {string}  options.wireField
+ * @param {Array}   options.tree
+ * @param {boolean} options.selectableBranches
+ */
+function architectTreeSelect({ wireField, tree = [], selectableBranches = false }) {
+    return {
+        selected: null,
+        expanded: [],
+
+        init() {
+            this.selected = this.$wire.get(wireField) ?? null;
+            this.render();
+        },
+
+        select(node) {
+            this.selected = node.key;
+            this.$wire.set(wireField, node.key);
+            this.render();
+        },
+
+        toggleExpanded(key) {
+            this.expanded = this.expanded.includes(key)
+                ? this.expanded.filter((k) => k !== key)
+                : [...this.expanded, key];
+            this.render();
+        },
+
+        render() {
+            const container = this.$refs.tree;
+            container.innerHTML = '';
+            tree.forEach((node) => container.appendChild(this.buildNode(node)));
+        },
+
+        buildNode(node) {
+            const wrapper = document.createElement('div');
+            wrapper.className = 'arch-tree-select__node';
+
+            const row = document.createElement('div');
+            row.className = 'arch-tree-select__row';
+            row.dataset.selected = String(this.selected === node.key);
+
+            const hasChildren = (node.children ?? []).length > 0;
+            if (hasChildren) {
+                const toggle = document.createElement('button');
+                toggle.type = 'button';
+                toggle.className = 'arch-tree-select__toggle';
+                toggle.textContent = this.expanded.includes(node.key) ? '▾' : '▸';
+                toggle.addEventListener('click', () => this.toggleExpanded(node.key));
+                row.appendChild(toggle);
+            }
+
+            const label = document.createElement('span');
+            label.className = 'arch-tree-select__label';
+            label.textContent = node.label;
+            if (!hasChildren || selectableBranches) {
+                label.addEventListener('click', () => this.select(node));
+            }
+            row.appendChild(label);
+            wrapper.appendChild(row);
+
+            if (hasChildren && this.expanded.includes(node.key)) {
+                const children = document.createElement('div');
+                children.className = 'arch-tree-select__children';
+                node.children.forEach((child) => children.appendChild(this.buildNode(child)));
+                wrapper.appendChild(children);
+            }
+
+            return wrapper;
+        },
+    };
+}
+
+/**
+ * Backs DualListboxField — click-to-highlight-then-transfer between two
+ * panes (ARCHITECT_IMPROVEMENT_PLAN.md Phase 1 Wave 2). Deliberately
+ * click+button rather than drag-and-drop: simpler, more accessible, and
+ * just as real.
+ *
+ * @param {Object}                options
+ * @param {string}                options.wireField
+ * @param {Object<string,string>} options.options  key => label pairs.
+ */
+function architectDualListbox({ wireField, options = {} }) {
+    return {
+        selectedKeys: [],
+        highlighted: [],
+
+        init() {
+            this.selectedKeys = this.$wire.get(wireField) ?? [];
+            this.render();
+        },
+
+        toggleHighlight(key) {
+            this.highlighted = this.highlighted.includes(key)
+                ? this.highlighted.filter((k) => k !== key)
+                : [...this.highlighted, key];
+            this.render();
+        },
+
+        moveToSelected() {
+            this.highlighted.forEach((key) => {
+                if (!this.selectedKeys.includes(key)) this.selectedKeys.push(key);
+            });
+            this.highlighted = [];
+            this.sync();
+        },
+
+        moveToAvailable() {
+            this.selectedKeys = this.selectedKeys.filter((key) => !this.highlighted.includes(key));
+            this.highlighted = [];
+            this.sync();
+        },
+
+        sync() {
+            this.$wire.set(wireField, this.selectedKeys);
+            this.render();
+        },
+
+        buildPane(keys) {
+            const pane = document.createElement('div');
+            pane.className = 'arch-dual-listbox__list';
+            keys.forEach((key) => {
+                const item = document.createElement('div');
+                item.className = 'arch-dual-listbox__item';
+                item.dataset.highlighted = String(this.highlighted.includes(key));
+                item.textContent = options[key] ?? key;
+                item.addEventListener('click', () => this.toggleHighlight(key));
+                pane.appendChild(item);
+            });
+
+            return pane;
+        },
+
+        render() {
+            const availableKeys = Object.keys(options).filter((key) => !this.selectedKeys.includes(key));
+
+            this.$refs.available.innerHTML = '';
+            this.$refs.available.appendChild(this.buildPane(availableKeys));
+
+            this.$refs.selected.innerHTML = '';
+            this.$refs.selected.appendChild(this.buildPane(this.selectedKeys));
+        },
+    };
+}
+
+/**
+ * Backs TemplateEditorField — `{{ variable }}` placeholder editor with a
+ * click-to-insert variable list and a structural preview that highlights
+ * recognized vs. unrecognized tokens (ARCHITECT_IMPROVEMENT_PLAN.md Phase
+ * 1 Wave 2). Never renders against real data — that's a host-app concern
+ * per the field's own docblock — this only validates token names.
+ *
+ * @param {Object}        options
+ * @param {string}        options.wireField
+ * @param {Array<string>} options.availableVariables
+ */
+function architectTemplateEditor({ wireField, availableVariables = [] }) {
+    return {
+        init() {
+            const value = this.$wire.get(wireField) ?? '';
+            this.$refs.input.value = value;
+            this.renderPreview(value);
+        },
+
+        onInput(value) {
+            this.$wire.set(wireField, value);
+            this.renderPreview(value);
+        },
+
+        insertVariable(name) {
+            const input = this.$refs.input;
+            const token = `{{ ${name} }}`;
+            const start = input.selectionStart ?? input.value.length;
+            const end = input.selectionEnd ?? input.value.length;
+            input.value = input.value.slice(0, start) + token + input.value.slice(end);
+            input.dispatchEvent(new Event('input', { bubbles: true }));
+            this.onInput(input.value);
+        },
+
+        renderPreview(value) {
+            const escaped = value.replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[c]);
+            const highlighted = escaped.replace(/\{\{\s*([\w.]+)\s*\}\}/g, (match, name) => {
+                const known = availableVariables.includes(name);
+                const cls = known ? 'arch-template-editor__token--known' : 'arch-template-editor__token--unknown';
+
+                return `<span class="${cls}">${match}</span>`;
+            });
+            this.$refs.preview.innerHTML = highlighted || `<em>${'Preview'}</em>`;
+        },
+    };
+}
+
+/**
+ * Backs MentionEditorField — @mention autocomplete via Tribute.js (per
+ * the Wave 2 dependency policy table: headless-style, you render/style
+ * the suggestion menu) over a contenteditable div
+ * (ARCHITECT_IMPROVEMENT_PLAN.md Phase 1 Wave 2). Expects
+ * mentionableUrl's JSON response as `[{key, value}, ...]` (Tribute's
+ * native shape).
+ *
+ * @param {Object}      options
+ * @param {string}      options.wireField
+ * @param {string|null} options.mentionableUrl
+ */
+function architectMentionEditor({ wireField, mentionableUrl = null }) {
+    return {
+        init() {
+            const editor = this.$refs.editor;
+            editor.innerHTML = this.$wire.get(wireField) ?? '';
+
+            const tribute = new Tribute({
+                values: (text, cb) => {
+                    if (!mentionableUrl) {
+                        cb([]);
+
+                        return;
+                    }
+
+                    fetch(`${mentionableUrl}?q=${encodeURIComponent(text)}`)
+                        .then((r) => r.json())
+                        .then((data) => cb(Array.isArray(data) ? data : (data.results ?? [])))
+                        .catch(() => cb([]));
+                },
+            });
+            tribute.attach(editor);
+
+            editor.addEventListener('input', () => this.$wire.set(wireField, editor.innerHTML));
+            editor.addEventListener('tribute-replaced', () => this.$wire.set(wireField, editor.innerHTML));
+        },
+    };
+}
+
+/**
+ * Enhances RegexBuilderTesterField (already Maturity::Stable — its plain
+ * wire:model pattern/flags/sample inputs are functional — but its own
+ * docblock promises "live match highlighting and captured groups" that
+ * didn't exist yet) with a real live-testing panel. No third-party lib:
+ * regex evaluation is a native JS engine capability.
+ *
+ * @param {Object} options
+ * @param {string} options.wireField
+ * @param {string} options.sampleText
+ */
+function architectRegexTester({ wireField, sampleText = '' }) {
+    return {
+        pattern: '',
+        flags: '',
+        groups: [],
+
+        init() {
+            const stored = this.$wire.get(wireField) ?? {};
+            this.pattern = stored.pattern ?? '';
+            this.flags = stored.flags ?? '';
+            this.evaluate();
+        },
+
+        onPatternInput(value) {
+            this.pattern = value;
+            this.$wire.set(`${wireField}.pattern`, value);
+            this.evaluate();
+        },
+
+        onFlagsInput(value) {
+            this.flags = value;
+            this.$wire.set(`${wireField}.flags`, value);
+            this.evaluate();
+        },
+
+        evaluate() {
+            this.groups = [];
+            const escaped = sampleText.replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[c]);
+
+            if (!this.pattern) {
+                this.$refs.highlighted.innerHTML = escaped;
+
+                return;
+            }
+
+            try {
+                const flags = this.flags.includes('g') ? this.flags : `${this.flags}g`;
+                const re = new RegExp(this.pattern, flags);
+                let lastIndex = 0;
+                let html = '';
+                let match;
+
+                while ((match = re.exec(sampleText)) !== null) {
+                    html += escaped.slice(lastIndex, match.index);
+                    html += `<mark>${escaped.slice(match.index, match.index + match[0].length)}</mark>`;
+                    lastIndex = match.index + match[0].length;
+                    this.groups.push(match.slice(1));
+                    if (match[0] === '') re.lastIndex++;
+                }
+                html += escaped.slice(lastIndex);
+
+                this.$refs.highlighted.innerHTML = html;
+            } catch {
+                this.$refs.highlighted.innerHTML = escaped;
+            }
+        },
+    };
+}
+
 
 export function registerArchitectForms(Alpine) {
     Alpine.data('architectFileUpload', architectFileUpload);
@@ -701,4 +1428,15 @@ export function registerArchitectForms(Alpine) {
     Alpine.data('architectDialKnob', architectDialKnob);
     Alpine.data('architectMaskedInput', architectMaskedInput);
     Alpine.data('architectCardInput', architectCardInput);
+    Alpine.data('architectKanbanBoard', architectKanbanBoard);
+    Alpine.data('architectImageCropper', architectImageCropper);
+    Alpine.data('architectImageComparisonSlider', architectImageComparisonSlider);
+    Alpine.data('architectGradientEditor', architectGradientEditor);
+    Alpine.data('architectEntityPicker', architectEntityPicker);
+    Alpine.data('architectRelationshipPicker', architectRelationshipPicker);
+    Alpine.data('architectTreeSelect', architectTreeSelect);
+    Alpine.data('architectDualListbox', architectDualListbox);
+    Alpine.data('architectTemplateEditor', architectTemplateEditor);
+    Alpine.data('architectMentionEditor', architectMentionEditor);
+    Alpine.data('architectRegexTester', architectRegexTester);
 }

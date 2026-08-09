@@ -22,6 +22,16 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
   New `Wave1FieldIntegrationTest` covers each field's `FormEngine` submit/validation round-trip.
 
+- **Forms** — Phase 1 Wave 2 (see `ARCHITECT_IMPROVEMENT_PLAN.md`): implemented real interactivity for the "small, focused third-party JS dependency" tier of fields, re-labelled `Maturity::Stable` now that `architect:doctor`'s Alpine-wiring audit confirms them clean:
+  - `KanbanBoardField` — drag-between-columns board using SortableJS (cross-column dragging needs real drop-target detection that native HTML5 drag-and-drop makes error-prone); gained a new `items(array $itemKey => $label)` config method since the field previously had no way to supply card labels at all.
+  - `ImageCropperField` — Cropper.js-powered crop/rotate/zoom step before the cropped output replaces the file input's `FileList` (via `DataTransfer`) and Livewire's native `wire:model` upload takes over.
+  - `MentionEditorField` — `@mention` autocomplete via Tribute.js over a `contenteditable` div.
+  - `ImageComparisonSliderField`, `GradientEditorField`, `EntityPickerField`, `RelationshipPickerField`, `TreeSelectField`, `DualListboxField`, `TemplateEditorField` — vanilla JS/DOM (Pointer Events, imperative DOM construction, debounced `fetch` search), per the plan's assessment that these don't warrant a third-party dependency. `RelationshipPickerField` gained a new `searchUrl(string $url)` config method (receives `?type=...&q=...`, returns `[{id, label}, ...]`) since it previously had no fetch/search mechanism at all.
+  - `RegexBuilderTesterField` — already `Maturity::Stable` (its plain pattern/flags/sample inputs were functional), but its own docblock promised "live match highlighting and captured groups" that didn't exist; added a live-highlighting panel using native `RegExp` (no maturity change needed).
+  - `CascadingSelectField` and `DiffMergeField`, both listed in the plan's Wave 2 scope, were found already `Maturity::Stable` and fully functional during the pre-implementation audit — no changes needed.
+
+  New npm dependencies: `sortablejs`, `cropperjs` (v1.x — the long-established `new Cropper(el, opts)` API, not the 2024 Web-Components v2 rewrite), `tributejs`. New `Wave2FieldIntegrationTest` covers each field's `FormEngine` submit/validation round-trip.
+
 ## [0.1.21] — 2026-07-22
 
 ### Added

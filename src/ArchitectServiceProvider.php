@@ -354,11 +354,11 @@ class ArchitectServiceProvider extends ServiceProvider
             ->register('autocomplete', AutocompleteField::class, 'Choice & Selection', 'string', 'Text input with typeahead suggestions.', Maturity::Experimental)
             ->register('combobox', ComboboxField::class, 'Choice & Selection', 'string', 'Text input + dropdown, allows custom values.', Maturity::Stable)
             ->register('multi-select', MultiSelectField::class, 'Choice & Selection', 'array', 'Multi-value select with chip display.', Maturity::Stable)
-            ->register('tree-select', TreeSelectField::class, 'Choice & Selection', 'string', 'Dropdown with hierarchical options.', Maturity::Experimental)
+            ->register('tree-select', TreeSelectField::class, 'Choice & Selection', 'string', 'Dropdown with hierarchical options.', Maturity::Stable)
             ->register('cascading-select', CascadingSelectField::class, 'Choice & Selection', 'string', 'Select whose options depend on another field.', Maturity::Stable)
-            ->register('dual-listbox', DualListboxField::class, 'Choice & Selection', 'array', 'Transfer-list selection.', Maturity::Experimental)
+            ->register('dual-listbox', DualListboxField::class, 'Choice & Selection', 'array', 'Transfer-list selection.', Maturity::Stable)
             ->register('hierarchical-checkbox-tree', HierarchicalCheckboxTreeField::class, 'Choice & Selection', 'array', 'Tree of checkboxes with partial selection.', Maturity::Stable)
-            ->register('entity-picker', EntityPickerField::class, 'Relationships & Lookup', 'integer', 'Richer templated entity search picker.', Maturity::Experimental)
+            ->register('entity-picker', EntityPickerField::class, 'Relationships & Lookup', 'integer', 'Richer templated entity search picker.', Maturity::Stable)
             ->register('segmented-control', SegmentedControlField::class, 'Choice & Selection', 'string', 'Small exclusive choice set as a segmented control.', Maturity::Stable)
             ->register('button-group', ButtonGroupField::class, 'Choice & Selection', 'string', 'Single-select button group.', Maturity::Stable)
             ->register('yes-no-unknown', YesNoUnknownField::class, 'Choice & Selection', 'string', 'Tri-state yes/no/unknown control.', Maturity::Stable)
@@ -377,10 +377,10 @@ class ArchitectServiceProvider extends ServiceProvider
             ->register('search-with-filters', SearchWithFiltersField::class, 'Formatted & Validated Text', 'array', 'Search input with structured filter chips.', Maturity::Experimental)
             ->register('query-language-text', QueryLanguageTextField::class, 'Formatted & Validated Text', 'string', 'Structured query-language text input.', Maturity::Stable)
             ->register('avatar', AvatarField::class, 'File & Media', 'string', 'Avatar upload with circular preview and initials fallback.', Maturity::Experimental)
-            ->register('image-cropper', ImageCropperField::class, 'File & Media', 'string', 'Image upload with in-browser crop/rotate/zoom.', Maturity::Experimental)
+            ->register('image-cropper', ImageCropperField::class, 'File & Media', 'string', 'Image upload with in-browser crop/rotate/zoom.', Maturity::Stable)
             ->register('map-location', MapLocationField::class, 'Visual & Spatial', 'array', 'Map-based location picker.', Maturity::Experimental)
             ->register('geographic-boundary', GeographicBoundaryField::class, 'Visual & Spatial', 'array', 'Draws a boundary on a map.', Maturity::Experimental)
-            ->register('gradient-editor', GradientEditorField::class, 'Visual & Spatial', 'array', 'Multi-stop colour gradient editor.', Maturity::Experimental)
+            ->register('gradient-editor', GradientEditorField::class, 'Visual & Spatial', 'array', 'Multi-stop colour gradient editor.', Maturity::Stable)
             ->register('signature-pad', SignaturePadField::class, 'Visual & Spatial', 'string', 'Canvas-based signature capture.', Maturity::Planned) // Wave 3 hardware/media field, deferred — see ARCHITECT_IMPROVEMENT_PLAN.md
             ->register('annotation', AnnotationField::class, 'Visual & Spatial', 'array', 'Draws bounding boxes/polygons/labels over an image.', Maturity::Experimental)
             ->register('drawing-sketch', DrawingSketchField::class, 'Visual & Spatial', 'string', 'Free-hand drawing/sketch canvas.', Maturity::Planned) // Wave 3 hardware/media field, deferred — see ARCHITECT_IMPROVEMENT_PLAN.md
@@ -388,11 +388,11 @@ class ArchitectServiceProvider extends ServiceProvider
             ->register('dial-knob', DialKnobField::class, 'Visual & Spatial', 'decimal', 'Rotational dial/knob control.', Maturity::Stable)
             ->register('matrix-input', MatrixInputField::class, 'Visual & Spatial', 'array', 'Survey-style response grid.', Maturity::Stable)
             ->register('sortable-list', SortableListField::class, 'Structural', 'array', 'Drag-to-reorder list.', Maturity::Stable)
-            ->register('kanban-board', KanbanBoardField::class, 'Structural', 'array', 'Drag-between-columns board input.', Maturity::Experimental)
+            ->register('kanban-board', KanbanBoardField::class, 'Structural', 'array', 'Drag-between-columns board input.', Maturity::Stable)
             ->register('ranking', RankingField::class, 'Structural', 'array', 'Drag-to-rank input.', Maturity::Stable)
-            ->register('relationship-picker', RelationshipPickerField::class, 'Relationships & Lookup', 'array', 'Links this record to another record/event/entity.', Maturity::Experimental)
+            ->register('relationship-picker', RelationshipPickerField::class, 'Relationships & Lookup', 'array', 'Links this record to another record/event/entity.', Maturity::Stable)
             ->register('timeline-editor', TimelineEditorField::class, 'Visual & Spatial', 'array', 'Timeline editor for labelled segments.', Maturity::Experimental)
-            ->register('image-comparison-slider', ImageComparisonSliderField::class, 'Visual & Spatial', 'decimal', 'Draggable divider comparing two images.', Maturity::Experimental)
+            ->register('image-comparison-slider', ImageComparisonSliderField::class, 'Visual & Spatial', 'decimal', 'Draggable divider comparing two images.', Maturity::Stable)
             ->register('camera-capture', CameraCaptureField::class, 'File & Media', 'string', 'Photo capture via the device camera.', Maturity::Planned) // Wave 3 hardware/media field, deferred — see ARCHITECT_IMPROVEMENT_PLAN.md
             ->register('audio-recorder', AudioRecorderField::class, 'File & Media', 'string', 'Audio recording via the device microphone.', Maturity::Planned) // Wave 3 hardware/media field, deferred — see ARCHITECT_IMPROVEMENT_PLAN.md
             ->register('video-recorder', VideoRecorderField::class, 'File & Media', 'string', 'Video recording via camera + microphone.', Maturity::Planned) // Wave 3 hardware/media field, deferred — see ARCHITECT_IMPROVEMENT_PLAN.md
@@ -401,8 +401,8 @@ class ArchitectServiceProvider extends ServiceProvider
             ->register('audio-waveform-selection', AudioWaveformSelectionField::class, 'Visual & Spatial', 'array', 'Selects a segment of an audio waveform.', Maturity::Planned) // Wave 3 hardware/media field, deferred — see ARCHITECT_IMPROVEMENT_PLAN.md
             ->register('formula-expression-editor', FormulaExpressionEditorField::class, 'Text & Structured Text', 'string', 'Formula/expression editor with field references.', Maturity::Experimental)
             ->register('math-equation-editor', MathEquationEditorField::class, 'Text & Structured Text', 'string', 'Visual math equation editor.', Maturity::Experimental)
-            ->register('mention-editor', MentionEditorField::class, 'Text & Structured Text', 'string', 'Rich text editor supporting @mentions.', Maturity::Experimental)
-            ->register('template-editor', TemplateEditorField::class, 'Text & Structured Text', 'string', 'Text editor with {{ variable }} placeholders.', Maturity::Experimental)
+            ->register('mention-editor', MentionEditorField::class, 'Text & Structured Text', 'string', 'Rich text editor supporting @mentions.', Maturity::Stable)
+            ->register('template-editor', TemplateEditorField::class, 'Text & Structured Text', 'string', 'Text editor with {{ variable }} placeholders.', Maturity::Stable)
             ->register('block-editor', BlockEditor::class, 'Structural', 'array', 'Full page/layout builder (extends Builder).', Maturity::Experimental)
             ->register('diff-merge', DiffMergeField::class, 'Structural', 'array', 'Presents two versions for per-field merge selection.', Maturity::Stable)
             ->register('query-builder', QueryBuilderField::class, 'Structural', 'array', 'Visual nested AND/OR query builder.', Maturity::Experimental)

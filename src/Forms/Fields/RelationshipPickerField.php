@@ -15,6 +15,8 @@ class RelationshipPickerField extends Field
     /** @var array<int, string> */
     private array $allowedTypes = [];
 
+    private ?string $searchUrl = null;
+
     /** @param  array<int, string>  $types */
     public function allowedTypes(array $types): static
     {
@@ -24,10 +26,24 @@ class RelationshipPickerField extends Field
         return $clone;
     }
 
+    /** Receives `?type=...&q=...` query params; returns `[{id, label}, ...]`. */
+    public function searchUrl(string $url): static
+    {
+        $clone = clone $this;
+        $clone->searchUrl = $url;
+
+        return $clone;
+    }
+
     /** @return array<int, string> */
     public function getAllowedTypes(): array
     {
         return $this->allowedTypes;
+    }
+
+    public function getSearchUrl(): ?string
+    {
+        return $this->searchUrl;
     }
 
     public function getViewName(): string
