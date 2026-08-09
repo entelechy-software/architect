@@ -9,6 +9,15 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Added
 
+- **Release gate (Phase 6)** — published `RELEASE_CHECKLIST.md` at the repo root, the definition-of-done checklist for this plan's target release, with every item verified against the live repo state (not just asserted).
+
+### Fixed
+
+- **Tests** — fixed the last 2 known-red tests in the suite: `WizardDraftPersistenceTest` failed with `no such table: cache` because the testbench environment had no cache store configured (defaulted to the `database` driver with no migrated `cache` table); `phpunit.xml` now sets `CACHE_STORE=array`, which still exercises the real draft-persistence code path within a test. Also silenced a PHPUnit 12 notice in `FormSearchSetTest` by switching an unasserted `Authenticatable` test double from `createMock()` to `createStub()` (the double's methods are never verified, so a stub — not a mock — is the correct tool). The full suite is now 100% green with zero errors and zero notices.
+- **Static analysis** — PHPStan is now genuinely clean at level 8 (previously carried 3 real pre-existing errors plus a stale `ignoreErrors` entry that no longer matched anything): `StubbedFeatureAuditor::findings()` now guards against `file_get_contents()` returning `false` before calling `str_contains()`; `AbstractEloquentDataModel::duplicate()`'s `$except` parameter is now documented `list<string>`; `FormPanel::buildGenericViewRecord()` now wraps its result in `array_values()` so its return type is provably `list<...>`, matching its docblock. Removed the stale `view-string|null` `ignoreErrors` entry from `phpstan.neon.dist` — none of `src/`'s ~20 `view('architect::...')` call sites trigger it any more, so keeping it around only produced an "unmatched ignored error" meta-error.
+
+### Added
+
 - **Docs (Phase 5)** — three new doc pages: **Feature Maturity** (`architect-status.html`, the Stable/Beta/Experimental/Planned legend plus every non-Stable Forms control in one lookup), **Multi-tenancy** (`architect-multi-tenancy.html`, row-level scoping vs database-per-tenant connection switching, a decision tree, and a `stancl/tenancy` adapter cookbook recipe — deferred from Phase 4), and **Feature Matrix (Phase 2)** (`architect-feature-matrix.html`, publishing `PHASE2_FEATURE_MATRIX.md` as a browsable doc page). `architect-form-controls.html` gained a "Roadmap" section grouping all 22 non-Stable controls by maturity with caveats, plus an inline maturity badge on each of those 22 rows in the category tables.
 - **Tooling** — `php artisan architect:doctor` gained a sixth check: `Support\Doctor\DocMaturityAuditor` scans `docs/_documentation/*.html` for `maturity-badge` spans and cross-references them against `ControlRegistry`, failing if a non-Stable control has no doc badge, or if a badge's level has drifted out of sync with the registry.
 

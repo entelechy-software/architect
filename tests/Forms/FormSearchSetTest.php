@@ -48,7 +48,7 @@ class FormSearchSetTest extends TestCase
             permission: 'notes.create',
         );
 
-        $user = $this->createMock(Authenticatable::class);
+        $user = $this->createStub(Authenticatable::class);
 
         $denyingResolver = new class implements PermissionResolver
         {

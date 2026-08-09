@@ -183,6 +183,8 @@ abstract class AbstractEloquentDataModel implements ArchitectDataModel, Supports
      * excluded automatically by Eloquent's replicate()) plus any columns
      * named in $except (typically unique columns such as email/slug that
      * ->clonable(['email']) declared should not be duplicated verbatim).
+     *
+     * @param  list<string>  $except
      */
     public function duplicate(int $id, array $except = []): int
     {

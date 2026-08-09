@@ -257,14 +257,15 @@ class FormPanel extends Component
      */
     private function buildGenericViewRecord(Model $record): array
     {
-        return collect($this->definition()->columns)
-            ->reject(fn (Column $column) => $column->isHiddenOnIndex())
-            ->map(fn (Column $column) => [
-                'label' => $column->getLabel(),
-                'value' => data_get($record, $column->getKey()),
-            ])
-            ->values()
-            ->all();
+        return array_values(
+            collect($this->definition()->columns)
+                ->reject(fn (Column $column) => $column->isHiddenOnIndex())
+                ->map(fn (Column $column) => [
+                    'label' => $column->getLabel(),
+                    'value' => data_get($record, $column->getKey()),
+                ])
+                ->all()
+        );
     }
 
     /**

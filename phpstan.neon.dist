@@ -28,16 +28,6 @@ parameters:
             message: '#Trait Entelechy\\Architect\\Tenancy\\Concerns\\ScopedToTenant is used zero times and is not analysed#'
             path: src/Tenancy/Concerns/ScopedToTenant.php
         -
-            # Larastan's view-string literal check requires the analysed app
-            # to have the package's views actually registered via a booted
-            # ServiceProvider (loadViewsFrom('architect')). When analysing
-            # the package standalone (no host app bootstrapped), Larastan
-            # can't resolve the 'architect::' namespace, so every view()
-            # call is flagged even though the views genuinely exist — see
-            # resources/views/ and ArchitectServiceProvider::boot().
-            message: '#Parameter \#1 \$view of function view expects view-string\|null, string given#'
-            path: src/*
-        -
             # DB::raw() requires a literal-string, but toggleColumn() builds
             # a CASE-WHEN fragment around a column identifier that has
             # already been validated against the table definition's known

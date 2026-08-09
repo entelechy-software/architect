@@ -70,6 +70,12 @@ final class StubbedFeatureAuditor
 
             $source = file_get_contents($fullPath);
 
+            if ($source === false) {
+                $findings[] = "Could not read tracked stub file: {$stub['path']}";
+
+                continue;
+            }
+
             if (! str_contains($source, $stub['marker'])) {
                 $findings[] = "Expected known-gap disclosure missing from {$stub['path']} — either the gap was ".
                     'silently fixed (remove this entry) or the disclosure comment was accidentally removed '.
