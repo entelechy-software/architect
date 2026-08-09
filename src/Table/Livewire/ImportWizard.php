@@ -9,11 +9,11 @@ use Entelechy\Architect\Contracts\TenantResolver;
 use Entelechy\Architect\Table\ArchitectTableDefinition;
 use Entelechy\Architect\Table\Column;
 use Entelechy\Architect\Table\Contracts\ArchitectDataModel;
+use Entelechy\Architect\Table\Contracts\ProvidesTableDefinition;
 use Entelechy\Architect\Table\Import\ImportProcessor;
 use Entelechy\Architect\Table\Import\ImportRateLimiter;
 use Entelechy\Architect\Table\Import\ImportResolver;
 use Entelechy\Architect\Table\Import\Models\ImportBatch;
-use Entelechy\Architect\Table\TableBuilder;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Model;
@@ -826,20 +826,13 @@ class ImportWizard extends Component
     {
         $class = $this->definitionClass;
 
-        if (! class_exists($class) || ! method_exists($class, 'definition')) {
+        if (! class_exists($class) || ! is_subclass_of($class, ProvidesTableDefinition::class)) {
             throw new \LogicException(
-                "ImportWizard: '{$class}' must expose a static ::definition() method"
+                "ImportWizard: '{$class}' must implement ".ProvidesTableDefinition::class
             );
         }
 
-        $def = $class::definition();
-
-        if ($def instanceof TableBuilder) {
-            $def = $def->build();
-        }
-
-        /** @var ArchitectTableDefinition $def */
-        return $def;
+        return $class::definition();
     }
 
     /**
@@ -891,13 +884,10 @@ class ImportWizard extends Component
     private function permissionGate(string $definitionClass): bool
     {
         try {
-            if (! class_exists($definitionClass) || ! method_exists($definitionClass, 'definition')) {
+            if (! class_exists($definitionClass) || ! is_subclass_of($definitionClass, ProvidesTableDefinition::class)) {
                 return false;
             }
             $def = $definitionClass::definition();
-            if ($def instanceof TableBuilder) {
-                $def = $def->build();
-            }
             $importDef = $def->importDefinition;
             if ($importDef === null) {
                 return false;

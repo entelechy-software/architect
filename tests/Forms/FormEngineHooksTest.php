@@ -12,6 +12,7 @@ use Entelechy\Architect\Forms\Livewire\FormEngine;
 use Entelechy\Architect\Tests\TestCase;
 use Illuminate\Support\Facades\Config;
 use Livewire\Livewire;
+use Entelechy\Architect\Forms\Contracts\ProvidesFormDefinition;
 
 class FormEngineHooksTest extends TestCase
 {
@@ -63,7 +64,7 @@ class FormEngineHooksTest extends TestCase
     }
 }
 
-final class HooksSuccessFormDefinition
+final class HooksSuccessFormDefinition implements ProvidesFormDefinition
 {
     public static bool $successCalled = false;
 
@@ -93,7 +94,7 @@ final class HooksSuccessFormDefinition
     }
 }
 
-final class HooksFailureFormDefinition
+final class HooksFailureFormDefinition implements ProvidesFormDefinition
 {
     public static bool $successCalled = false;
 

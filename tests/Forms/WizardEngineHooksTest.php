@@ -12,6 +12,7 @@ use Entelechy\Architect\Forms\WizardBuilder;
 use Entelechy\Architect\Tests\TestCase;
 use Illuminate\Support\Facades\Config;
 use Livewire\Livewire;
+use Entelechy\Architect\Forms\Contracts\ProvidesWizardDefinition;
 
 class WizardEngineHooksTest extends TestCase
 {
@@ -56,7 +57,7 @@ class WizardEngineHooksTest extends TestCase
     }
 }
 
-final class WizardHooksDefinition
+final class WizardHooksDefinition implements ProvidesWizardDefinition
 {
     public static bool $successCalled = false;
 

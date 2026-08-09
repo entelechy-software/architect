@@ -1,6 +1,11 @@
 {{--
-    <x-architect::definition-renderer :definition="$definition" />
-    <x-architect::definition-renderer definition-class="\App\Modules\Foo\Components\Tables\FooNavigator" />
+    <x-architect::static :definition="$definition" />
+    <x-architect::static definition-class="\App\Modules\Foo\Components\Tables\FooNavigator" />
+
+    Navigator's Blade-only renderer — the "static" counterpart to the
+    <livewire:architect-*> ("live") tags used by every other subsystem.
+    Navigator is the only subsystem that ever renders without a Livewire
+    round-trip, so this component needs no per-subsystem name.
 
     Dispatcher component — resolves the correct partial based on
     $definition->type and wraps it in a position-aware container.
@@ -18,7 +23,8 @@
 
     Props:
       $definition       ArchitectNavigatorDefinition (optional if definitionClass given)
-      $definitionClass  string FQCN (optional; used to build $definition + forwarded to workspace-tabs)
+      $definitionClass  string FQCN of a class implementing ProvidesNavigatorDefinition
+                        (optional; used to build $definition + forwarded to workspace-tabs)
 --}}
 @props(['definition' => null, 'definitionClass' => '', 'wrapInCard' => true])
 
@@ -28,8 +34,8 @@
     // breadcrumbs) from bleeding into this component's scope and causing
     // "Undefined property" errors on classes that don't carry navigator properties.
     if ($definitionClass !== '') {
-        if (class_exists($definitionClass) && method_exists($definitionClass, 'build')) {
-            $definition = $definitionClass::build();
+        if (class_exists($definitionClass) && is_subclass_of($definitionClass, \Entelechy\Architect\Navigator\Contracts\ProvidesNavigatorDefinition::class)) {
+            $definition = $definitionClass::definition();
         }
     }
 

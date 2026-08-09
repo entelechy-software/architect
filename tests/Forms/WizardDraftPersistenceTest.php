@@ -11,6 +11,7 @@ use Entelechy\Architect\Forms\WizardBuilder;
 use Entelechy\Architect\Tests\TestCase;
 use Illuminate\Support\Facades\Config;
 use Livewire\Livewire;
+use Entelechy\Architect\Forms\Contracts\ProvidesWizardDefinition;
 
 /**
  * Verifies drafts survive a fresh WizardEngine mount within the same
@@ -55,7 +56,7 @@ class WizardDraftPersistenceTest extends TestCase
     }
 }
 
-final class DraftableWizardDefinition
+final class DraftableWizardDefinition implements ProvidesWizardDefinition
 {
     public static function definition(): ArchitectWizardDefinition
     {
@@ -69,7 +70,7 @@ final class DraftableWizardDefinition
     }
 }
 
-final class DraftableWithoutStepResumeDefinition
+final class DraftableWithoutStepResumeDefinition implements ProvidesWizardDefinition
 {
     public static function definition(): ArchitectWizardDefinition
     {

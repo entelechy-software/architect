@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Entelechy\Architect\Table;
 
+use Entelechy\Architect\Contracts\ArchitectDefinitionProvider;
+
 /**
  * Immutable custom form launch configuration for table create/modify flows.
  */
@@ -33,9 +35,9 @@ final class CustomForm
             throw new \InvalidArgumentException("customForm definition class [{$definitionClass}] does not exist.");
         }
 
-        if (! method_exists($definitionClass, 'definition')) {
+        if (! is_subclass_of($definitionClass, ArchitectDefinitionProvider::class)) {
             throw new \InvalidArgumentException(
-                "customForm definition class [{$definitionClass}] must expose static definition()."
+                "customForm definition class [{$definitionClass}] must implement ".ArchitectDefinitionProvider::class
             );
         }
 

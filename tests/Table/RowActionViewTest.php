@@ -15,6 +15,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 use Livewire\Livewire;
+use Entelechy\Architect\Table\Contracts\ProvidesTableDefinition;
 
 class RowActionViewTest extends TestCase
 {
@@ -77,7 +78,7 @@ final class ViewWidgetDataModel extends AbstractEloquentDataModel
     }
 }
 
-final class ViewWidgetTableDefinition
+final class ViewWidgetTableDefinition implements ProvidesTableDefinition
 {
     public static function definition(): ArchitectTableDefinition
     {

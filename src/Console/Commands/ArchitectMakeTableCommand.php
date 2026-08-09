@@ -101,8 +101,9 @@ class ArchitectMakeTableCommand extends Command
         use Entelechy\Architect\Architect;
         use Entelechy\Architect\Table\ArchitectTableDefinition;
         use Entelechy\Architect\Table\Column;
+        use Entelechy\Architect\Table\Contracts\ProvidesTableDefinition;
 
-        final class {$name}TableDefinition
+        final class {$name}TableDefinition implements ProvidesTableDefinition
         {
             public static function definition(): ArchitectTableDefinition
             {

@@ -13,6 +13,7 @@ use Entelechy\Architect\Table\Actions\BulkStatusAction;
 use Entelechy\Architect\Table\ArchitectTableDefinition;
 use Entelechy\Architect\Table\Column;
 use Entelechy\Architect\Table\Contracts\ArchitectDataModel;
+use Entelechy\Architect\Table\Contracts\ProvidesTableDefinition;
 use Entelechy\Architect\Table\Contracts\SupportsAutoRefreshFingerprint;
 use Entelechy\Architect\Table\Export\CsvStreamExporter;
 use Entelechy\Architect\Table\Export\ExcelExporter;
@@ -1609,9 +1610,9 @@ class Engine extends Component
 
         $class = $this->definitionClass;
 
-        if (! class_exists($class) || ! method_exists($class, 'definition')) {
+        if (! class_exists($class) || ! is_subclass_of($class, ProvidesTableDefinition::class)) {
             throw new \LogicException(
-                "TableBuilder engine: '{$class}' must expose a static ::definition() method"
+                "TableBuilder engine: '{$class}' must implement ".ProvidesTableDefinition::class
             );
         }
 

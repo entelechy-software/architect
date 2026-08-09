@@ -18,6 +18,9 @@ use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Pagination\LengthAwarePaginator as ConcreteLengthAwarePaginator;
 use Livewire\Livewire;
+use Entelechy\Architect\Forms\Contracts\ProvidesFormDefinition;
+use Entelechy\Architect\Forms\Contracts\ProvidesWizardDefinition;
+use Entelechy\Architect\Table\Contracts\ProvidesTableDefinition;
 
 class CustomFormRuntimeTest extends TestCase
 {
@@ -73,7 +76,7 @@ class CustomFormRuntimeTest extends TestCase
     }
 }
 
-final class RuntimeTableDefinition
+final class RuntimeTableDefinition implements ProvidesTableDefinition
 {
     public static function definition(): ArchitectTableDefinition
     {
@@ -159,7 +162,7 @@ final class RuntimeStubDataModel implements ArchitectDataModel
     }
 }
 
-final class RuntimeFormDefinition
+final class RuntimeFormDefinition implements ProvidesFormDefinition
 {
     public static function definition(): ArchitectFormDefinition
     {
@@ -172,7 +175,7 @@ final class RuntimeFormDefinition
     }
 }
 
-final class RuntimeWizardDefinition
+final class RuntimeWizardDefinition implements ProvidesWizardDefinition
 {
     public static function definition(): ArchitectWizardDefinition
     {

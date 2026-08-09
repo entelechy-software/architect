@@ -7,10 +7,12 @@ namespace Entelechy\Architect\Table\Livewire;
 use Carbon\CarbonImmutable;
 use Entelechy\Architect\Forms\ArchitectFormDefinition;
 use Entelechy\Architect\Forms\ArchitectWizardDefinition;
+use Entelechy\Architect\Contracts\ArchitectDefinitionProvider;
 use Entelechy\Architect\Table\ArchitectTableDefinition;
 use Entelechy\Architect\Table\Column;
 use Entelechy\Architect\Table\Contracts\ArchitectDataModel;
 use Entelechy\Architect\Table\Contracts\HasViewAll;
+use Entelechy\Architect\Table\Contracts\ProvidesTableDefinition;
 use Entelechy\Architect\Table\Permissions\FieldVisibilityFilter;
 use Entelechy\Architect\Table\Permissions\PermissionGate;
 use Illuminate\Auth\Access\AuthorizationException;
@@ -483,9 +485,9 @@ class FormPanel extends Component
     {
         $class = $this->definitionClass;
 
-        if (! class_exists($class) || ! method_exists($class, 'definition')) {
+        if (! class_exists($class) || ! is_subclass_of($class, ProvidesTableDefinition::class)) {
             throw new \LogicException(
-                "TableBuilder form panel: '{$class}' must expose a static ::definition() method"
+                "TableBuilder form panel: '{$class}' must implement ".ProvidesTableDefinition::class
             );
         }
 
@@ -497,9 +499,9 @@ class FormPanel extends Component
 
     private function resolveCustomFormEngineComponent(string $definitionClass): string
     {
-        if (! class_exists($definitionClass) || ! method_exists($definitionClass, 'definition')) {
+        if (! class_exists($definitionClass) || ! is_subclass_of($definitionClass, ArchitectDefinitionProvider::class)) {
             throw new \LogicException(
-                "Custom form definition class [{$definitionClass}] must expose static definition()."
+                "Custom form definition class [{$definitionClass}] must implement ".ArchitectDefinitionProvider::class
             );
         }
 

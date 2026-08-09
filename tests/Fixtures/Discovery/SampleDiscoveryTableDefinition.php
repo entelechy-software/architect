@@ -7,8 +7,9 @@ namespace Entelechy\Architect\Tests\Fixtures\Discovery;
 use Entelechy\Architect\Table\ArchitectTableDefinition;
 use Entelechy\Architect\Table\Column;
 use Entelechy\Architect\Table\TableBuilder;
+use Entelechy\Architect\Table\Contracts\ProvidesTableDefinition;
 
-class SampleDiscoveryTableDefinition
+class SampleDiscoveryTableDefinition implements ProvidesTableDefinition
 {
     public static function definition(): ArchitectTableDefinition
     {

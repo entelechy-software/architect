@@ -13,6 +13,8 @@ use Entelechy\Architect\Forms\FormSearchSet;
 use Entelechy\Architect\Forms\WizardBuilder;
 use Entelechy\Architect\Tests\TestCase;
 use Illuminate\Contracts\Auth\Authenticatable;
+use Entelechy\Architect\Forms\Contracts\ProvidesFormDefinition;
+use Entelechy\Architect\Forms\Contracts\ProvidesWizardDefinition;
 
 class FormSearchSetTest extends TestCase
 {
@@ -83,7 +85,7 @@ class FormSearchSetTest extends TestCase
     }
 }
 
-final class ExposedQuickNoteForm
+final class ExposedQuickNoteForm implements ProvidesFormDefinition
 {
     public static function definition(): ArchitectFormDefinition
     {
@@ -94,7 +96,7 @@ final class ExposedQuickNoteForm
     }
 }
 
-final class UnexposedQuickNoteForm
+final class UnexposedQuickNoteForm implements ProvidesFormDefinition
 {
     public static function definition(): ArchitectFormDefinition
     {
@@ -104,7 +106,7 @@ final class UnexposedQuickNoteForm
     }
 }
 
-final class ExposedOnboardingWizard
+final class ExposedOnboardingWizard implements ProvidesWizardDefinition
 {
     public static function definition(): ArchitectWizardDefinition
     {

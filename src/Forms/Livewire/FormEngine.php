@@ -7,6 +7,7 @@ namespace Entelechy\Architect\Forms\Livewire;
 use Entelechy\Architect\Forms\ArchitectFormDefinition;
 use Entelechy\Architect\Forms\Concerns\FlattensStructure;
 use Entelechy\Architect\Forms\Concerns\SanitizesFormData;
+use Entelechy\Architect\Forms\Contracts\ProvidesFormDefinition;
 use Entelechy\Architect\Forms\Events\EventPayload;
 use Entelechy\Architect\Forms\Events\FormEvents;
 use Entelechy\Architect\Forms\FormKeyRegistry;
@@ -178,7 +179,13 @@ class FormEngine extends Component
 
     private function resolveDefinition(): ArchitectFormDefinition
     {
-        return ($this->definitionClass)::definition();
+        $class = $this->definitionClass;
+
+        if (! class_exists($class) || ! is_subclass_of($class, ProvidesFormDefinition::class)) {
+            throw new \LogicException("FormEngine: '{$class}' must implement ".ProvidesFormDefinition::class);
+        }
+
+        return $class::definition();
     }
 
     private function applyFillData(mixed $data): void

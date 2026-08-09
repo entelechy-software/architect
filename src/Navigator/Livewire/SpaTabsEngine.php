@@ -7,6 +7,7 @@ namespace Entelechy\Architect\Navigator\Livewire;
 use Entelechy\Architect\Breadcrumbs\AutomaticBreadcrumbsResolver;
 use Entelechy\Architect\Contracts\PermissionResolver;
 use Entelechy\Architect\Navigator\ArchitectNavigatorDefinition;
+use Entelechy\Architect\Navigator\Contracts\ProvidesNavigatorDefinition;
 use Entelechy\Architect\Navigator\Items\Tab;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\View\View;
@@ -49,7 +50,7 @@ class SpaTabsEngine extends Component
     public function mount(string $definitionClass): void
     {
         abort_unless(
-            class_exists($definitionClass) && method_exists($definitionClass, 'definition'),
+            class_exists($definitionClass) && is_subclass_of($definitionClass, ProvidesNavigatorDefinition::class),
             404
         );
 
@@ -85,7 +86,7 @@ class SpaTabsEngine extends Component
                     /** @var class-string $tableClass */
                     $tableClass = $item->getArchitectClass();
 
-                    if (method_exists($tableClass, 'definition')) {
+                    if (is_subclass_of($tableClass, \Entelechy\Architect\Table\Contracts\ProvidesTableDefinition::class)) {
                         $tableDef = $tableClass::definition();
                         $tabBreadcrumbs[$item->getSlug()] = $tableDef->breadcrumbMode === 'automatic'
                             ? app(AutomaticBreadcrumbsResolver::class)->forTable($tableDef, request())

@@ -6,6 +6,7 @@ namespace Entelechy\Architect\Toolbar\Livewire;
 
 use Entelechy\Architect\Contracts\PermissionResolver;
 use Entelechy\Architect\Toolbar\ArchitectToolbarDefinition;
+use Entelechy\Architect\Toolbar\Contracts\ProvidesToolbarDefinition;
 use Entelechy\Architect\Toolbar\Items\Contracts\ToolbarItem;
 use Entelechy\Architect\Toolbar\Items\Dropdown\DropdownCheckbox;
 use Entelechy\Architect\Toolbar\Items\Dropdown\DropdownRadioGroup as DropdownRadioGroupItem;
@@ -43,7 +44,7 @@ class ToolbarEngine extends Component
 {
     /**
      * FQCN of the definition class to drive.
-     * Must expose a public static build(): ArchitectToolbarDefinition method.
+     * Must expose a public static definition(): ArchitectToolbarDefinition method.
      */
     public string $definitionClass = '';
 
@@ -633,13 +634,12 @@ class ToolbarEngine extends Component
         if (! $this->cachedDefinition instanceof ArchitectToolbarDefinition) {
             /** @var class-string $class */
             $class = $this->definitionClass;
-            $built = $class::build();
 
-            if (! $built instanceof ArchitectToolbarDefinition) {
-                throw new \LogicException("ToolbarEngine: [{$class}::build()] must return an ArchitectToolbarDefinition.");
+            if (! class_exists($class) || ! is_subclass_of($class, ProvidesToolbarDefinition::class)) {
+                throw new \LogicException("ToolbarEngine: '{$class}' must implement ".ProvidesToolbarDefinition::class);
             }
 
-            $this->cachedDefinition = $built;
+            $this->cachedDefinition = $class::definition();
         }
 
         return $this->cachedDefinition;

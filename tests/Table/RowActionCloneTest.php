@@ -14,6 +14,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 use Livewire\Livewire;
+use Entelechy\Architect\Table\Contracts\ProvidesTableDefinition;
 
 class RowActionCloneTest extends TestCase
 {
@@ -71,7 +72,7 @@ final class CloneWidgetDataModel extends AbstractEloquentDataModel
     }
 }
 
-final class CloneWidgetTableDefinition
+final class CloneWidgetTableDefinition implements ProvidesTableDefinition
 {
     public static function definition(): ArchitectTableDefinition
     {

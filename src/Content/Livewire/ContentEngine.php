@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Entelechy\Architect\Content\Livewire;
 
 use Entelechy\Architect\Content\ArchitectContentDefinition;
+use Entelechy\Architect\Content\Contracts\ProvidesContentDefinition;
 use Illuminate\Contracts\View\View;
 use Livewire\Component;
 
@@ -34,9 +35,9 @@ class ContentEngine extends Component
     {
         $class = $this->definitionClass;
 
-        if (! class_exists($class) || ! method_exists($class, 'definition')) {
+        if (! class_exists($class) || ! is_subclass_of($class, ProvidesContentDefinition::class)) {
             throw new \LogicException(
-                "ContentEngine: '{$class}' must expose a static ::definition() method"
+                "ContentEngine: '{$class}' must implement ".ProvidesContentDefinition::class
             );
         }
 

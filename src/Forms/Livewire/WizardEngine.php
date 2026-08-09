@@ -7,6 +7,7 @@ namespace Entelechy\Architect\Forms\Livewire;
 use Entelechy\Architect\Forms\ArchitectWizardDefinition;
 use Entelechy\Architect\Forms\Concerns\FlattensStructure;
 use Entelechy\Architect\Forms\Concerns\SanitizesFormData;
+use Entelechy\Architect\Forms\Contracts\ProvidesWizardDefinition;
 use Entelechy\Architect\Forms\Contracts\StructureItem;
 use Entelechy\Architect\Forms\Contracts\WizardDraftStore;
 use Entelechy\Architect\Forms\Events\EventPayload;
@@ -239,7 +240,13 @@ class WizardEngine extends Component
 
     private function resolveDefinition(): ArchitectWizardDefinition
     {
-        return ($this->definitionClass)::definition();
+        $class = $this->definitionClass;
+
+        if (! class_exists($class) || ! is_subclass_of($class, ProvidesWizardDefinition::class)) {
+            throw new \LogicException("WizardEngine: '{$class}' must implement ".ProvidesWizardDefinition::class);
+        }
+
+        return $class::definition();
     }
 
     /**

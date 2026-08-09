@@ -32,8 +32,8 @@ use Entelechy\Architect\Toolbar\Items\ToolbarSpacer;
  *
  * For use as a definition class (the recommended pattern), implement a class:
  *
- *   class MyToolbarDefinition {
- *       public static function build(): ArchitectToolbarDefinition {
+ *   class MyToolbarDefinition implements \Entelechy\Architect\Toolbar\Contracts\ProvidesToolbarDefinition {
+ *       public static function definition(): ArchitectToolbarDefinition {
  *           return Architect::toolbar()->key('my-toolbar')->item(...)->build();
  *       }
  *   }

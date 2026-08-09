@@ -13,6 +13,7 @@ use Entelechy\Architect\Forms\Livewire\FormEngine;
 use Entelechy\Architect\Tests\TestCase;
 use Illuminate\Support\Facades\Config;
 use Livewire\Livewire;
+use Entelechy\Architect\Forms\Contracts\ProvidesFormDefinition;
 
 /**
  * Coverage matrix scenario: "multi-form page" (FORMS_FEATURE_PLAN.md Phase 7,
@@ -84,7 +85,7 @@ class MultiFormPageIntegrationTest extends TestCase
     }
 }
 
-final class NewsletterSignupForm
+final class NewsletterSignupForm implements ProvidesFormDefinition
 {
     public static function definition(): ArchitectFormDefinition
     {
@@ -95,7 +96,7 @@ final class NewsletterSignupForm
     }
 }
 
-final class ContactRequestForm
+final class ContactRequestForm implements ProvidesFormDefinition
 {
     public static function definition(): ArchitectFormDefinition
     {
@@ -106,7 +107,7 @@ final class ContactRequestForm
     }
 }
 
-final class ConflictingKeyForm
+final class ConflictingKeyForm implements ProvidesFormDefinition
 {
     public static function definition(): ArchitectFormDefinition
     {

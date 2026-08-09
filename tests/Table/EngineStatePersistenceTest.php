@@ -17,6 +17,7 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Pagination\LengthAwarePaginator as ConcreteLengthAwarePaginator;
 use Illuminate\Support\Facades\Schema;
 use Livewire\Livewire;
+use Entelechy\Architect\Table\Contracts\ProvidesTableDefinition;
 
 class EngineStatePersistenceTest extends TestCase
 {
@@ -155,7 +156,7 @@ final class StatePersistenceStubUser implements Authenticatable
     }
 }
 
-final class StatePersistenceTableDefinition
+final class StatePersistenceTableDefinition implements ProvidesTableDefinition
 {
     public static function definition(): ArchitectTableDefinition
     {
@@ -172,7 +173,7 @@ final class StatePersistenceTableDefinition
     }
 }
 
-final class OtherStatePersistenceTableDefinition
+final class OtherStatePersistenceTableDefinition implements ProvidesTableDefinition
 {
     public static function definition(): ArchitectTableDefinition
     {

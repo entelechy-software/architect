@@ -6,6 +6,7 @@ namespace Entelechy\Architect\Navigator\Livewire;
 
 use Entelechy\Architect\Contracts\PermissionResolver;
 use Entelechy\Architect\Navigator\ArchitectNavigatorDefinition;
+use Entelechy\Architect\Navigator\Contracts\ProvidesNavigatorDefinition;
 use Entelechy\Architect\Navigator\WorkspaceTabsDefinition;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\View\View;
@@ -39,7 +40,7 @@ use LogicException;
 class ModuleTabsManager extends Component
 {
     /**
-     * FQCN of a class with a static build(): ArchitectNavigatorDefinition method.
+     * FQCN of a class implementing ProvidesNavigatorDefinition.
      * Stored as a string so Livewire can serialize it between requests.
      */
     public string $definitionClass = '';
@@ -64,8 +65,8 @@ class ModuleTabsManager extends Component
 
     public function mount(string $definitionClass): void
     {
-        if (! class_exists($definitionClass) || ! method_exists($definitionClass, 'build')) {
-            throw new LogicException("ModuleTabsManager: [{$definitionClass}] must exist and have a static build() method.");
+        if (! class_exists($definitionClass) || ! is_subclass_of($definitionClass, ProvidesNavigatorDefinition::class)) {
+            throw new LogicException("ModuleTabsManager: [{$definitionClass}] must implement ".ProvidesNavigatorDefinition::class);
         }
 
         $this->definitionClass = $definitionClass;
@@ -87,11 +88,11 @@ class ModuleTabsManager extends Component
      */
     private function definition(): WorkspaceTabsDefinition
     {
-        $navDef = ($this->definitionClass)::build();
+        $navDef = ($this->definitionClass)::definition();
 
         if (! $navDef instanceof ArchitectNavigatorDefinition || $navDef->workspaceDefinition === null) {
             throw new LogicException(
-                "ModuleTabsManager: [{$this->definitionClass}::build()] must return a ArchitectNavigatorDefinition ".
+                "ModuleTabsManager: [{$this->definitionClass}::definition()] must return a ArchitectNavigatorDefinition ".
                 'with a workspace definition (use Architect::make(\'navigator\')->type(\'workspace-tabs\')).'
             );
         }

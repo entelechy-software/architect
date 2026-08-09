@@ -8,6 +8,7 @@ use Entelechy\Architect\Navigator\Livewire\SpaSharedDefinition;
 use Entelechy\Architect\Stats\ArchitectStatDefinition;
 use Entelechy\Architect\Stats\Livewire\DashboardEngine;
 use Entelechy\Architect\Tests\TestCase;
+use Entelechy\Architect\Stats\Contracts\ProvidesStatDefinition;
 
 class DashboardBreadcrumbsTest extends TestCase
 {
@@ -27,7 +28,7 @@ class DashboardBreadcrumbsTest extends TestCase
     }
 }
 
-final class DashboardBreadcrumbDefinition
+final class DashboardBreadcrumbDefinition implements ProvidesStatDefinition
 {
     public static function definition(): ArchitectStatDefinition
     {

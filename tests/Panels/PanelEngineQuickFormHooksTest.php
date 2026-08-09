@@ -12,6 +12,7 @@ use Entelechy\Architect\Panels\Panels\QuickFormPanel;
 use Entelechy\Architect\Tests\TestCase;
 use Illuminate\Support\Facades\Config;
 use Livewire\Livewire;
+use Entelechy\Architect\Panels\Contracts\ProvidesDashboardDefinition;
 
 class PanelEngineQuickFormHooksTest extends TestCase
 {
@@ -51,7 +52,7 @@ class PanelEngineQuickFormHooksTest extends TestCase
     }
 }
 
-final class QuickFormHooksSuccessDashboard
+final class QuickFormHooksSuccessDashboard implements ProvidesDashboardDefinition
 {
     public static bool $successCalled = false;
 
@@ -84,7 +85,7 @@ final class QuickFormHooksSuccessDashboard
     }
 }
 
-final class QuickFormHooksFailureDashboard
+final class QuickFormHooksFailureDashboard implements ProvidesDashboardDefinition
 {
     public static bool $successCalled = false;
 

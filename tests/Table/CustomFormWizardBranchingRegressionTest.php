@@ -19,6 +19,8 @@ use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Pagination\LengthAwarePaginator as ConcreteLengthAwarePaginator;
 use Livewire\Livewire;
+use Entelechy\Architect\Forms\Contracts\ProvidesWizardDefinition;
+use Entelechy\Architect\Table\Contracts\ProvidesTableDefinition;
 
 /**
  * Regression test for the "hardening" decision noted in
@@ -65,7 +67,7 @@ class CustomFormWizardBranchingRegressionTest extends TestCase
     }
 }
 
-final class BranchingRuntimeTableDefinition
+final class BranchingRuntimeTableDefinition implements ProvidesTableDefinition
 {
     public static function definition(): ArchitectTableDefinition
     {
@@ -88,7 +90,7 @@ final class BranchingRuntimeTableDefinition
     }
 }
 
-final class BranchingApplicationWizard
+final class BranchingApplicationWizard implements ProvidesWizardDefinition
 {
     public static function definition(): ArchitectWizardDefinition
     {

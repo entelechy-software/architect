@@ -14,6 +14,8 @@ use Entelechy\Architect\Forms\WizardBuilder;
 use Entelechy\Architect\Tests\TestCase;
 use Illuminate\Support\Facades\Config;
 use Livewire\Livewire;
+use Entelechy\Architect\Forms\Contracts\ProvidesFormDefinition;
+use Entelechy\Architect\Forms\Contracts\ProvidesWizardDefinition;
 
 class ActionEngineWizardSupportTest extends TestCase
 {
@@ -70,7 +72,7 @@ class ActionEngineWizardSupportTest extends TestCase
     }
 }
 
-final class PlainFormActionForm
+final class PlainFormActionForm implements ProvidesFormDefinition
 {
     public static function definition(): ArchitectFormDefinition
     {
@@ -87,7 +89,7 @@ final class PlainFormCreateAction extends CreateAction
     protected ?string $formClass = self::FORM_CLASS;
 }
 
-final class WizardActionForm
+final class WizardActionForm implements ProvidesWizardDefinition
 {
     public static function definition(): ArchitectWizardDefinition
     {

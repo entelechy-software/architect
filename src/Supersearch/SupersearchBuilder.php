@@ -20,6 +20,16 @@ use Entelechy\Architect\Supersearch\SearchSets\NavigationSearchSet;
  *     ->searchSet(MyModelSet::for(Member::class)->fields(['name'])->...)
  *     ->build();
  * ```
+ *
+ * For use as a definition class (the recommended pattern), implement a class:
+ *
+ *   class MySupersearchDefinition implements \Entelechy\Architect\Supersearch\Contracts\ProvidesSupersearchDefinition {
+ *       public static function definition(): ArchitectSupersearchDefinition {
+ *           return Architect::supersearch()->key('global')->searchSet(...)->build();
+ *       }
+ *   }
+ *
+ * And pass it as: <livewire:architect-supersearch definition-class="MySupersearchDefinition" />
  */
 final class SupersearchBuilder
 {

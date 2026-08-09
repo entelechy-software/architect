@@ -27,6 +27,8 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator as ConcreteLengthAwarePaginator;
 use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
+use Entelechy\Architect\Forms\Contracts\ProvidesFormDefinition;
+use Entelechy\Architect\Forms\Contracts\ProvidesWizardDefinition;
 
 class TableBuilderTest extends TestCase
 {
@@ -531,7 +533,7 @@ class TableBuilderTest extends TestCase
     public function test_custom_form_requires_definition_method(): void
     {
         $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage('must expose static definition()');
+        $this->expectExceptionMessage('must implement Entelechy\Architect\Contracts\ArchitectDefinitionProvider');
 
         TableBuilder::make()
             ->title('Widgets')
@@ -735,7 +737,7 @@ final class StubArchitectDataModel implements ArchitectDataModel
     }
 }
 
-final class StubStandardFormDefinition
+final class StubStandardFormDefinition implements ProvidesFormDefinition
 {
     public static function definition(): ArchitectFormDefinition
     {
@@ -748,7 +750,7 @@ final class StubStandardFormDefinition
     }
 }
 
-final class StubWizardFormDefinition
+final class StubWizardFormDefinition implements ProvidesWizardDefinition
 {
     public static function definition(): ArchitectWizardDefinition
     {

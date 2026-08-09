@@ -9,6 +9,7 @@ use Entelechy\Architect\Breadcrumbs\BreadcrumbTrail;
 use Entelechy\Architect\Contracts\PermissionResolver;
 use Entelechy\Architect\Navigator\Livewire\SpaSharedDefinition;
 use Entelechy\Architect\Stats\ArchitectStatDefinition;
+use Entelechy\Architect\Stats\Contracts\ProvidesStatDefinition;
 use Entelechy\Architect\Stats\DateRange;
 use Entelechy\Architect\Stats\Elements\MetricCard;
 use Illuminate\Auth\Access\AuthorizationException;
@@ -60,7 +61,7 @@ class DashboardEngine extends Component
     public function mount(string $definitionClass): void
     {
         abort_unless(
-            class_exists($definitionClass) && method_exists($definitionClass, 'definition'),
+            class_exists($definitionClass) && is_subclass_of($definitionClass, ProvidesStatDefinition::class),
             404
         );
 

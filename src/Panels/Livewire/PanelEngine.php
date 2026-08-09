@@ -8,6 +8,7 @@ use Entelechy\Architect\Forms\Contracts\ArchitectField;
 use Entelechy\Architect\Forms\Contracts\StructureItem;
 use Entelechy\Architect\Forms\Events\EventPayload;
 use Entelechy\Architect\Panels\ArchitectDashboardDefinition;
+use Entelechy\Architect\Panels\Contracts\ProvidesDashboardDefinition;
 use Entelechy\Architect\Panels\Panels\QuickFormPanel;
 use Illuminate\View\View;
 use Livewire\Component;
@@ -47,7 +48,15 @@ class PanelEngine extends Component
 
     private function resolveDefinition(): ArchitectDashboardDefinition
     {
-        return ($this->definitionClass)::definition();
+        $class = $this->definitionClass;
+
+        if (! class_exists($class) || ! is_subclass_of($class, ProvidesDashboardDefinition::class)) {
+            throw new \LogicException(
+                "PanelEngine: '{$class}' must implement ".ProvidesDashboardDefinition::class
+            );
+        }
+
+        return $class::definition();
     }
 
     public function submitQuickForm(int $panelIndex): void

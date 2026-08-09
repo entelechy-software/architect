@@ -7,6 +7,7 @@ namespace Entelechy\Architect\Supersearch\Livewire;
 use Entelechy\Architect\Contracts\PermissionResolver;
 use Entelechy\Architect\Supersearch\ArchitectSupersearchDefinition;
 use Entelechy\Architect\Supersearch\Contracts\HasSupersearchHook;
+use Entelechy\Architect\Supersearch\Contracts\ProvidesSupersearchDefinition;
 use Entelechy\Architect\Supersearch\SearchSets\ModelSearchSet;
 use Entelechy\Architect\Supersearch\SearchSets\NavigationSearchSet;
 use Illuminate\Auth\Access\AuthorizationException;
@@ -33,7 +34,7 @@ use Livewire\Component;
 class SupersearchEngine extends Component
 {
     /**
-     * FQCN of the definition class whose static build() method returns
+     * FQCN of the definition class whose static definition() method returns
      * the ArchitectSupersearchDefinition driving this instance.
      */
     public string $definitionClass = '';
@@ -356,7 +357,11 @@ class SupersearchEngine extends Component
         /** @var class-string $class */
         $class = $this->definitionClass;
 
-        return $class::build();
+        if (! class_exists($class) || ! is_subclass_of($class, ProvidesSupersearchDefinition::class)) {
+            throw new \LogicException("SupersearchEngine: '{$class}' must implement ".ProvidesSupersearchDefinition::class);
+        }
+
+        return $class::definition();
     }
 
     private function currentUser(): ?Authenticatable
