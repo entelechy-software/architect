@@ -6,7 +6,7 @@
     /** @var \Entelechy\Architect\Toolbar\Items\Dropdown\DropdownSubmenu $dropdownItem */
     if (!$this->can($dropdownItem->getPermission())) return;
 
-    $subMenuAlpineId = 'submenu_' . $parentDropKey . '_' . $dropdownItem->key();
+    $subMenuAlpineId = 'submenu_' . $parentDropKey . '_' . $dropdownItem->getKey();
 @endphp
 
 <li role="none" x-data="{ {{ $subMenuAlpineId }}: false }">
@@ -44,7 +44,7 @@
         role="menu"
         class="border-l-2 border-gray-200 dark:border-gray-600 ml-4 my-0.5"
     >
-        @foreach ($dropdownItem->getSubItems() as $subItem)
+        @foreach ($dropdownItem->getItems() as $subItem)
             @include('architect::toolbar.partials.dropdown-item', [
                 'dropdownItem'  => $subItem,
                 'parentDropKey' => $parentDropKey,

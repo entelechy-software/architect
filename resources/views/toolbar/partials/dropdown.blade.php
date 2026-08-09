@@ -7,7 +7,7 @@
     /** @var \Entelechy\Architect\Toolbar\Items\ToolbarDropdown $item */
     if (!$this->can($item->getPermission())) return;
 
-    $dropKey = 'dropdown_' . $item->key();
+    $dropKey = 'dropdown_' . $item->getKey();
 @endphp
 
 <div
@@ -49,7 +49,7 @@
             @foreach ($item->getItems() as $dropdownItem)
                 @include('architect::toolbar.partials.dropdown-item', [
                     'dropdownItem'  => $dropdownItem,
-                    'parentDropKey' => $item->key(),
+                    'parentDropKey' => $item->getKey(),
                     'dropKey'       => $dropKey,
                 ])
             @endforeach

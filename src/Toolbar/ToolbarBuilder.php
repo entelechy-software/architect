@@ -125,7 +125,13 @@ final class ToolbarBuilder
 
     /**
      * Bind this toolbar to a target Architect component (e.g. a TableEngine).
-     * Used for bidirectional state sync (Phase 4).
+     *
+     * KNOWN GAP (tracked, not yet wired): ToolbarEngine dispatches
+     * `architect:toolbar:bound-changed` (with `boundTarget` in the payload)
+     * on every state change, but no consumer anywhere in the package
+     * (Table\Livewire\Engine included) currently listens for it. Setting
+     * ->bind() records the intent but has no observable effect today —
+     * see ARCHITECT_IMPROVEMENT_PLAN.md Phase 2 Feature Matrix.
      */
     public function bind(string $targetKey): self
     {

@@ -16,7 +16,7 @@
     /** @var \Entelechy\Architect\Toolbar\Items\ToolbarSearch $item */
     if (!$this->can($item->getPermission())) return;
 
-    $searchKey    = $item->key();
+    $searchKey    = $item->getKey();
     $currentValue = $searchValues[$searchKey] ?? '';
     $suggestions  = $searchSuggestions[$searchKey] ?? [];
     $isLoading    = $searchLoading[$searchKey] ?? false;

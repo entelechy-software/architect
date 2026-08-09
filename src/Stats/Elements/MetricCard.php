@@ -16,8 +16,11 @@ use Entelechy\Architect\Stats\DateRange;
  *                        either (Container) or (DateRange, Container) depending
  *                        on its signature; the engine injects accordingly.
  *
- *   ->live(callable, every: int) — the card renders as an independent
- *                        wire:poll child component, refreshing every N seconds.
+ *   ->live(callable, every: int) — resolved fresh on every dashboard render,
+ *                        ignoring the dashboard date filter. Auto-refresh
+ *                        relies on the dashboard's own ->poll($every) interval
+ *                        (StatBuilder::poll()) — set ->poll() to the same
+ *                        value as $every so wire:poll drives the refresh.
  *                        The callable only receives (Container) — live cards
  *                        represent current state, not a date-range aggregate.
  *

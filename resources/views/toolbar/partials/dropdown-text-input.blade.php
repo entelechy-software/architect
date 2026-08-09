@@ -4,10 +4,10 @@
 --}}
 @php
     /** @var \Entelechy\Architect\Toolbar\Items\Dropdown\DropdownTextInput $dropdownItem */
-    $compoundKey  = $parentDropKey . '.' . $dropdownItem->key();
+    $compoundKey  = $parentDropKey . '.' . $dropdownItem->getKey();
     $currentValue = $textValues[$compoundKey] ?? $dropdownItem->getDefault();
     $debounceMs   = $dropdownItem->getDebounceMs();
-    $inputType    = $dropdownItem->getType();
+    $inputType    = $dropdownItem->getInputType();
     $persist      = $dropdownItem->getPersist();
     $lsKey        = $persist === 'local'
         ? "architectToolbar_{$toolbarKey}_text_{$compoundKey}"
