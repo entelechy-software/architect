@@ -357,7 +357,7 @@ class ArchitectServiceProvider extends ServiceProvider
             ->register('tree-select', TreeSelectField::class, 'Choice & Selection', 'string', 'Dropdown with hierarchical options.', Maturity::Experimental)
             ->register('cascading-select', CascadingSelectField::class, 'Choice & Selection', 'string', 'Select whose options depend on another field.', Maturity::Stable)
             ->register('dual-listbox', DualListboxField::class, 'Choice & Selection', 'array', 'Transfer-list selection.', Maturity::Experimental)
-            ->register('hierarchical-checkbox-tree', HierarchicalCheckboxTreeField::class, 'Choice & Selection', 'array', 'Tree of checkboxes with partial selection.', Maturity::Experimental)
+            ->register('hierarchical-checkbox-tree', HierarchicalCheckboxTreeField::class, 'Choice & Selection', 'array', 'Tree of checkboxes with partial selection.', Maturity::Stable)
             ->register('entity-picker', EntityPickerField::class, 'Relationships & Lookup', 'integer', 'Richer templated entity search picker.', Maturity::Experimental)
             ->register('segmented-control', SegmentedControlField::class, 'Choice & Selection', 'string', 'Small exclusive choice set as a segmented control.', Maturity::Stable)
             ->register('button-group', ButtonGroupField::class, 'Choice & Selection', 'string', 'Single-select button group.', Maturity::Stable)
@@ -369,11 +369,11 @@ class ArchitectServiceProvider extends ServiceProvider
             ->register('natural-language-date', NaturalLanguageDateField::class, 'Date & Time', 'string', 'Free-text date input for natural-language parsing.', Maturity::Stable)
             ->register('measurement', MeasurementField::class, 'Numeric', 'array', 'Numeric input with a unit suffix.', Maturity::Stable)
             ->register('numeric-stepper', NumericStepperField::class, 'Numeric', 'integer', 'Numeric input with +/- stepper controls.', Maturity::Stable)
-            ->register('masked-input', MaskedInputField::class, 'Formatted & Validated Text', 'string', 'Text input enforcing a fixed format mask.', Maturity::Beta) // data-mask attribute is rendered but nothing applies the mask yet
-            ->register('password-strength', PasswordStrengthField::class, 'Formatted & Validated Text', 'string', 'Password input with live strength feedback.', Maturity::Experimental)
+            ->register('masked-input', MaskedInputField::class, 'Formatted & Validated Text', 'string', 'Text input enforcing a fixed format mask.', Maturity::Stable)
+            ->register('password-strength', PasswordStrengthField::class, 'Formatted & Validated Text', 'string', 'Password input with live strength feedback.', Maturity::Stable)
             ->register('address-autocomplete', AddressAutocompleteField::class, 'Formatted & Validated Text', 'array', 'Address search resolving to a structured address.', Maturity::Planned) // address-lookup provider not yet chosen — see ARCHITECT_IMPROVEMENT_PLAN.md
             ->register('postal-code-lookup', PostalCodeLookupField::class, 'Formatted & Validated Text', 'array', 'Postcode lookup with address selection.', Maturity::Planned) // address-lookup provider not yet chosen — see ARCHITECT_IMPROVEMENT_PLAN.md
-            ->register('card-input', CardInputField::class, 'Formatted & Validated Text', 'string', 'Card entry via a payment provider\'s hosted fields.', Maturity::Experimental)
+            ->register('card-input', CardInputField::class, 'Formatted & Validated Text', 'string', 'Card entry via a payment provider\'s hosted fields.', Maturity::Stable)
             ->register('search-with-filters', SearchWithFiltersField::class, 'Formatted & Validated Text', 'array', 'Search input with structured filter chips.', Maturity::Experimental)
             ->register('query-language-text', QueryLanguageTextField::class, 'Formatted & Validated Text', 'string', 'Structured query-language text input.', Maturity::Stable)
             ->register('avatar', AvatarField::class, 'File & Media', 'string', 'Avatar upload with circular preview and initials fallback.', Maturity::Experimental)
@@ -385,11 +385,11 @@ class ArchitectServiceProvider extends ServiceProvider
             ->register('annotation', AnnotationField::class, 'Visual & Spatial', 'array', 'Draws bounding boxes/polygons/labels over an image.', Maturity::Experimental)
             ->register('drawing-sketch', DrawingSketchField::class, 'Visual & Spatial', 'string', 'Free-hand drawing/sketch canvas.', Maturity::Planned) // Wave 3 hardware/media field, deferred — see ARCHITECT_IMPROVEMENT_PLAN.md
             ->register('canvas-manipulation', CanvasManipulationField::class, 'Visual & Spatial', 'array', 'Drag/resize/rotate objects on a canvas.', Maturity::Planned) // Wave 3 hardware/media field, deferred — see ARCHITECT_IMPROVEMENT_PLAN.md
-            ->register('dial-knob', DialKnobField::class, 'Visual & Spatial', 'decimal', 'Rotational dial/knob control.', Maturity::Experimental)
+            ->register('dial-knob', DialKnobField::class, 'Visual & Spatial', 'decimal', 'Rotational dial/knob control.', Maturity::Stable)
             ->register('matrix-input', MatrixInputField::class, 'Visual & Spatial', 'array', 'Survey-style response grid.', Maturity::Stable)
-            ->register('sortable-list', SortableListField::class, 'Structural', 'array', 'Drag-to-reorder list.', Maturity::Experimental)
+            ->register('sortable-list', SortableListField::class, 'Structural', 'array', 'Drag-to-reorder list.', Maturity::Stable)
             ->register('kanban-board', KanbanBoardField::class, 'Structural', 'array', 'Drag-between-columns board input.', Maturity::Experimental)
-            ->register('ranking', RankingField::class, 'Structural', 'array', 'Drag-to-rank input.', Maturity::Experimental)
+            ->register('ranking', RankingField::class, 'Structural', 'array', 'Drag-to-rank input.', Maturity::Stable)
             ->register('relationship-picker', RelationshipPickerField::class, 'Relationships & Lookup', 'array', 'Links this record to another record/event/entity.', Maturity::Experimental)
             ->register('timeline-editor', TimelineEditorField::class, 'Visual & Spatial', 'array', 'Timeline editor for labelled segments.', Maturity::Experimental)
             ->register('image-comparison-slider', ImageComparisonSliderField::class, 'Visual & Spatial', 'decimal', 'Draggable divider comparing two images.', Maturity::Experimental)
@@ -416,7 +416,7 @@ class ArchitectServiceProvider extends ServiceProvider
             ->register('api-request-builder', ApiRequestBuilderField::class, 'Structural', 'array', 'Structured HTTP request builder.', Maturity::Stable)
             ->register('cron-schedule-builder', CronScheduleBuilderField::class, 'Date & Time', 'string', 'Builds a cron expression from a friendly schedule.', Maturity::Experimental)
             ->register('regex-builder-tester', RegexBuilderTesterField::class, 'Formatted & Validated Text', 'array', 'Regex pattern builder/tester.', Maturity::Stable)
-            ->register('keyboard-shortcut-recorder', KeyboardShortcutRecorderField::class, 'Structural', 'string', 'Records a keyboard shortcut combination.', Maturity::Experimental);
+            ->register('keyboard-shortcut-recorder', KeyboardShortcutRecorderField::class, 'Structural', 'string', 'Records a keyboard shortcut combination.', Maturity::Stable);
     }
 
     /**

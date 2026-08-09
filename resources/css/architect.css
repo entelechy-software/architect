@@ -544,6 +544,35 @@
 .arch-fieldset { border: 1px solid var(--arch-color-border); border-radius: var(--arch-radius-lg); @apply p-4; }
 .arch-fieldset__legend { font-size: var(--arch-font-size-sm); font-weight: var(--arch-font-weight-semibold); color: var(--arch-color-text); @apply px-1; }
 
+/* Password strength */
+.arch-password-strength__meter { height: 0.375rem; border-radius: var(--arch-radius-full); background: var(--arch-color-border); margin-top: var(--arch-gap-xs); overflow: hidden; }
+.arch-password-strength__meter::after { content: ''; display: block; height: 100%; width: var(--arch-password-strength-width, 0%); background: var(--arch-password-strength-color, transparent); transition: width var(--arch-transition), background-color var(--arch-transition); }
+.arch-password-strength__label { font-size: var(--arch-font-size-xs); color: var(--arch-color-text-muted); margin-top: var(--arch-gap-xs); }
+
+/* Ranking / sortable list (native drag-and-drop reorder) */
+.arch-ranking,
+.arch-sortable-list { @apply flex flex-col; gap: var(--arch-gap-xs); list-style: none; padding: 0; margin: 0; }
+.arch-ranking__item,
+.arch-sortable-list__item { @apply flex items-center gap-2 px-3 py-2 text-sm; background: var(--arch-color-surface); border: 1px solid var(--arch-color-border); border-radius: var(--arch-radius-md); cursor: grab; }
+.arch-ranking__item:active,
+.arch-sortable-list__item:active { cursor: grabbing; }
+.arch-ranking__handle,
+.arch-sortable-list__handle { color: var(--arch-color-text-muted); }
+
+/* Hierarchical checkbox tree */
+.arch-checkbox-tree__node { @apply flex flex-col; gap: var(--arch-gap-xs); }
+.arch-checkbox-tree__label { @apply inline-flex items-center gap-2; font-size: var(--arch-font-size-sm); cursor: pointer; }
+.arch-checkbox-tree__children { @apply flex flex-col; gap: var(--arch-gap-xs); margin-left: var(--arch-gap-md); margin-top: var(--arch-gap-xs); }
+
+/* Keyboard shortcut recorder */
+.arch-keyboard-shortcut-recorder .arch-input { font-family: var(--arch-font-family-mono); text-align: center; cursor: pointer; }
+
+/* Dial knob */
+.arch-dial-knob { @apply flex justify-center; }
+.arch-dial-knob__face { position: relative; width: 5rem; height: 5rem; border-radius: 50%; background: var(--arch-color-surface-alt); border: 1px solid var(--arch-color-border); cursor: grab; touch-action: none; }
+.arch-dial-knob__pointer { position: absolute; top: 0.375rem; left: 50%; width: 0.25rem; height: 1.5rem; margin-left: -0.125rem; background: var(--arch-color-primary); border-radius: var(--arch-radius-full); transform-origin: 50% 2.125rem; }
+.arch-dial-knob__value { position: absolute; inset: 0; @apply flex items-center justify-center; font-size: var(--arch-font-size-sm); font-weight: var(--arch-font-weight-medium); color: var(--arch-color-text); pointer-events: none; }
+
 /* Stats & Charts */
 
 /* Dashboard section layout-edit ring — uses outline so it never disturbs box-shadow/ring utilities */

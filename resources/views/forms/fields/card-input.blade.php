@@ -9,5 +9,6 @@
          })">
         {{-- The provider's hosted-field SDK mounts here; raw card data never touches this component's Livewire state. --}}
         <div x-ref="mount"></div>
+        <p class="arch-field__hint" x-show="status" x-text="status"></p>
     </div>
 </x-architect::field-wrapper>

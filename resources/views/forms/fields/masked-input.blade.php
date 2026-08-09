@@ -3,7 +3,9 @@
     <input type="text"
            id="field-{{ $field->getName() }}"
            class="arch-input"
-           wire:model="formData.{{ $field->getName() }}"
+           wire:ignore
+           x-data="architectMaskedInput({ wireField: 'formData.{{ $field->getName() }}', mask: @js($field->getMask()) })"
+           x-on:input="onInput($event)"
            @if ($field->getMask() !== null) data-mask="{{ $field->getMask() }}" @endif
            @if ($field->getPlaceholder() !== null) placeholder="{{ $field->getPlaceholder() }}" @elseif ($field->getMask() !== null) placeholder="{{ $field->getMask() }}" @endif>
 </x-architect::field-wrapper>
